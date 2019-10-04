@@ -3,13 +3,12 @@ cache: cargo
 
 jobs:
   include:
-    - stage: format
+    - stage: build
+      name: format
       before_install: rustup component add rustfmt
       script: cargo fmt --verbose -- --check --verbose
-
-    - stage: lint
+    - name: lint
       before_install: rustup component add clippy
       script: cargo clippy --all-targets -- -D warnings
-
-    - stage: test
+    - name: test
       script: cargo test --all --verbose
