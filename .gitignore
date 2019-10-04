@@ -1,0 +1,9 @@
+# IDEs
+.idea/
+.vscode/
+
+# Folders
+target/
+
+# Files
+.DS_Store

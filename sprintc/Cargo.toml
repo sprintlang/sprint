@@ -1,0 +1,13 @@
+[package]
+name = "sprintc"
+version = "0.1.0"
+authors = [
+    "Alex Nielsen <alex@hitecherik.net>",
+    "Ivan Kapelyukh <ivankapelyukh@gmail.com>",
+    "Pablo Gamito <pablo@gamito.me>",
+    "Tom Claydon <tom@claydon.me.uk>",
+    "Zak Cutner <me@zakcutner.uk>"
+]
+edition = "2018"
+
+[dependencies]
