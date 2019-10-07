@@ -1,6 +1,6 @@
 [workspace]
 members = [
+    "move",
     "parser",
-    "libra",
     "sprintc",
 ]
