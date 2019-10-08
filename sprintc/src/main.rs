@@ -1,9 +1,7 @@
-use assert_cmd::prelude::*;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::path::PathBuf;
-use std::process::Command;
 use structopt::StructOpt;
 
 const MVIR_EXTENSION: &str = "mvir";
@@ -133,8 +131,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fails_with_no_args() {
-        let mut cmd = Command::cargo_bin("sprintc").unwrap();
-        cmd.assert().failure();
+    fn uses_source_stem_when_no_output_specified() {
+        let args = Args {
+            source_path: PathBuf::from("test.sprint"),
+            output_path: None,
+        };
+
+        assert_eq!(create_output_path(&&args), PathBuf::from("test.mvir"));
+    }
+
+    #[test]
+    fn uses_output_stem_when_specified() {
+        let args = Args {
+            source_path: PathBuf::from("test.sprint"),
+            output_path: Some(PathBuf::from("output.mvir")),
+        };
+
+        assert_eq!(create_output_path(&args), PathBuf::from("output.mvir"));
     }
 }
