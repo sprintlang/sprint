@@ -1,12 +1,9 @@
-use sprint_parser::parser;
-use std::{
-    borrow::Cow,
-    error::Error,
-    ffi::OsStr,
-    fs::File,
-    io::{BufReader, Read, Write},
-    path::{Path, PathBuf},
-};
+use assert_cmd::prelude::*;
+use std::ffi::OsStr;
+use std::fs::File;
+use std::io::{BufReader, Read, Write};
+use std::path::PathBuf;
+use std::process::Command;
 use structopt::StructOpt;
 
 const MVIR_EXTENSION: &str = "mvir";
@@ -26,9 +23,10 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::from_args();
-    let (source_path, output_path) = check_args(&args)?;
 
-    let source = read_source(source_path)?;
+    let (source_path, output_path) = check_args(&args);
+
+    let source = read_source(source_path);
 
     let ast = parser::contract(&source).map_err(|err| {
         eprint!("{}", err.pretty(&source));
@@ -37,39 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // TODO: Move code generation.
     // Currently the source file is written to output file as code generation has not been implemented.
-    println!("{:?}", ast);
-    write_output(&output_path, source.as_bytes())?;
-
-    Ok(())
-}
-
-// Checks for presence of output path and that file extensions are valid.
-fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
-    let source = &args.source_path;
-    let extension = source.extension();
-
-    match extension {
-        Some(extension) => {
-            if extension != SPRINT_EXTENSION {
-                // to_str() returns None if the OsStr is not valid Unicode.
-                let extension = extension
-                    .to_str()
-                    .ok_or("Source path is not valid unicode")?;
-
-                return Err(format!(
-                    "Incorrect extension on source file: got `{}`, expected `{}`",
-                    extension, SPRINT_EXTENSION
-                ));
-            }
-        }
-        None => {
-            return Err(String::from("Missing file extension on source path"));
-        }
-    }
-
-    let output = create_output_path(&args)?;
-
-    Ok((source, output))
+    write_output(&output_path, source.as_bytes());
 }
 
 fn create_output_path(args: &Args) -> Result<Cow<Path>, String> {
@@ -122,20 +88,18 @@ fn write_output(path: &Path, buf: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn create_output_path_no_output_specified() {
-        let args = Args {
-            source_path: PathBuf::from("test.sprint"),
-            output_path: None,
-        };
-
-        assert_eq!(
-            create_output_path(&args).unwrap(),
-            PathBuf::from("test.mvir")
+// Checks for presence of output path and that file extensions are valid.
+fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
+    let sprint_extension = "sprint";
+    let mvir_extension = "mvir";
+    let source = &args.source_path;
+    let extension = source
+        .extension()
+        .expect("Missing file extension on source file");
+    if extension != sprint_extension {
+        panic!(
+            "Bad extension on source file {:?}, expected `{}`",
+            extension, sprint_extension
         );
     }
 
@@ -146,9 +110,31 @@ mod tests {
             output_path: Some(PathBuf::from("output.mvir")),
         };
 
-        assert_eq!(
-            create_output_path(&args).unwrap(),
-            PathBuf::from("output.mvir")
-        );
+    match output_path {
+        Some(path) => {
+            if path.extension() != Some(OsStr::new(mvir_extension)) {
+                panic!(
+                    "Output path must specify file with `{}` extension",
+                    mvir_extension
+                );
+            }
+            output.push(path);
+        }
+        None => {
+            output.push(source.file_stem().unwrap());
+            output.set_extension(mvir_extension);
+        }
+    };
+    (source, output)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fails_with_no_args() {
+        let mut cmd = Command::cargo_bin("sprintc").unwrap();
+        cmd.assert().failure();
     }
 }

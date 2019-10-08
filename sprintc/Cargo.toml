@@ -13,3 +13,4 @@ edition = "2018"
 [dependencies]
 sprint-parser = { path = "../parser" }
 structopt = "0.2.10"
+assert_cmd = "0.11"
