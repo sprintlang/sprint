@@ -1,9 +1,7 @@
-use assert_cmd::prelude::*;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::path::PathBuf;
-use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -95,12 +93,6 @@ fn create_output_path(args: &Args) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn fails_with_no_args() {
-        let mut cmd = Command::cargo_bin("sprintc").unwrap();
-        cmd.assert().failure();
-    }
 
     #[test]
     fn uses_source_stem_when_no_output_specified() {
