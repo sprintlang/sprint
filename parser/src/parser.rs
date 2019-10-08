@@ -1,60 +1,62 @@
+use super::ast::Contract;
 use nom::{branch::alt, bytes::complete::tag, combinator::all_consuming, IResult};
 
-// TODO: implement a real AST (this is temporary)
-#[derive(Debug, PartialEq)]
-pub enum AST {
-    Zero,
-    One,
-}
+pub fn parse(input: &str) -> Result<Contract, ()> {
+    let parser = contract(input);
 
-fn zero(code: &str) -> IResult<&str, AST> {
-    let (code, _) = tag("zero")(code)?;
-    Ok((code, AST::Zero))
-}
-
-fn one(code: &str) -> IResult<&str, AST> {
-    let (code, _) = tag("one")(code)?;
-    Ok((code, AST::One))
-}
-
-pub fn parse(code: &str) -> Result<AST, ()> {
-    let parser = all_consuming(alt((zero, one)));
-
-    match parser(code) {
-        Ok((_, ast)) => Ok(ast),
+    match parser {
+        Ok((_, node)) => Ok(node),
         Err(_) => Err(()),
     }
+}
+
+pub fn contract(input: &str) -> IResult<&str, Contract> {
+    let parser = all_consuming(alt((zero, one)));
+    parser(input)
+}
+
+pub fn zero(input: &str) -> IResult<&str, Contract> {
+    let (input, _) = tag("zero")(input)?;
+    Ok((input, Contract::Zero))
+}
+
+pub fn one(input: &str) -> IResult<&str, Contract> {
+    let (input, _) = tag("one")(input)?;
+    Ok((input, Contract::One))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn ast_parsed(code: &str, ast_expected: AST) {
-        match parse(code) {
-            Ok(ast) => assert_eq!(
-                ast, ast_expected,
+    fn ast_parsed(input: &str, expected: Contract) {
+        match parse(input) {
+            Ok(actual) => assert_eq!(
+                actual, expected,
                 "Tried to parse \"{}\", but got {:?}.",
-                code, ast
+                input, actual
             ),
-            Err(()) => panic!("Error parsing \"{}\".", code),
+            Err(()) => panic!("Error parsing \"{}\".", input),
         };
     }
 
-    fn ast_not_parsed(code: &str) {
-        if let Ok(ast) = parse(code) {
-            panic!("\"{}\" should not have parsed, but got {:?}.", code, ast);
+    fn ast_not_parsed(input: &str) {
+        if let Ok(contract) = parse(input) {
+            panic!(
+                "\"{}\" should not have parsed, but got {:?}.",
+                input, contract
+            );
         }
     }
 
     #[test]
     fn zero_parsed() {
-        ast_parsed("zero", AST::Zero);
+        ast_parsed("zero", Contract::Zero);
     }
 
     #[test]
     fn one_parsed() {
-        ast_parsed("one", AST::One);
+        ast_parsed("one", Contract::One);
     }
 
     #[test]
