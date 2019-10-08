@@ -4,11 +4,9 @@ cache: cargo
 jobs:
   include:
     - stage: build
-      name: format
-      before_install: rustup component add rustfmt
-      script: cargo fmt --verbose -- --check
-    - name: lint
-      before_install: rustup component add clippy
-      script: cargo clippy --all-targets -- -D warnings
-    - name: test
-      script: cargo test --all --verbose
+      before_install: rustup component add rustfmt clippy
+      script:
+        - cargo fmt --verbose -- --check
+        - cargo build --all --all-targets --verbose
+        - cargo clippy --all-targets -- -D warnings
+        - cargo test --all --verbose
