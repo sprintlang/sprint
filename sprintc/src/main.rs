@@ -1,7 +1,9 @@
+use assert_cmd::prelude::*;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::path::PathBuf;
+use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -21,17 +23,10 @@ fn main() {
 
     let (source_path, output_path) = check_args(&args);
 
-    println!(
-        "Source path: {:?} Destination: {:?}",
-        source_path, output_path
-    );
-
     let source = read_source(source_path);
 
     // TODO: Parse and Move code generation.
-
-    println!("Sprint file: {}", source);
-
+    // Currently the source file is written to output file as code generation has not been implemented.
     write_output(&output_path, source.as_bytes());
 }
 
@@ -56,6 +51,7 @@ fn write_output(path: &PathBuf, buf: &[u8]) {
         .unwrap_or_else(|err| panic!("Unable to write to file {:?}: {}", path, err));
 }
 
+// Checks for presence of output path and that file extensions are valid.
 fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
     let sprint_extension = "sprint";
     let mvir_extension = "mvir";
@@ -64,11 +60,10 @@ fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
         .extension()
         .expect("Missing file extension on source file");
     if extension != sprint_extension {
-        eprintln!(
+        panic!(
             "Bad extension on source file {:?}, expected `{}`",
             extension, sprint_extension
         );
-        std::process::exit(1);
     }
 
     let output_path = &args.output_path;
@@ -77,11 +72,10 @@ fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
     match output_path {
         Some(path) => {
             if path.extension() != Some(OsStr::new(mvir_extension)) {
-                eprintln!(
+                panic!(
                     "Output path must specify file with `{}` extension",
                     mvir_extension
                 );
-                std::process::exit(1);
             }
             output.push(path);
         }
@@ -90,6 +84,16 @@ fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
             output.set_extension(mvir_extension);
         }
     };
-
     (source, output)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fails_with_no_args() {
+        let mut cmd = Command::cargo_bin("sprintc").unwrap();
+        cmd.assert().failure();
+    }
 }
