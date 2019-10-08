@@ -1,4 +1,3 @@
-extern crate nom;
 use nom::{branch::alt, bytes::complete::tag, combinator::all_consuming, IResult};
 
 // TODO: implement a real AST (this is temporary)
@@ -35,7 +34,7 @@ mod tests {
         match parse(code) {
             Ok(ast) => assert_eq!(
                 ast, ast_expected,
-                "Tried to parse \"{}\", got {:?}.",
+                "Tried to parse \"{}\", but got {:?}.",
                 code, ast
             ),
             Err(()) => panic!("Error parsing \"{}\".", code),
@@ -44,7 +43,7 @@ mod tests {
 
     fn ast_not_parsed(code: &str) {
         if let Ok(ast) = parse(code) {
-            panic!("{} should not have parsed, but got {:?}.", code, ast);
+            panic!("\"{}\" should not have parsed, but got {:?}.", code, ast);
         }
     }
 

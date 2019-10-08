@@ -1,2 +1,1 @@
-mod parser;
-pub use crate::parser::parse;
+pub mod parser;
