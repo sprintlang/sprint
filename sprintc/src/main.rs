@@ -54,7 +54,6 @@ fn write_output(path: &PathBuf, buf: &[u8]) {
 // Checks for presence of output path and that file extensions are valid.
 fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
     let sprint_extension = "sprint";
-    let mvir_extension = "mvir";
     let source = &args.source_path;
     let extension = source
         .extension()
@@ -66,9 +65,15 @@ fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
         );
     }
 
+    let output = create_output_path(&args);
+
+    (source, output)
+}
+
+fn create_output_path(args: &Args) -> PathBuf {
+    let mvir_extension = "mvir";
     let output_path = &args.output_path;
     let mut output = PathBuf::new();
-
     match output_path {
         Some(path) => {
             if path.extension() != Some(OsStr::new(mvir_extension)) {
@@ -80,11 +85,11 @@ fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
             output.push(path);
         }
         None => {
-            output.push(source.file_stem().unwrap());
+            output.push(args.source_path.file_stem().unwrap());
             output.set_extension(mvir_extension);
         }
     };
-    (source, output)
+    output
 }
 
 #[cfg(test)]
@@ -95,5 +100,25 @@ mod tests {
     fn fails_with_no_args() {
         let mut cmd = Command::cargo_bin("sprintc").unwrap();
         cmd.assert().failure();
+    }
+
+    #[test]
+    fn uses_source_stem_when_no_output_specified() {
+        let args = Args {
+            source_path: PathBuf::from("test.sprint"),
+            output_path: None,
+        };
+
+        assert_eq!(create_output_path(&&args), PathBuf::from("test.mvir"));
+    }
+
+    #[test]
+    fn uses_output_stem_when_specified() {
+        let args = Args {
+            source_path: PathBuf::from("test.sprint"),
+            output_path: Some(PathBuf::from("output.mvir")),
+        };
+
+        assert_eq!(create_output_path(&args), PathBuf::from("output.mvir"));
     }
 }
