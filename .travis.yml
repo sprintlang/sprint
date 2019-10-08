@@ -8,5 +8,5 @@ jobs:
       script:
         - cargo fmt --verbose -- --check
         - cargo build --all --all-targets --verbose
-        - cargo clippy --all-targets -- -D warnings
-        - cargo test --all --verbose
+        - cargo clippy --all --all-targets -- -D warnings
+        - cargo test --all --all-targets --verbose
