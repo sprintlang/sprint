@@ -18,30 +18,29 @@ pub fn one(input: &str) -> IResult<&str, Contract> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::tests::{parse, parse_invalid};
     use super::*;
 
     #[test]
     fn parse_contract_with_padding_and_brackets() {
-        parse(" (zero) ", contract, ("", Contract::Zero));
-        parse("( zero )", contract, ("", Contract::Zero));
-        parse(" ( zero ) ", contract, ("", Contract::Zero));
-        parse(" ( (zero) ) ", contract, ("", Contract::Zero));
-        parse(" ( (zero))", contract, ("", Contract::Zero));
+        assert_eq!(contract(" (zero) "), Ok(("", Contract::Zero)));
+        assert_eq!(contract("( zero )"), Ok(("", Contract::Zero)));
+        assert_eq!(contract(" ( zero ) "), Ok(("", Contract::Zero)));
+        assert_eq!(contract(" ( (zero) ) "), Ok(("", Contract::Zero)));
+        assert_eq!(contract(" ( (zero))"), Ok(("", Contract::Zero)));
     }
 
     #[test]
     fn parse_zero() {
-        parse("zero", contract, ("", Contract::Zero));
+        assert_eq!(contract("zero"), Ok(("", Contract::Zero)));
     }
 
     #[test]
     fn parse_one() {
-        parse("one", contract, ("", Contract::One));
+        assert_eq!(contract("one"), Ok(("", Contract::One)));
     }
 
     #[test]
-    fn parse_invalid_two() {
-        parse_invalid("two", contract);
+    fn parse_two() {
+        contract("two").unwrap_err();
     }
 }
