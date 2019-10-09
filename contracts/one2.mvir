@@ -1,0 +1,60 @@
+module One {
+  import 0x0.LibraCoin;
+  import 0x0.LibraAccount;
+
+  resource T {
+    counter_party: address,
+    balance: LibraCoin.T,
+  }
+
+  public create(counter_party: address) {
+    let zero_balance: LibraCoin.T;
+    let contract: Self.T;
+
+    zero_balance = LibraCoin.zero();
+
+    contract = T {
+      address: move(counter_party),
+      balance: move(zero_balance),
+    }
+
+    move_to_sender<T>(move(contract));
+
+    return;
+  }
+
+  public sign(holder: address) {
+    let contract_ref: &mut Self.T;
+    let counter_party: address;
+    let sender: address;
+    let deposit: LibraCoin.T;
+    let balance: LibraCoin.T;
+    let contract_ref: &mut Self.T;
+
+    contract_ref = borrow_global<T>(move(holder));
+    counter_party = *(&copy(contract_ref).counter_party);
+
+    sender = get_txn_sender();
+    assert(move(counter_party) == move(sender), 401);
+
+    deposit = LibraAccount.withdraw_from_sender(1);
+
+    contract_ref = borrow_global_mut<T>(move(payee));
+
+    LibraCoin.deposit(&mut copy(contract_ref).balance, move(deposit));
+
+    return;
+  }
+
+  public unwrap(): LibraCoin.T {
+    let coin: LibraCoin.T;
+    let recipient: address;
+
+    sender = get_txn_sender();
+    contract = move_from<T>(move(sender));
+
+    T { coin, recipient } = move(contract);
+
+    return move(coin);
+  }
+}
