@@ -1,3 +1,7 @@
+//! account: alice
+//! account: bob
+
+//! sender: alice
 module One {
   import 0x0.LibraCoin;
 
@@ -41,10 +45,12 @@ module One {
     // "Unpacks" the contract offer by destroying the outer resource returing its contents.
     Offer { counter_party } = move(offer);
 
+    sender = get_txn_sender();
+
     // Ensure the transaction sender is the intended counter_party of the offer.
     // If this assertion fails, the transcation will fail (none of it's effects will be commited).
     // Will emmit a 401 error code with the transaction output if this assertion fails.
-    assert(*(counter_party) == move(sender), 401);
+    assert(move(counter_party)) == move(sender), 401);
 
     // Create signed contract
     signed = Signed {
@@ -60,6 +66,7 @@ module One {
   public execute_contract(counter_party: address) {
     let coin: LibraCoin.T;
     let holder: address;
+    let sender: address;
 
     contract = move_from<Signed>(move(counter_party));
 

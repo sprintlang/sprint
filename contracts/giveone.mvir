@@ -43,7 +43,7 @@ module GiveOne {
 
   // Destroys/consumes the contract releasing its resources.
   // Allowing the holder (in Libra terms) of the contract to claim the funds.
-  public unwrap(contract: Self.T) {
+  public unwrap(contract: Self.T): LibraCoin.T {
     let coin: LibraCoin.T;
     let counter_party: address;
 
