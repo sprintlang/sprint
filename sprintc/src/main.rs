@@ -31,30 +31,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn read_source(path: &PathBuf) -> Result<String, String> {
-    let source_file =
-        File::open(path).map_err(|err| format!("Unable to open file {:?}: {}", path, err))?;
-
-    let mut buf_reader = BufReader::new(source_file);
-    let mut source = String::new();
-
-    buf_reader
-        .read_to_string(&mut source)
-        .map_err(|err| format!("Unable to read to file {:?}: {}", path, err))?;
-
-    Ok(source)
-}
-
-fn write_output(path: &PathBuf, buf: &[u8]) -> Result<(), String> {
-    let mut move_file =
-        File::create(path).map_err(|err| format!("Unable to create file {:?}: {}", path, err))?;
-
-    move_file
-        .write_all(&buf)
-        .map_err(|err| format!("Unable to write to file {:?}: {}", path, err))?;
-    Ok(())
-}
-
 // Checks for presence of output path and that file extensions are valid.
 fn check_args(args: &Args) -> Result<(&PathBuf, PathBuf), String> {
     let sprint_extension = "sprint";
@@ -78,6 +54,30 @@ fn check_args(args: &Args) -> Result<(&PathBuf, PathBuf), String> {
     let output = create_output_path(&args)?;
 
     Ok((source, output))
+}
+
+fn read_source(path: &PathBuf) -> Result<String, String> {
+    let source_file =
+        File::open(path).map_err(|err| format!("Unable to open file {:?}: {}", path, err))?;
+
+    let mut buf_reader = BufReader::new(source_file);
+    let mut source = String::new();
+
+    buf_reader
+        .read_to_string(&mut source)
+        .map_err(|err| format!("Unable to read to file {:?}: {}", path, err))?;
+
+    Ok(source)
+}
+
+fn write_output(path: &PathBuf, buf: &[u8]) -> Result<(), String> {
+    let mut move_file =
+        File::create(path).map_err(|err| format!("Unable to create file {:?}: {}", path, err))?;
+
+    move_file
+        .write_all(&buf)
+        .map_err(|err| format!("Unable to write to file {:?}: {}", path, err))?;
+    Ok(())
 }
 
 fn create_output_path(args: &Args) -> Result<PathBuf, String> {
