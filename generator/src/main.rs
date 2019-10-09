@@ -2,6 +2,8 @@ use sprint_parser::ast::contract::Visitor;
 
 struct MoveVisitor {}
 
+static MOVE_ONE_CODE: &str = include!("./sample_move_program.rs");
+
 impl MoveVisitor {
     fn new() -> MoveVisitor {
         MoveVisitor {}
@@ -19,8 +21,7 @@ impl Visitor for MoveVisitor {
 }
 
 fn main() {
-    let move_one_code = include!("./sample_move_program.rs");
-    println!("My Move code is: {}", move_one_code);
+    println!("My Move code is: {}", MOVE_ONE_CODE);
     let mut visitor: MoveVisitor = MoveVisitor::new();
     visitor.visit_one();
 }
