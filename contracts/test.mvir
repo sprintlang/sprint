@@ -1,8 +1,0 @@
-module TestModule {
-  import 0x0.LibraCoin;
-
-  // The identity function for coins: takes a LibraCoin.T as input and hands it back
-  public id(c: LibraCoin.T): LibraCoin.T {
-    return move(c);
-  }
-}

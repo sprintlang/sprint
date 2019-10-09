@@ -1,3 +1,17 @@
+# Run on a fake block chain through tests
+1. Clone the Libra repository.
+2. Follow the Libra README for how to compile and install it.
+3. Create the directory `language/functional_tests/tests/testsuite/sprint` in the `Libra` directory.
+4. Copy the `.mvir` file you want to run/test to `language/functional_tests/tests/testsuite/sprint`.
+5. Run `cargo test -p functional_tests sprint` to run all the tests in sprint or `cargo test -p functional_tests sprint/<name>` to run a specific one.
+
+Example (run in Libra folder which is a sibiling of Sprint).
+```
+cp ../sprint/contracts/example.mvir ./language/functional_tests/tests/testsuite/sprint/ && cargo test -p functional_tests sprint/example
+```
+
+# Running on an actual blockchain
+
 ## On the server
 ```
 cargo run -p libra_swarm
@@ -47,5 +61,17 @@ libra% query balance 0
 
 ### Compiling your move code
 ```
-libra% dev compile 0 <path to my_module.mvir> module
+libra% dev compile 0 <path to my_module.mvir> <module|script>
+
+> Successfully compiled a program at  <path_to_compiled_code>
+```
+
+### Publish a module
+```
+libra% dev publish 0 <path_to_compiled_code>
+```
+
+### Execute a script
+```
+dev execute 0 <path_to_compiled_code> <main's parameters>
 ```
