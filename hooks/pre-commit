@@ -1,0 +1,23 @@
+#!/bin/sh
+
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+	against=HEAD
+else
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# If there are whitespace errors, print the offending file names and fail.
+echo "+whitespace"
+git diff-index --check --cached $against -- || exit 1
+
+# If there are Rust formatting errors, show the errors and fail.
+echo "+cargo fmt"
+cargo fmt --all -- --check || exit 1
+
+# If there are Clippy errors, show the errors and fail.
+echo "+cargo clippy"
+cargo clippy --all --all-targets -- -D warnings > /dev/null || exit 1
+
+# If there are test failures, show the output and fail.
+echo "+cargo test"
+cargo test --all --all-targets > /dev/null || exit 1
