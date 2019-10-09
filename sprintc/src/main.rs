@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
@@ -7,7 +8,7 @@ use structopt::StructOpt;
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR.")]
 struct Args {
-    //File to be compiled.
+    // File to be compiled.
     #[structopt(parse(from_os_str))]
     source_path: PathBuf,
 
@@ -16,69 +17,80 @@ struct Args {
     output_path: Option<PathBuf>,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::from_args();
 
-    let (source_path, output_path) = check_args(&args);
+    let (source_path, output_path) = check_args(&args)?;
 
-    let source = read_source(source_path);
+    let source = read_source(source_path)?;
 
     // TODO: Parse and Move code generation.
     // Currently the source file is written to output file as code generation has not been implemented.
-    write_output(&output_path, source.as_bytes());
+    write_output(&output_path, source.as_bytes())?;
+
+    Ok(())
 }
 
-fn read_source(path: &PathBuf) -> String {
+fn read_source(path: &PathBuf) -> Result<String, String> {
     let source_file =
-        File::open(path).unwrap_or_else(|err| panic!("Unable to open file {:?}: {}", path, err));
+        File::open(path).map_err(|err| format!("Unable to open file {:?}: {}", path, err))?;
 
     let mut buf_reader = BufReader::new(source_file);
     let mut source = String::new();
 
     buf_reader
         .read_to_string(&mut source)
-        .unwrap_or_else(|err| panic!("Unable to read file {:?}: {}", path, err));
-    source
+        .map_err(|err| format!("Unable to read to file {:?}: {}", path, err))?;
+
+    Ok(source)
 }
 
-fn write_output(path: &PathBuf, buf: &[u8]) {
-    let mut move_file = File::create(path)
-        .unwrap_or_else(|err| panic!("Unable to create file {:?}: {}", path, err));
+fn write_output(path: &PathBuf, buf: &[u8]) -> Result<(), String> {
+    let mut move_file =
+        File::create(path).map_err(|err| format!("Unable to create file {:?}: {}", path, err))?;
+
     move_file
         .write_all(&buf)
-        .unwrap_or_else(|err| panic!("Unable to write to file {:?}: {}", path, err));
+        .map_err(|err| format!("Unable to write to file {:?}: {}", path, err))?;
+    Ok(())
 }
 
 // Checks for presence of output path and that file extensions are valid.
-fn check_args(args: &Args) -> (&PathBuf, PathBuf) {
+fn check_args(args: &Args) -> Result<(&PathBuf, PathBuf), String> {
     let sprint_extension = "sprint";
     let source = &args.source_path;
-    let extension = source
-        .extension()
-        .expect("Missing file extension on source file");
-    if extension != sprint_extension {
-        panic!(
-            "Bad extension on source file {:?}, expected `{}`",
-            extension, sprint_extension
-        );
+    let extension = source.extension();
+
+    match extension {
+        Some(ext) => {
+            if ext != sprint_extension {
+                return Err(format!(
+                    "Bad extension on source file {:?}, expected `{}`",
+                    extension, sprint_extension
+                ));
+            }
+        }
+        None => {
+            return Err("Missing file extension on source path".to_string());
+        }
     }
 
-    let output = create_output_path(&args);
+    let output = create_output_path(&args)?;
 
-    (source, output)
+    Ok((source, output))
 }
 
-fn create_output_path(args: &Args) -> PathBuf {
+fn create_output_path(args: &Args) -> Result<PathBuf, String> {
     let mvir_extension = "mvir";
     let output_path = &args.output_path;
     let mut output = PathBuf::new();
     match output_path {
         Some(path) => {
             if path.extension() != Some(OsStr::new(mvir_extension)) {
-                panic!(
+                return Err(format!(
                     "Output path must specify file with `{}` extension",
                     mvir_extension
-                );
+                ));
             }
             output.push(path);
         }
@@ -87,7 +99,7 @@ fn create_output_path(args: &Args) -> PathBuf {
             output.set_extension(mvir_extension);
         }
     };
-    output
+    Ok(output)
 }
 
 #[cfg(test)]
@@ -101,7 +113,10 @@ mod tests {
             output_path: None,
         };
 
-        assert_eq!(create_output_path(&&args), PathBuf::from("test.mvir"));
+        assert_eq!(
+            create_output_path(&args).unwrap(),
+            PathBuf::from("test.mvir")
+        );
     }
 
     #[test]
@@ -111,6 +126,9 @@ mod tests {
             output_path: Some(PathBuf::from("output.mvir")),
         };
 
-        assert_eq!(create_output_path(&args), PathBuf::from("output.mvir"));
+        assert_eq!(
+            create_output_path(&args).unwrap(),
+            PathBuf::from("output.mvir")
+        );
     }
 }
