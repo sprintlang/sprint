@@ -26,8 +26,8 @@ impl Visitor for MoveVisitor {
 
 fn main() {
     let mut visitor: MoveVisitor = MoveVisitor::new();
+    visitor.visit_zero();
     visitor.visit_one();
-    println!("{}", visitor.move_code);
 }
 
 #[cfg(test)]
@@ -39,5 +39,12 @@ mod tests {
         let mut visitor: MoveVisitor = MoveVisitor::new();
         visitor.visit_zero();
         assert_eq!(visitor.move_code, String::new());
+    }
+
+    #[test]
+    fn test_visit_one() {
+        let mut visitor: MoveVisitor = MoveVisitor::new();
+        visitor.visit_one();
+        assert_eq!(visitor.move_code, MOVE_ONE_CODE);
     }
 }
