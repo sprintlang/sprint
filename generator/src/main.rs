@@ -29,3 +29,15 @@ fn main() {
     visitor.visit_one();
     println!("{}", visitor.move_code);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_visit_zero() {
+        let mut visitor: MoveVisitor = MoveVisitor::new();
+        visitor.visit_zero();
+        assert_eq!(visitor.move_code, String::new());
+    }
+}
