@@ -6,6 +6,9 @@ use std::io::{BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
+const MVIR_EXTENSION: &str = "mvir";
+const SPRINT_EXTENSION: &str = "sprint";
+
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR.")]
 struct Args {
@@ -34,16 +37,20 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 // Checks for presence of output path and that file extensions are valid.
 fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
-    const SPRINT_EXTENSION: &str = "sprint";
     let source = &args.source_path;
     let extension = source.extension();
 
     match extension {
-        Some(ext) => {
-            if ext != SPRINT_EXTENSION {
+        Some(extension) => {
+            if extension != SPRINT_EXTENSION {
+                // to_str() returns None if the OsStr is not valid Unicode.
+                let ext_str = extension
+                    .to_str()
+                    .or_else(|| Some("(source path is not valid unicode)"))
+                    .unwrap();
                 return Err(format!(
-                    "Bad extension on source file {:?}, expected `{}`",
-                    extension, SPRINT_EXTENSION
+                    "Incorrect extension on source file: got `{}`, expected `{}`",
+                    ext_str, SPRINT_EXTENSION
                 ));
             }
         }
@@ -58,7 +65,6 @@ fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
 }
 
 fn create_output_path(args: &Args) -> Result<Cow<Path>, String> {
-    const MVIR_EXTENSION: &str = "mvir";
     let output_path = &args.output_path;
 
     match output_path {
@@ -84,26 +90,26 @@ fn create_output_path(args: &Args) -> Result<Cow<Path>, String> {
 }
 
 fn read_source(path: &Path) -> Result<String, String> {
-    let source_file =
-        File::open(path).map_err(|err| format!("Unable to open file {:?}: {}", path, err))?;
+    let source_file = File::open(path)
+        .map_err(|err| format!("Unable to open file `{}`: {}", path.display(), err))?;
 
     let mut buf_reader = BufReader::new(source_file);
     let mut source = String::new();
 
     buf_reader
         .read_to_string(&mut source)
-        .map_err(|err| format!("Unable to read to file {:?}: {}", path, err))?;
+        .map_err(|err| format!("Unable to read to file `{}`: {}", path.display(), err))?;
 
     Ok(source)
 }
 
 fn write_output(path: &Path, buf: &[u8]) -> Result<(), String> {
-    let mut move_file =
-        File::create(path).map_err(|err| format!("Unable to create file {:?}: {}", path, err))?;
+    let mut move_file = File::create(path)
+        .map_err(|err| format!("Unable to create file `{}`: {}", path.display(), err))?;
 
     move_file
         .write_all(&buf)
-        .map_err(|err| format!("Unable to write to file {:?}: {}", path, err))?;
+        .map_err(|err| format!("Unable to write to file `{}`: {}", path.display(), err))?;
 
     Ok(())
 }
