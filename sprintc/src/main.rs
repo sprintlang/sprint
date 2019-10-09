@@ -1,9 +1,11 @@
-use std::borrow::Cow;
-use std::error::Error;
-use std::ffi::OsStr;
-use std::fs::File;
-use std::io::{BufReader, Read, Write};
-use std::path::{Path, PathBuf};
+use std::{
+    borrow::Cow,
+    error::Error,
+    ffi::OsStr,
+    fs::File,
+    io::{BufReader, Read, Write},
+    path::{Path, PathBuf},
+};
 use structopt::StructOpt;
 
 const MVIR_EXTENSION: &str = "mvir";
