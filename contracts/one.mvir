@@ -1,52 +1,73 @@
-module one {
+module One {
   import 0x0.LibraCoin;
 
-  resource T {
-    coin: LibraCoin.T,
+  resource Offer {
     counter_party: address,
   }
 
-  // Creates the contract (as a resource) and moves it to the transaction sender's account.
-  public create(coin: LibraCoin.T, recipient: address) {
-    let t: Self.T;
+  resource Signed {
+    // The creator of the initial contract.
+    holder: address,
+    coin: LibraCoin.T,
+  }
 
-    t = T {
-      coin: move(coin),
-      counter_party: move(recipient),
+  // Creates the contract offer (as a resource) and moves it to the transaction sender's account.
+  public create_offer(counter_party: address) {
+    let contract_offer: Self.Offer;
+
+    contract_offer = Offer {
+      address: move(counter_party);
     }
 
-    // Publish the contract under the transaction sender's account
-    move_to_sender<T>(move(t));
+    // Publish the contract offer under the transaction sender's account
+    // Note: Maybe it should be the other way around, the counter-party owns the offer
+    //       and the holder will own the signed contract. This does require finding out how to
+    //       move the resource to a specific address... Scout the Libra tests to find method that might do this.
+    move_to_sender<Offer>(move(contract_offer));
     return;
   }
 
-  // "Signs" the contract held by the holder_address, making the
-  // transaction sender the counterparty to the contract
-  public sign(holder_address: address): Self.T acquires T {
-    let contract: Self.T;
-    let sender: address;
+  // Signs the contract offer, creating a signed contract resource.
+  // holder: address of the offer holder.
+  public sign_offer(holder: address, coin: LibraCoin.T) {
+    let offer: Self.Offer;
+    let signed: Self.Signed;
+    let counter_party: address;
 
-    // Move the contract resource (T) from the holder_address to the variable contract.
-    // If there is no resource of type T published under the address, this transaction will fail.
-    contract = move_from<T>(move(holder_address));
+    // Move the contract offer resource from the holder to the variable offer.
+    // If there is no resource of type Offer held by the holder address, this transaction will fail.
+    offer = move_from<Offer>(move(holder));
+
+    // "Unpacks" the contract offer by destroying the outer resource returing its contents.
+    Offer { counter_party } = move(offer);
+
+    // Ensure the transaction sender is the intended counter_party of the offer.
+    // If this assertion fails, the transcation will fail (none of it's effects will be commited).
+    // Will emmit a 401 error code with the transaction output if this assertion fails.
+    assert(*(counter_party) == move(sender), 401);
+
+    // Create signed contract
+    signed = Signed {
+      holder: move(holder),
+      coin: move(coin),
+    }
+
+    move_to_sender<Signed>(move(signed));
+
+    return;
+  }
+
+  public execute_contract(counter_party: address) {
+    let coin: LibraCoin.T;
+    let holder: address;
+
+    contract = move_from<Signed>(move(counter_party));
 
     sender = get_txn_sender();
 
-    // Ensure the transaction sender is the intended counter_party.
-    // If this assertion fails, the transcation will fail (none of it's effects will be commited).
-    // Will emmit a 401 error code with the transaction output if this assertion fails.
-    assert(*(&move(&contract).recipient) == move(sender), 401);
+    T { coin, holder } = move(contract);
 
-    return move(t);
-  }
-
-  // Destroys/consumes the contract releasing its resources.
-  public unwrap(contract: Self.T) {
-    let coin: LibraCoin.T;
-    let counter_party: address;
-
-    // "Unpacks" the contract by destroying the outer resource returing its contents.
-    T { coin, counter_party } = move(contract);
+    assert(*holder == move(sender), 401);
 
     return move(coin);
   }
