@@ -1,5 +1,15 @@
 pub mod contract;
 
+use crate::ast;
+use nom::combinator::all_consuming;
+
+pub fn contract(input: &str) -> Result<ast::Contract, ()> {
+    match all_consuming(self::contract::contract)(input) {
+        Ok((_, contract)) => Ok(contract),
+        Err(_) => Err(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use nom::IResult;
