@@ -2,7 +2,7 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -78,7 +78,7 @@ fn create_output_path(args: &Args) -> Result<PathBuf, String> {
     Ok(output)
 }
 
-fn read_source(path: &PathBuf) -> Result<String, String> {
+fn read_source(path: &Path) -> Result<String, String> {
     let source_file =
         File::open(path).map_err(|err| format!("Unable to open file {:?}: {}", path, err))?;
 
@@ -92,7 +92,7 @@ fn read_source(path: &PathBuf) -> Result<String, String> {
     Ok(source)
 }
 
-fn write_output(path: &PathBuf, buf: &[u8]) -> Result<(), String> {
+fn write_output(path: &Path, buf: &[u8]) -> Result<(), String> {
     let mut move_file =
         File::create(path).map_err(|err| format!("Unable to create file {:?}: {}", path, err))?;
 
