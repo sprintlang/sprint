@@ -1,3 +1,4 @@
 fn main() {
-    println!("Hello, world! I am a code generator targetting Move.");
+    let move_one_code = include!("./sample_move_program.rs");
+    println!("My Move code is: {}", move_one_code);
 }
