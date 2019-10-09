@@ -1,5 +1,7 @@
 pub mod contract;
 
+mod combinator;
+
 use crate::ast;
 use nom::{
     combinator::all_consuming,

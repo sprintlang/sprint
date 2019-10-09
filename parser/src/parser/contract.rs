@@ -1,9 +1,9 @@
+use super::combinator::{brackets, padding};
 use crate::ast::Contract;
 use nom::{branch::alt, bytes::complete::tag, IResult};
 
 pub fn contract(input: &str) -> IResult<&str, Contract> {
-    let parser = alt((zero, one));
-    parser(input)
+    padding(alt((brackets(contract), zero, one)))(input)
 }
 
 pub fn zero(input: &str) -> IResult<&str, Contract> {
@@ -20,6 +20,15 @@ pub fn one(input: &str) -> IResult<&str, Contract> {
 mod tests {
     use super::super::tests::{parse, parse_invalid};
     use super::*;
+
+    #[test]
+    fn parse_contract_with_padding_and_brackets() {
+        parse(" (zero) ", contract, ("", Contract::Zero));
+        parse("( zero )", contract, ("", Contract::Zero));
+        parse(" ( zero ) ", contract, ("", Contract::Zero));
+        parse(" ( (zero) ) ", contract, ("", Contract::Zero));
+        parse(" ( (zero))", contract, ("", Contract::Zero));
+    }
 
     #[test]
     fn parse_zero() {
