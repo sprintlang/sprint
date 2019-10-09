@@ -33,16 +33,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 // Checks for presence of output path and that file extensions are valid.
 fn check_args(args: &Args) -> Result<(&PathBuf, PathBuf), String> {
-    let sprint_extension = "sprint";
+    const SPRINT_EXTENSION: &str = "sprint";
     let source = &args.source_path;
     let extension = source.extension();
 
     match extension {
         Some(ext) => {
-            if ext != sprint_extension {
+            if ext != SPRINT_EXTENSION {
                 return Err(format!(
                     "Bad extension on source file {:?}, expected `{}`",
-                    extension, sprint_extension
+                    extension, SPRINT_EXTENSION
                 ));
             }
         }
@@ -107,7 +107,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn uses_source_stem_when_no_output_specified() {
+    fn create_output_path_no_output_specified() {
         let args = Args {
             source_path: PathBuf::from("test.sprint"),
             output_path: None,
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn uses_output_stem_when_specified() {
+    fn create_output_path_output_specified() {
         let args = Args {
             source_path: PathBuf::from("test.sprint"),
             output_path: Some(PathBuf::from("output.mvir")),
