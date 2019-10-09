@@ -1,0 +1,55 @@
+// A contract that immediately pays the counter party one LibraCoin.
+// The contract has an innite horizon.
+module GiveOne {
+  import 0x0.LibraCoin;
+
+  resource T {
+    coin: LibraCoin.T,
+  }
+
+  // Creates the contract (as a resource) and moves it to the transaction sender's account.
+  public create(counter_party: address) {
+    let t: Self.T;
+
+    t = T {
+      coin: move(coin),
+      counter_party: move(counter_party),
+    }
+
+    // Publish the contract under the transaction sender's account
+    move_to_sender<T>(move(t));
+    return;
+  }
+
+  // "Signs" the contract held by the holder_address, making the
+  // transaction sender the counterparty to the contract
+  public sign(holder_address: address): Self.T acquires T {
+    let contract: Self.T;
+    let sender: address;
+
+    // Move the contract resource (T) from the holder_address to the variable contract.
+    // If there is no resource of type T published under the address, this transaction will fail.
+    contract = move_from<T>(move(holder_address));
+
+    sender = get_txn_sender();
+
+    // Ensure the transaction sender is the intended counter_party.
+    // If this assertion fails, the transcation will fail (none of it's effects will be commited).
+    // Will emmit a 401 error code with the transaction output if this assertion fails.
+    assert(*(&move(&contract).counter_party) == move(sender), 401);
+
+    return move(t);
+  }
+
+  // Destroys/consumes the contract releasing its resources.
+  // Allowing the holder (in Libra terms) of the contract to claim the funds.
+  public unwrap(contract: Self.T) {
+    let coin: LibraCoin.T;
+    let counter_party: address;
+
+    // "Unpacks" the contract by destroying the outer resource returing its contents.
+    T { coin, counter_party } = move(contract);
+
+    return move(coin);
+  }
+}
