@@ -1,5 +1,1 @@
-#[derive(PartialEq, Debug)]
-pub enum Contract {
-    Zero,
-    One,
-}
+pub mod contract;

@@ -8,7 +8,7 @@ use nom::{
     error::{convert_error, ParseError, VerboseError},
 };
 
-pub fn contract(input: &str) -> Result<ast::Contract, String> {
+pub fn contract(input: &str) -> Result<ast::contract::Contract, String> {
     match all_consuming(self::contract::contract)(input) {
         Ok((_, contract)) => Ok(contract),
         Err(nom::Err::Error((input, kind))) | Err(nom::Err::Failure((input, kind))) => {
@@ -25,6 +25,6 @@ mod tests {
 
     #[test]
     fn parse_contract() {
-        assert_eq!(contract("zero"), Ok(ast::Contract::Zero));
+        assert_eq!(contract("zero"), Ok(ast::contract::Contract::Zero));
     }
 }

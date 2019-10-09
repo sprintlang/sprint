@@ -1,5 +1,5 @@
 use super::combinator::{brackets, padding};
-use crate::ast::Contract;
+use crate::ast::contract::Contract;
 use nom::{branch::alt, bytes::complete::tag, IResult};
 
 pub fn contract(input: &str) -> IResult<&str, Contract> {
