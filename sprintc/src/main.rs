@@ -56,6 +56,28 @@ fn check_args(args: &Args) -> Result<(&PathBuf, PathBuf), String> {
     Ok((source, output))
 }
 
+fn create_output_path(args: &Args) -> Result<PathBuf, String> {
+    const MVIR_EXTENSION: &str = "mvir";
+    let output_path = &args.output_path;
+    let mut output = PathBuf::new();
+    match output_path {
+        Some(path) => {
+            if path.extension() != Some(OsStr::new(MVIR_EXTENSION)) {
+                return Err(format!(
+                    "Output path must specify file with `{}` extension",
+                    MVIR_EXTENSION
+                ));
+            }
+            output.push(path);
+        }
+        None => {
+            output.push(args.source_path.file_stem().unwrap());
+            output.set_extension(MVIR_EXTENSION);
+        }
+    };
+    Ok(output)
+}
+
 fn read_source(path: &PathBuf) -> Result<String, String> {
     let source_file =
         File::open(path).map_err(|err| format!("Unable to open file {:?}: {}", path, err))?;
@@ -78,28 +100,6 @@ fn write_output(path: &PathBuf, buf: &[u8]) -> Result<(), String> {
         .write_all(&buf)
         .map_err(|err| format!("Unable to write to file {:?}: {}", path, err))?;
     Ok(())
-}
-
-fn create_output_path(args: &Args) -> Result<PathBuf, String> {
-    let mvir_extension = "mvir";
-    let output_path = &args.output_path;
-    let mut output = PathBuf::new();
-    match output_path {
-        Some(path) => {
-            if path.extension() != Some(OsStr::new(mvir_extension)) {
-                return Err(format!(
-                    "Output path must specify file with `{}` extension",
-                    mvir_extension
-                ));
-            }
-            output.push(path);
-        }
-        None => {
-            output.push(args.source_path.file_stem().unwrap());
-            output.set_extension(mvir_extension);
-        }
-    };
-    Ok(output)
 }
 
 #[cfg(test)]
