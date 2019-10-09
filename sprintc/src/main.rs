@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fs::File;
@@ -32,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 // Checks for presence of output path and that file extensions are valid.
-fn check_args(args: &Args) -> Result<(&PathBuf, PathBuf), String> {
+fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
     const SPRINT_EXTENSION: &str = "sprint";
     let source = &args.source_path;
     let extension = source.extension();
@@ -56,10 +57,10 @@ fn check_args(args: &Args) -> Result<(&PathBuf, PathBuf), String> {
     Ok((source, output))
 }
 
-fn create_output_path(args: &Args) -> Result<PathBuf, String> {
+fn create_output_path(args: &Args) -> Result<Cow<Path>, String> {
     const MVIR_EXTENSION: &str = "mvir";
     let output_path = &args.output_path;
-    let mut output = PathBuf::new();
+
     match output_path {
         Some(path) => {
             if path.extension() != Some(OsStr::new(MVIR_EXTENSION)) {
@@ -68,14 +69,18 @@ fn create_output_path(args: &Args) -> Result<PathBuf, String> {
                     MVIR_EXTENSION
                 ));
             }
-            output.push(path);
+
+            Ok(path.into())
         }
         None => {
+            let mut output = PathBuf::new();
+
             output.push(args.source_path.file_stem().unwrap());
             output.set_extension(MVIR_EXTENSION);
+
+            Ok(output.into())
         }
-    };
-    Ok(output)
+    }
 }
 
 fn read_source(path: &Path) -> Result<String, String> {
@@ -99,6 +104,7 @@ fn write_output(path: &Path, buf: &[u8]) -> Result<(), String> {
     move_file
         .write_all(&buf)
         .map_err(|err| format!("Unable to write to file {:?}: {}", path, err))?;
+
     Ok(())
 }
 
