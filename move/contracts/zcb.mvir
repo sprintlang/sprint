@@ -121,6 +121,7 @@ module Zcb {
 
 }
 
+// It may be cheaper to redeploy the top level contract instead of wrapping it.
 //! new-transaction
 //! sender: alice
 module ContractWrapper1 {
