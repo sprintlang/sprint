@@ -7,7 +7,7 @@
 
 Example (run in Libra folder which is a sibiling of Sprint).
 ```
-cp ../sprint/contracts/example.mvir ./language/functional_tests/tests/testsuite/sprint/ && cargo test -p functional_tests sprint/example
+cp ../sprint/move/contracts/example.mvir ./language/functional_tests/tests/testsuite/sprint/ && cargo test -p functional_tests sprint/example
 ```
 
 # Running on an actual blockchain
