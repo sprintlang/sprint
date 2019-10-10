@@ -48,8 +48,7 @@ fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
                 // to_str() returns None if the OsStr is not valid Unicode.
                 let ext_str = extension
                     .to_str()
-                    .or_else(|| Some("(source path is not valid unicode)"))
-                    .unwrap();
+                    .unwrap_or("(source path is not valid unicode)");
                 return Err(format!(
                     "Incorrect extension on source file: got `{}`, expected `{}`",
                     ext_str, SPRINT_EXTENSION
@@ -57,7 +56,7 @@ fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
             }
         }
         None => {
-            return Err("Missing file extension on source path".to_string());
+            return Err(String::from("Missing file extension on source path"));
         }
     }
 
