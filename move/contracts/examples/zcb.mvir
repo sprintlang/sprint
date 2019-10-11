@@ -18,7 +18,7 @@ module Transfer {
         let contract: Self.T;
         let coin: LibraCoin.T;
 
-        coin = LibraAccount.withdraw_from_sender(move(amount));
+        coin = LibraAccnout.withdraw_from_sender(move(amount));
 
         contract = T {
             counterparty: move(counterparty),
@@ -50,7 +50,7 @@ module Transfer {
 module Zcb {
     // scaleK 100 (get (truncate t1 (one Libra)))
     // \receive $100 at time t1
-    
+
     import {{sprint}}.Transfer;
 
     resource T {
@@ -61,7 +61,7 @@ module Zcb {
     }
 
     // Create a Zcb so that the contract acquire will receive `amount` in the future.
-    public create(counterparty: address, amount: u64): Self.T {        
+    public create(counterparty: address, amount: u64): Self.T {
         let contract: Self.T;
         let sender: address;
         let inner_contract: Transfer.T;
@@ -238,8 +238,8 @@ main() {
 // // check: ABORTED
 // // check: 1
 
-// I'm already certain their test suite is broken it can't do 
-// this aborting checking if there already is one in the code... 
+// I'm already certain their test suite is broken it can't do
+// this aborting checking if there already is one in the code...
 // Litterally just ignore this should fail...
 // If you want to uncomment this out, comment out the other ABORTED check.
 // //! new-transaction
