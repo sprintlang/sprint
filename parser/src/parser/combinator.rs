@@ -3,7 +3,7 @@ use nom::{
     character::complete::multispace0,
     error::ParseError,
     multi::{count, many1_count},
-    sequence::delimited,
+    sequence::{delimited, terminated},
     AsChar, IResult, InputIter, InputTakeAtPosition, Slice,
 };
 use std::ops::RangeFrom;
@@ -23,13 +23,11 @@ where
     I: Slice<RangeFrom<usize>> + InputIter + Clone + PartialEq,
     <I as InputIter>::Item: AsChar,
     E: ParseError<I>,
-    F: Fn(I) -> IResult<I, O, E>,
+    F: Fn(I) -> IResult<I, O, E> + Copy,
 {
     move |input: I| {
         let (input, brackets) = many1_count(char('('))(input)?;
-        let (input, output) = f(input)?;
-        let (input, _) = count(char(')'), brackets)(input)?;
-        Ok((input, output))
+        terminated(f, count(char(')'), brackets))(input)
     }
 }
 
