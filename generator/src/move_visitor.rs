@@ -1,11 +1,11 @@
 use sprint_parser::ast::contract::Visitor;
 
+static MOVE_ONE_CODE: &str = include_str!("./move_one_contract.mvir");
+
 #[derive(Default)]
 pub struct MoveVisitor {
     move_code: String, // Accumulates Move code.
 }
-
-static MOVE_ONE_CODE: &str = include_str!("./move_one_contract.mvir");
 
 impl MoveVisitor {
     pub fn new() -> Self {
