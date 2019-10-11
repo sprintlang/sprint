@@ -20,6 +20,12 @@ pub fn one(input: Span) -> IResult<Span, Contract, Error> {
     Ok((input, Contract::One))
 }
 
+pub fn give(input: &str) -> IResult<&str, Contract> {
+    let (input, _) = tag("give")(input)?;
+    let (input, sub_contract) = contract(input)?;
+    Ok((input, Contract::Give(Box::new(sub_contract))))
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::combinator::span;
@@ -55,5 +61,39 @@ mod tests {
     #[test]
     fn parse_two() {
         parse_contract_err("two");
+    }
+
+    #[test]
+    fn parse_give() {
+        assert_eq!(
+            contract("give(zero)"),
+            Ok(("", Contract::Give(Box::new(Contract::Zero))))
+        );
+        assert_eq!(
+            contract("give zero"),
+            Ok(("", Contract::Give(Box::new(Contract::Zero))))
+        );
+        assert_eq!(
+            contract("give(one)"),
+            Ok(("", Contract::Give(Box::new(Contract::One))))
+        );
+        assert_eq!(
+            contract("give one"),
+            Ok(("", Contract::Give(Box::new(Contract::One))))
+        );
+        assert_eq!(
+            contract("give(give(one))"),
+            Ok((
+                "",
+                Contract::Give(Box::new(Contract::Give(Box::new(Contract::One))))
+            ))
+        );
+        assert_eq!(
+            contract("give(give(zero))"),
+            Ok((
+                "",
+                Contract::Give(Box::new(Contract::Give(Box::new(Contract::Zero))))
+            ))
+        );
     }
 }
