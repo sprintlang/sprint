@@ -1,19 +1,73 @@
 module {{contractName}} {
-  // Acquires and destroys
-  public acquire(contract: Self.T, {{acquiringParameters}}) {
-    let counterparty: address;
+  {{imports}}
+
+  resource T {
+    counterparty: address,
+    acquired: bool,
+    inner_contract: {{innerContractType}},
+    {{additionalContractItems}}
+  }
+
+  public create(counterparty: address, inner_contract: {{innerContractType}}, {{additionalCreateParameters}}): Self.T {
+    let contract: Self.T;
+    {{createVariableDefinitions}}
+
+    {{thingsToDoOnCreation}}
+
+    contract = T {
+      counterparty: move(counterparty),
+      inner_contract: {{innerContractType}},
+      {{initialContractValues}}
+    };
+
+    return move(contract);
+  }
+
+  public acquire(contract_ref: &mut Self.T) {
+    let acquired_ref: &mut bool;
+    let counterparty_ref: &mut address;
     let sender: address;
-    {{additionalValueDefinitions}}
+    {{acquireVariableDefinitions}}
 
-    {{thingsToDoOnAcquiring}}
+    // We can add checks here to see if you can still acquire the contract
+    // or if it is too late.
+    {{acquireContractConditions}}
 
-    T { counterparty, {{contractVariable}} } = move(contract);
-
+    counterparty_ref = &mut copy(contract_ref).counterparty;
     sender = get_txn_sender();
-    assert(copy(counterparty) == move(sender), 401);
+    assert(*move(counterparty_ref) == move(sender), 401);
 
-    LibraAccount.deposit(move(counterparty), move(coin));
+    acquired_ref = &mut move(contract_ref).acquired;
+    assert(*copy(acquired_ref) == false, 1);
+
+    *move(acquired_ref) = true;
 
     return;
+  }
+
+  public release_inner_contract(contract: Self.T): {{innerContractType}} {
+    let counterparty: address;
+    let acquired: bool;
+    let sender: address;
+    let inner_contract: {{innerContractType}};
+    {{releaseInnerContractVariableDefinitions}}
+
+    // Check the inner contract can be released.
+    {{checkReleaseConditions}}
+
+    T { counterparty, acquired, inner_contract, {{contractVariable}} } = move(contract);
+
+    sender = get_txn_sender();
+    // Thses checks might actually belong to the wrapper rather than the contract.
+    assert(move(counterparty) == move(sender), 401);
+    assert(move(acquired) == true, 2);
+
+    return move(inner_contract);
+  }
+
+  // If contract has expired and hasn't been claimed for example,
+  // resources should be released to the creator.
+  public destroy_contract() {
+    // TODO
   }
 }

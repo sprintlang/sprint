@@ -10,9 +10,9 @@ module {{contractName}} {
     {{additionalContractItems}}
   }
 
-  public create(counterparty: address, amount: u64): Self.T {
+  public create(counterparty: address, {{additionalCreateParameters}}): Self.T {
     let contract: Self.T;
-    {{additionalValueDefinitions}}
+    {{createVariableDefinitions}}
 
     {{thingsToDoOnCreation}}
 
@@ -41,11 +41,4 @@ module {{contractName}} {
 
     return;
   }
-
-  // Acquires
-  public acquire_inner_contract(contract Self.T) {
-
-  }
-
-  {{extraMethods}}
 }
