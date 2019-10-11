@@ -1,0 +1,51 @@
+// Anything that is unconditional on external event can be collapsed into a single contract.
+// If it depends on an observable then the acquire needs to check the observable and only return
+// the inner contract if the observable condition is met.
+
+module {{contractName}} {
+  {{imports}}
+
+  resource T {
+    counterparty: address,
+    {{additionalContractItems}}
+  }
+
+  public create(counterparty: address, amount: u64): Self.T {
+    let contract: Self.T;
+    {{additionalValueDefinitions}}
+
+    {{thingsToDoOnCreation}}
+
+    contract = T {
+      counterparty: move(counterparty),
+      {{initialContractValues}}
+    };
+
+    return move(contract);
+  }
+
+  // Acquires and destroys
+  public acquire(contract: Self.T, {{acquiringParameters}}) {
+    let counterparty: address;
+    let sender: address;
+    {{additionalValueDefinitions}}
+
+    {{thingsToDoOnAcquiring}}
+
+    T { counterparty, {{contractVariable}} } = move(contract);
+
+    sender = get_txn_sender();
+    assert(copy(counterparty) == move(sender), 401);
+
+    LibraAccount.deposit(move(counterparty), move(coin));
+
+    return;
+  }
+
+  // Acquires
+  public acquire_inner_contract(contract Self.T) {
+
+  }
+
+  {{extraMethods}}
+}
