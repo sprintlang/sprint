@@ -1,46 +1,59 @@
-use super::combinator::{brackets, padding};
+use super::{
+    combinator::{brackets, padding},
+    error::Error,
+    Span,
+};
 use crate::ast::contract::Contract;
 use nom::{branch::alt, bytes::complete::tag, IResult};
 
-pub fn contract(input: &str) -> IResult<&str, Contract> {
+pub fn contract(input: Span) -> IResult<Span, Contract, Error> {
     padding(alt((brackets(contract), zero, one)))(input)
 }
 
-pub fn zero(input: &str) -> IResult<&str, Contract> {
+pub fn zero(input: Span) -> IResult<Span, Contract, Error> {
     let (input, _) = tag("zero")(input)?;
     Ok((input, Contract::Zero))
 }
 
-pub fn one(input: &str) -> IResult<&str, Contract> {
+pub fn one(input: Span) -> IResult<Span, Contract, Error> {
     let (input, _) = tag("one")(input)?;
     Ok((input, Contract::One))
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::combinator::span;
     use super::*;
+
+    fn parse_contract_ok(input: &str, expected: (&str, Contract)) {
+        assert_eq!(span(contract)(input), Ok(expected));
+    }
+
+    fn parse_contract_err(input: &str) {
+        assert!(span(contract)(input).is_err());
+    }
 
     #[test]
     fn parse_contract_with_padding_and_brackets() {
-        assert_eq!(contract(" (zero) "), Ok(("", Contract::Zero)));
-        assert_eq!(contract("( zero )"), Ok(("", Contract::Zero)));
-        assert_eq!(contract(" ( zero ) "), Ok(("", Contract::Zero)));
-        assert_eq!(contract(" ( (zero) ) "), Ok(("", Contract::Zero)));
-        assert_eq!(contract(" ( (zero))"), Ok(("", Contract::Zero)));
+        parse_contract_ok(" (zero) ", ("", Contract::Zero));
+        parse_contract_ok("( zero )", ("", Contract::Zero));
+        parse_contract_ok(" ( zero ) ", ("", Contract::Zero));
+        parse_contract_ok(" ( (zero) ) ", ("", Contract::Zero));
+        parse_contract_ok(" ( (zero))", ("", Contract::Zero));
     }
 
     #[test]
     fn parse_zero() {
-        assert_eq!(contract("zero"), Ok(("", Contract::Zero)));
+        parse_contract_ok("zero", ("", Contract::Zero));
     }
 
     #[test]
     fn parse_one() {
-        assert_eq!(contract("one"), Ok(("", Contract::One)));
+        parse_contract_ok("one", ("", Contract::One));
     }
 
     #[test]
     fn parse_two() {
-        contract("two").unwrap_err();
+        parse_contract_err("two");
     }
 }

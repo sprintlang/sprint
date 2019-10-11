@@ -3,19 +3,21 @@ pub mod error;
 
 mod combinator;
 
-use crate::ast;
-use nom::{
-    combinator::all_consuming,
-    error::{convert_error, ParseError, VerboseError},
-};
+use self::{combinator::span, error::Error};
+use crate::ast::contract::Contract;
+use nom::{combinator::all_consuming, IResult};
+use nom_locate::LocatedSpan;
 
-pub fn contract(input: &str) -> Result<ast::contract::Contract, String> {
-    match all_consuming(self::contract::contract)(input) {
+type Span<'a> = LocatedSpan<&'a str>;
+
+pub fn contract(input: &str) -> Result<Contract, String> {
+    fn all_consuming_contract(input: Span) -> IResult<Span, Contract, Error> {
+        all_consuming(self::contract::contract)(input)
+    }
+
+    match span(all_consuming_contract)(input) {
         Ok((_, contract)) => Ok(contract),
-        Err(nom::Err::Error((input, kind))) | Err(nom::Err::Failure((input, kind))) => {
-            let error = VerboseError::from_error_kind(input, kind);
-            Err(convert_error(input, error))
-        }
+        Err(nom::Err::Error(_)) | Err(nom::Err::Failure(_)) => Err("Error".into()),
         Err(nom::Err::Incomplete(_)) => Err(String::from("Incomplete input")),
     }
 }
@@ -26,6 +28,6 @@ mod tests {
 
     #[test]
     fn parse_contract() {
-        assert_eq!(contract("zero"), Ok(ast::contract::Contract::Zero));
+        assert_eq!(contract("zero"), Ok(Contract::Zero));
     }
 }

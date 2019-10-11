@@ -1,36 +1,32 @@
-use nom::{
-    error::{convert_error, ErrorKind, ParseError, VerboseError},
-    AsBytes,
-};
-use nom_locate::LocatedSpan;
+use super::Span;
+use nom::error::{convert_error, ErrorKind, ParseError, VerboseError};
 
-#[derive(Debug)]
-pub struct Err {
-    line: usize,
-    column: usize,
-    input: String,
-    kind: ErrorKind,
+#[derive(Debug, PartialEq)]
+pub struct Error {
+    pub line: usize,
+    pub column: usize,
+    pub input: String,
+    pub kind: ErrorKind,
 }
 
-impl Err {
-    pub fn pretty<I: ToString>(&self, original: I) -> String {
-        let input = self.input.to_string();
-        let error = VerboseError::<&str>::from_error_kind(&input, self.kind);
-        convert_error(&original.to_string(), error)
+impl Error {
+    pub fn pretty(&self, original: &str) -> String {
+        let error = VerboseError::<&str>::from_error_kind(&self.input, self.kind);
+        convert_error(original, error)
     }
 }
 
-impl<I: AsBytes + ToString> ParseError<LocatedSpan<I>> for Err {
-    fn from_error_kind(input: LocatedSpan<I>, kind: ErrorKind) -> Self {
-        Err {
+impl ParseError<Span<'_>> for Error {
+    fn from_error_kind(input: Span, kind: ErrorKind) -> Self {
+        Error {
             line: input.line as usize,
             column: input.get_column(),
-            input: input.to_string(),
+            input: String::from(input.fragment),
             kind,
         }
     }
 
-    fn append(_: LocatedSpan<I>, _: ErrorKind, other: Self) -> Self {
+    fn append(_: Span, _: ErrorKind, other: Self) -> Self {
         other
     }
 }
@@ -39,12 +35,13 @@ impl<I: AsBytes + ToString> ParseError<LocatedSpan<I>> for Err {
 mod tests {
     use super::*;
     use nom::InputTake;
+    use nom_locate::LocatedSpan;
 
     #[test]
     fn error_from_span() {
         let original = LocatedSpan::new("foo bar");
         let (new, _) = original.take_split(3);
-        let error = Err::from_char(new, 'b');
+        let error = Error::from_char(new, 'b');
 
         assert_eq!(error.line, 1);
         assert_eq!(error.column, 4);

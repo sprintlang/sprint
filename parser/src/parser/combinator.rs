@@ -1,3 +1,4 @@
+use super::{error::Error, Span};
 use nom::{
     character::complete::char,
     character::complete::multispace0,
@@ -6,7 +7,18 @@ use nom::{
     sequence::{delimited, terminated},
     AsChar, IResult, InputIter, InputTakeAtPosition, Slice,
 };
+use nom_locate::LocatedSpan;
 use std::ops::RangeFrom;
+
+pub fn span<O, F>(f: F) -> impl Fn(&str) -> IResult<&str, O, Error>
+where
+    F: Fn(Span) -> IResult<Span, O, Error>,
+{
+    move |input: &str| {
+        let input = LocatedSpan::new(input);
+        f(input).map(|(input, output)| (input.fragment, output))
+    }
+}
 
 pub fn padding<I, O, E, F>(f: F) -> impl Fn(I) -> IResult<I, O, E>
 where
@@ -34,10 +46,36 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nom::bytes::complete::tag;
+    use nom::{bytes::complete::tag, character::complete::char, error::ErrorKind, Err};
 
     fn parser(input: &str) -> IResult<&str, &str> {
         tag("abc")(input)
+    }
+
+    fn parser_span<'a>(input: Span) -> IResult<Span, &'a str, Error> {
+        let (input, _) = char('a')(input)?;
+        let (input, _) = char('b')(input)?;
+        let (input, _) = char('c')(input)?;
+        Ok((input, "abc"))
+    }
+
+    #[test]
+    fn parse_span() {
+        assert_eq!(span(parser_span)("abc"), Ok(("", "abc")));
+        assert_eq!(span(parser_span)("abcd"), Ok(("d", "abc")));
+
+        match span(parser_span)("abd").unwrap_err() {
+            Err::Error(error) | Err::Failure(error) => assert_eq!(
+                error,
+                Error {
+                    line: 1,
+                    column: 3,
+                    input: String::from("d"),
+                    kind: ErrorKind::Char,
+                }
+            ),
+            _ => unreachable!(),
+        }
     }
 
     #[test]
