@@ -1,4 +1,4 @@
-use sprint_parser::ast::contract::Visitor;
+use sprint_parser::ast::contract;
 
 static MOVE_ONE_CODE: &str = include_str!("./move_one_contract.mvir");
 
@@ -8,7 +8,7 @@ pub struct MoveVisitor {
     move_code: String,
 }
 
-impl Visitor for MoveVisitor {
+impl contract::Visitor for MoveVisitor {
     /// The empty contract.
     fn visit_zero(&mut self) {}
 
@@ -20,6 +20,7 @@ impl Visitor for MoveVisitor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use contract::Visitor;
 
     #[test]
     fn visit_zero() {
