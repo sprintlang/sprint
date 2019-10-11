@@ -22,14 +22,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_visit_zero() {
+    fn visit_zero() {
         let mut visitor: MoveVisitor = Default::default();
         visitor.visit_zero();
         assert_eq!(visitor.move_code, String::new());
     }
 
     #[test]
-    fn test_visit_one() {
+    fn visit_one() {
         let mut visitor: MoveVisitor = Default::default();
         visitor.visit_one();
         assert_eq!(visitor.move_code, MOVE_ONE_CODE);
