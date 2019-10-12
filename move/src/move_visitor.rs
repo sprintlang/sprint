@@ -1,10 +1,12 @@
+use crate::jog::Template as JobTemplate;
+use askama::Template;
 use sprint_parser::ast::contract;
+use std::io;
 
 use crate::jog::contract_module::ContractModule;
 use crate::jog::transactions::LockLibra;
 
 pub struct MoveVisitor {
-    // base_module: ContractModule,
     modules: Vec<ContractModule>,
     // The module we are currently generating at the stage of visiting we are at.
     curr_module_index: usize,
@@ -29,26 +31,60 @@ impl contract::Visitor for MoveVisitor {
     fn visit_one(&mut self) {
         let curr_module = &mut self.modules[self.curr_module_index];
 
-        LockLibra::new(curr_module, 1 /* * multipler*/);
+        let lock_action = LockLibra::on_contract_creation(curr_module, 1 /* * multipler*/);
+        (*curr_module).create_method.actions.push(lock_action);
     }
+}
+
+impl JobTemplate for ContractModule {
+    fn write(&self, _w: &mut impl io::Write) {
+        let t = UnconditionalModuleTemplate {
+            name: "ContractModuleName",
+        }; // instantiate your struct
+        println!("{}", t.render().unwrap()); // then render it.
+    }
+}
+
+#[derive(Template)]
+#[template(path = "test.mvir.html")]
+struct UnconditionalModuleTemplate<'a> {
+    name: &'a str, // the field name should match the variable name
+                   // in your template
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use contract::Visitor;
+    use std::fs::File;
 
     #[test]
     fn visit_zero() {
         let mut visitor: MoveVisitor = MoveVisitor::default();
+        println!();
+        println!("-----------------");
+        println!("CONTRACT ZERO");
+        println!("-----------------");
         visitor.visit_zero();
-        // assert_eq!(visitor.move_code, String::new());
+
+        let mut buffer = File::create("output.mvir").unwrap();
+        visitor.modules[0].write(&mut buffer);
+
+        println!();
     }
 
     #[test]
     fn visit_one() {
         let mut visitor: MoveVisitor = MoveVisitor::default();
+        println!();
+        println!("-----------------");
+        println!("CONTRACT ONE");
+        println!("-----------------");
         visitor.visit_one();
-        // assert_eq!(visitor.move_code, MOVE_ONE_CODE);
+
+        let mut buffer = File::create("output.mvir").unwrap();
+        visitor.modules[0].write(&mut buffer);
+
+        println!();
     }
 }

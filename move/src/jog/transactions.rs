@@ -10,7 +10,7 @@ pub struct LockLibra {
 }
 
 impl LockLibra {
-    pub fn new(curr_module: &mut ContractModule, amount: u64) -> Self {
+    pub fn on_contract_creation(curr_module: &mut ContractModule, _amount: u64) -> String {
         // Add required imports to current module.
         (*curr_module)
             .dependencies
@@ -35,22 +35,21 @@ impl LockLibra {
             name: resource_var.clone(),
             type_name: coin_type.clone(),
         });
+
         (*curr_module).create_method.var_defs.push(Variable {
             name: coin_var.clone(),
             type_name: coin_type,
         });
 
-        // Add the action
-        (*curr_module)
-            .create_method
-            .actions
-            .push("Lock Libra Action".to_string());
+        "Lock Libra Action".to_string()
 
-        LockLibra {
-            _amount: amount,
-            _resource_var: resource_var,
-            _coin_var: coin_var,
-        }
+        // For now we just return strings but we will probably want to change this
+        // to return a Template to be added to the actions of the create method.
+        // LockLibra {
+        //     _amount: amount,
+        //     _resource_var: resource_var,
+        //     _coin_var: coin_var,
+        // }
     }
 }
 

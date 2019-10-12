@@ -1,6 +1,4 @@
-use crate::jog::Template;
 use std::collections::HashSet;
-use std::io;
 
 pub struct ContractModule {
     _name: String,
@@ -24,10 +22,6 @@ impl ContractModule {
             acquire_method: Method::default(),
         }
     }
-}
-
-impl Template for ContractModule {
-    fn write(&self, _w: &mut impl io::Write) {}
 }
 
 pub struct Variable {

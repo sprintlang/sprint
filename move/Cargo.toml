@@ -12,3 +12,4 @@ edition = "2018"
 
 [dependencies]
 sprint-parser = {path = "../parser"}
+askama = "0.8"
