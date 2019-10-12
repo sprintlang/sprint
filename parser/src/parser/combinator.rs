@@ -1,20 +1,21 @@
-use super::{error::Error, Span};
+use super::error::Error;
 use nom::{
     character::complete::char,
     character::complete::multispace0,
     error::ParseError,
     multi::{count, many1_count},
     sequence::{delimited, terminated},
-    AsChar, IResult, InputIter, InputTakeAtPosition, Slice,
+    AsBytes, AsChar, IResult, InputIter, InputTakeAtPosition, Slice,
 };
 use nom_locate::LocatedSpan;
 use std::ops::RangeFrom;
 
-pub fn span<O, F>(f: F) -> impl Fn(&str) -> IResult<&str, O, Error>
+pub fn span<I, O, F>(f: F) -> impl Fn(I) -> IResult<I, O, Error>
 where
-    F: Fn(Span) -> IResult<Span, O, Error>,
+    I: AsBytes,
+    F: Fn(LocatedSpan<I>) -> IResult<LocatedSpan<I>, O, Error>,
 {
-    move |input: &str| {
+    move |input: I| {
         let input = LocatedSpan::new(input);
         f(input).map(|(input, output)| (input.fragment, output))
     }
@@ -45,6 +46,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::super::Span;
     use super::*;
     use nom::{bytes::complete::tag, character::complete::char, error::ErrorKind, Err};
 

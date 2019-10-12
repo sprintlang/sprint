@@ -5,20 +5,13 @@ mod combinator;
 
 use self::{combinator::span, error::Error};
 use crate::ast::contract::Contract;
-use nom::{
-    combinator::{all_consuming, complete},
-    IResult,
-};
+use nom::combinator::{all_consuming, complete};
 use nom_locate::LocatedSpan;
 
 type Span<'a> = LocatedSpan<&'a str>;
 
 pub fn contract(input: &str) -> Result<Contract, Error> {
-    fn contract_(input: Span) -> IResult<Span, Contract, Error> {
-        all_consuming(complete(self::contract::contract))(input)
-    }
-
-    match span(contract_)(input) {
+    match span(all_consuming(complete(self::contract::contract)))(input) {
         Ok((_, contract)) => Ok(contract),
         Err(nom::Err::Error(error)) | Err(nom::Err::Failure(error)) => Err(error),
         _ => unreachable!(),
