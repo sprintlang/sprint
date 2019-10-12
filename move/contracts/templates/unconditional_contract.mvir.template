@@ -41,4 +41,9 @@ module {{contractName}} {
 
     return;
   }
+
+  public destroy() {
+    // TODO: Contract should be destroyable by holder until it is acquired.
+    // This means we might need to store the holder in the actual contract.
+  }
 }
