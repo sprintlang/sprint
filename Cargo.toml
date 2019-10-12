@@ -3,5 +3,4 @@ members = [
     "move",
     "parser",
     "sprintc",
-    "generator",
 ]

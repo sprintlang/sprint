@@ -1,11 +1,25 @@
 use sprint_parser::ast::contract;
 
-static MOVE_ONE_CODE: &str = include_str!("./move_one_contract.mvir");
+use crate::jog::contract_module::ContractModule;
+use crate::jog::transactions::LockLibra;
 
-#[derive(Default)]
 pub struct MoveVisitor {
-    /// Accumulates Move code.
-    move_code: String,
+    // base_module: ContractModule,
+    modules: Vec<ContractModule>,
+    // The module we are currently generating at the stage of visiting we are at.
+    curr_module_index: usize,
+}
+
+impl MoveVisitor {
+    pub fn default() -> Self {
+        let base_module = ContractModule::new(String::from("Some cool contract"));
+
+        MoveVisitor {
+            // base_module,
+            modules: vec![base_module],
+            curr_module_index: 0,
+        }
+    }
 }
 
 impl contract::Visitor for MoveVisitor {
@@ -13,7 +27,9 @@ impl contract::Visitor for MoveVisitor {
     fn visit_zero(&mut self) {}
 
     fn visit_one(&mut self) {
-        self.move_code.push_str(MOVE_ONE_CODE);
+        let curr_module = &mut self.modules[self.curr_module_index];
+
+        LockLibra::new(curr_module, 1 /* * multipler*/);
     }
 }
 
@@ -24,15 +40,15 @@ mod tests {
 
     #[test]
     fn visit_zero() {
-        let mut visitor: MoveVisitor = Default::default();
+        let mut visitor: MoveVisitor = MoveVisitor::default();
         visitor.visit_zero();
-        assert_eq!(visitor.move_code, String::new());
+        // assert_eq!(visitor.move_code, String::new());
     }
 
     #[test]
     fn visit_one() {
-        let mut visitor: MoveVisitor = Default::default();
+        let mut visitor: MoveVisitor = MoveVisitor::default();
         visitor.visit_one();
-        assert_eq!(visitor.move_code, MOVE_ONE_CODE);
+        // assert_eq!(visitor.move_code, MOVE_ONE_CODE);
     }
 }

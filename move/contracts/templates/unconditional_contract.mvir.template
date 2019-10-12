@@ -10,16 +10,16 @@ module {{contractName}} {
     {{additionalContractItems}}
   }
 
-  public create(counterparty: address, {{additionalCreateParameters}}): Self.T {
+  public create(counterparty: address, {{createParameters}}): Self.T {
     let contract: Self.T;
     {{createVariableDefinitions}}
-
-    {{thingsToDoOnCreation}}
 
     contract = T {
       counterparty: move(counterparty),
       {{initialContractValues}}
     };
+
+    {{thingsToDoOnCreation}}
 
     return move(contract);
   }
@@ -30,7 +30,7 @@ module {{contractName}} {
     let sender: address;
     {{additionalValueDefinitions}}
 
-    T { counterparty, {{contractVariable}} } = move(contract);
+    T { counterparty, {{contractVariables}} } = move(contract);
 
     sender = get_txn_sender();
     assert(copy(counterparty) == move(sender), 401);

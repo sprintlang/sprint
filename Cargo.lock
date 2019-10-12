@@ -264,15 +264,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "sprint-generator"
+name = "sprint-move"
 version = "0.1.0"
 dependencies = [
  "sprint-parser 0.1.0",
 ]
-
-[[package]]
-name = "sprint-move"
-version = "0.1.0"
 
 [[package]]
 name = "sprint-parser"

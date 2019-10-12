@@ -11,3 +11,4 @@ authors = [
 edition = "2018"
 
 [dependencies]
+sprint-parser = {path = "../parser"}
