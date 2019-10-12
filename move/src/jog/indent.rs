@@ -11,7 +11,6 @@ impl<W: io::Write> Indent<W> for W {
     fn indent(&mut self) -> IndentWriter<W> {
         IndentWriter {
             inner: self,
-            indents: 1,
             new_line: true,
         }
     }
@@ -19,16 +18,13 @@ impl<W: io::Write> Indent<W> for W {
 
 pub struct IndentWriter<'a, W: io::Write> {
     inner: &'a mut W,
-    indents: usize,
     new_line: bool,
 }
 
 impl<W: io::Write> IndentWriter<'_, W> {
     fn write_line(&mut self, line: &str, count: &mut usize) -> Result<(), io::Error> {
         if self.new_line && line.as_bytes()[0] != EOL {
-            for _ in 0..self.indents {
-                self.inner.write_all(INDENT)?;
-            }
+            self.inner.write_all(INDENT)?;
         }
 
         *count += self.inner.write(line.as_bytes())?;
