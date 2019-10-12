@@ -1,3 +1,5 @@
+mod indent;
+
 use std::io;
 
 pub trait Template {
