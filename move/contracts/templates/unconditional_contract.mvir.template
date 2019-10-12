@@ -30,14 +30,12 @@ module {{contractName}} {
     let sender: address;
     {{additionalValueDefinitions}}
 
-    {{thingsToDoOnAcquiring}}
-
     T { counterparty, {{contractVariable}} } = move(contract);
 
     sender = get_txn_sender();
     assert(copy(counterparty) == move(sender), 401);
 
-    LibraAccount.deposit(move(counterparty), move(coin));
+    {{thingsToDoOnAcquiring}}
 
     return;
   }
