@@ -22,15 +22,13 @@ pub struct IndentWriter<'a, W: io::Write> {
 }
 
 impl<W: io::Write> IndentWriter<'_, W> {
-    fn write_line(&mut self, line: &str, count: &mut usize) -> Result<(), io::Error> {
+    fn write_line(&mut self, line: &str) -> Result<usize, io::Error> {
         if self.new_line && line.as_bytes()[0] != EOL {
             self.inner.write_all(INDENT)?;
         }
 
-        *count += self.inner.write(line.as_bytes())?;
         self.new_line = true;
-
-        Ok(())
+        self.inner.write(line.as_bytes())
     }
 }
 
@@ -44,13 +42,13 @@ impl<W: io::Write> io::Write for IndentWriter<'_, W> {
 
         for (i, _) in matches {
             let line = unsafe { string.get_unchecked(position..=i) };
-            self.write_line(line, &mut count)?;
+            count += self.write_line(line)?;
             position = i + 1;
         }
 
         if position < string.len() {
             let remainder = unsafe { string.get_unchecked(position..string.len()) };
-            self.write_line(remainder, &mut count)?;
+            count += self.write_line(remainder)?;
             self.new_line = false;
         }
 
