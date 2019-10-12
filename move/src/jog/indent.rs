@@ -23,12 +23,14 @@ pub struct IndentWriter<'a, W: io::Write> {
 
 impl<W: io::Write> IndentWriter<'_, W> {
     fn write_line(&mut self, line: &str) -> Result<usize, io::Error> {
-        if self.new_line && line.as_bytes()[0] != EOL {
+        let line = line.as_bytes();
+
+        if self.new_line && line[0] != EOL {
             self.inner.write_all(INDENT)?;
         }
 
         self.new_line = true;
-        self.inner.write(line.as_bytes())
+        self.inner.write(line)
     }
 }
 
