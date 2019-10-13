@@ -1,63 +1,70 @@
 use crate::jog::contract_module::ContractModule;
+use crate::jog::contract_module::Method;
 use crate::jog::contract_module::Variable;
-use crate::jog::Template;
-use std::io;
+use crate::jog::contract_module::VariableWithDefaultValue;
 
-pub struct LockLibra {
-    _amount: u64,
-    _resource_var: String,
-    _coin_var: String,
+pub struct LockLibraAction {
+    amount: u64,
+    /// The name of the variable used to store the Libra in the resource.
+    locked_var_name: String,
+    /// The name of the variable to temporarily store the Libra being deposited.
+    deposit_var_name: String,
 }
 
-impl LockLibra {
-    pub fn on_contract_creation(curr_module: &mut ContractModule, _amount: u64) -> String {
-        // Add required imports to current module.
-        (*curr_module)
+impl LockLibraAction {
+    /// # Arguments
+    /// `amount` - The amount of LibraCoins to lock in the contract.
+    pub fn new(amount: u64) -> Self {
+        // TODO: This might need to be generated to avoid name clashes.
+        let locked_var_name = "locked_coins".to_string();
+        let deposit_var_name = "deposit_coins".to_string();
+
+        LockLibraAction {
+            amount,
+            locked_var_name,
+            deposit_var_name,
+        }
+    }
+
+    /// # Arguments
+    /// `module` - The module in which to lock the libra's in.
+    pub fn init_in_module(&self, module: &mut ContractModule) {
+        // Add required imports to the module.
+        (*module)
             .dependencies
             .insert(String::from("0x0.LibraAccount"));
-        (*curr_module)
+        (*module)
             .dependencies
             .insert(String::from("0x0.LibraCoin"));
 
-        let resource_var = String::from("locked_coins");
-        let coin_var = String::from("coins");
-        let coin_type = String::from("LibraCoin.T");
-
         // Add item to contract resource to use to store the locked libra.
-        (*curr_module).contract_items.push((
-            resource_var.clone(),
-            coin_type.clone(),
-            "LibraCoin.zero()".to_string(),
-        ));
-
-        // Add required variable definitions to method.
-        (*curr_module).create_method.var_defs.push(Variable {
-            name: resource_var.clone(),
-            type_name: coin_type.clone(),
+        (*module).contract_items.push(VariableWithDefaultValue {
+            var: Variable {
+                name: self.locked_var_name.clone(),
+                type_name: "LibraCoin.T".to_string(),
+            },
+            default: "LibraCoin.zero()".to_string(),
         });
-
-        (*curr_module).create_method.var_defs.push(Variable {
-            name: coin_var.clone(),
-            type_name: coin_type,
-        });
-
-        "Lock Libra Action".to_string()
-
-        // For now we just return strings but we will probably want to change this
-        // to return a Template to be added to the actions of the create method.
-        // LockLibra {
-        //     _amount: amount,
-        //     _resource_var: resource_var,
-        //     _coin_var: coin_var,
-        // }
     }
-}
 
-impl Template for LockLibra {
-    fn write(&self, _w: &mut impl io::Write) {
-        // Write:
-        // {coin_var} = LibraAccount.withdraw_from_sender(move({amount}));
-        // {resource_var} = &mut contract.{resource_var};
-        // LibraCoin.deposit(move({resource_var}), {coin_var});
+    /// # Arguments
+    /// `method` - The method in which we want to execute the libra locking.
+    pub fn init_in_method(&self, method: &mut Method) {
+        // Add required variable definitions to method.
+        (*method).var_defs.push(Variable {
+            name: self.locked_var_name.clone(),
+            type_name: "LibraCoin.T".to_string(),
+        });
+        (*method).var_defs.push(Variable {
+            name: self.deposit_var_name.clone(),
+            type_name: "LibraCoin.T".to_string(),
+        });
+    }
+
+    pub fn to_string(&self) -> [String; 2] {
+        [
+            format!("{} = LibraAccnout.withdraw_from_sender({});", self.deposit_var_name, self.amount),
+            format!("LibraCoin.deposit(move({}), move({}));", self.locked_var_name, self.deposit_var_name),
+        ]
     }
 }

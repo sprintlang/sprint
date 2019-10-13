@@ -1,10 +1,10 @@
-use crate::jog::Template as JobTemplate;
+use crate::jog::Template as JogTemplate;
 use askama::Template;
 use sprint_parser::ast::contract;
 use std::io;
 
 use crate::jog::contract_module::ContractModule;
-use crate::jog::transactions::LockLibra;
+use crate::jog::transactions::LockLibraAction;
 
 pub struct MoveVisitor {
     modules: Vec<ContractModule>,
@@ -14,7 +14,7 @@ pub struct MoveVisitor {
 
 impl MoveVisitor {
     pub fn default() -> Self {
-        let base_module = ContractModule::new(String::from("Some cool contract"));
+        let base_module = ContractModule::new(String::from("SomeCoolContract"));
 
         MoveVisitor {
             // base_module,
@@ -31,25 +31,32 @@ impl contract::Visitor for MoveVisitor {
     fn visit_one(&mut self) {
         let curr_module = &mut self.modules[self.curr_module_index];
 
-        let lock_action = LockLibra::on_contract_creation(curr_module, 1 /* * multipler*/);
-        (*curr_module).create_method.actions.push(lock_action);
+        let lock_action = LockLibraAction::new(1 /* * multipler*/);
+        // let unlock_action = UnlockLibraAction::new(&lock_action);
+
+        // NOTE: These init method calls could be moved to be executed once we have visited everything.
+        // We could just go through every module and all the methods and init all the actions in them,
+        // with the correct modules, and methods. This would probably simplify the code in the visit methods.
+        // We could just stored Actions which have the init_in_module and init_in_method methods in the Method.actions Vector.
+        lock_action.init_in_module(curr_module);
+        // unlock_action.init_in_module(curr_module);
+        lock_action.init_in_method(&mut (*curr_module).create_method);
+        // unlock_action.init_in_method(&mut (*curr_module).create_method);
+
+        // NOTE: If we do what is above we won't need to call .to_string() here anymore.
+        (*curr_module).create_method.actions.extend(lock_action.to_string().iter().cloned());
+        // (*curr_module).acquire_method.actions.push(unlock_action.to_string());
     }
 }
 
-impl JobTemplate for ContractModule {
+/**
+ * Templates
+ */
+
+impl JogTemplate for ContractModule {
     fn write(&self, _w: &mut impl io::Write) {
-        let t = UnconditionalModuleTemplate {
-            name: "ContractModuleName",
-        }; // instantiate your struct
-        println!("{}", t.render().unwrap()); // then render it.
+        println!("{}", self.render().unwrap()); // then render it.
     }
-}
-
-#[derive(Template)]
-#[template(path = "test.mvir.html")]
-struct UnconditionalModuleTemplate<'a> {
-    name: &'a str, // the field name should match the variable name
-                   // in your template
 }
 
 #[cfg(test)]

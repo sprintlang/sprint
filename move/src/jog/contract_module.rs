@@ -1,11 +1,14 @@
 use std::collections::HashSet;
+use askama::Template;
 
+#[derive(Template)]
+#[template(path = "contract.mvir.template", escape = "none")]
 pub struct ContractModule {
-    _name: String,
+    name: String,
     pub is_conditional: bool,
     pub dependencies: HashSet<String>,
     // (name, type, initial_value)
-    pub contract_items: Vec<(String, String, String)>,
+    pub contract_items: Vec<VariableWithDefaultValue>,
 
     pub create_method: Method,
     pub acquire_method: Method,
@@ -14,8 +17,8 @@ pub struct ContractModule {
 impl ContractModule {
     pub fn new(name: String) -> Self {
         ContractModule {
-            _name: name,
-            is_conditional: true,
+            name: name,
+            is_conditional: false,
             dependencies: HashSet::new(),
             contract_items: Vec::new(),
             create_method: Method::default(),
@@ -24,12 +27,18 @@ impl ContractModule {
     }
 }
 
+pub struct VariableWithDefaultValue {
+    pub var: Variable,
+    pub default: String,
+}
+
 pub struct Variable {
     pub name: String,
     pub type_name: String,
 }
 
 pub struct Method {
+    pub params: Vec<Variable>,
     pub var_defs: Vec<Variable>,
     pub actions: Vec<String>,
 }
@@ -37,6 +46,7 @@ pub struct Method {
 impl Method {
     pub fn default() -> Self {
         Method {
+            params: Vec::new(),
             var_defs: Vec::new(),
             actions: Vec::new(),
         }
