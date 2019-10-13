@@ -7,7 +7,7 @@ use crate::ast::contract::Contract;
 use nom::{branch::alt, bytes::complete::tag, IResult};
 
 pub fn contract(input: Span) -> IResult<Span, Contract, Error> {
-    padding(alt((brackets(contract), zero, one)))(input)
+    padding(alt((brackets(contract), zero, one, give)))(input)
 }
 
 pub fn zero(input: Span) -> IResult<Span, Contract, Error> {
@@ -20,7 +20,7 @@ pub fn one(input: Span) -> IResult<Span, Contract, Error> {
     Ok((input, Contract::One))
 }
 
-pub fn give(input: &str) -> IResult<&str, Contract> {
+pub fn give(input: Span) -> IResult<Span, Contract, Error> {
     let (input, _) = tag("give")(input)?;
     let (input, contract) = contract(input)?;
     Ok((input, Contract::Give(Box::new(contract))))
@@ -65,16 +65,14 @@ mod tests {
 
     #[test]
     fn parse_give() {
-        assert_eq!(
-            contract("give zero"),
-            Ok(("", Contract::Give(Box::new(Contract::Zero))))
-        );
-        assert_eq!(
-            contract("give give zero"),
-            Ok((
+        parse_contract_ok("give zero", ("", Contract::Give(Box::new(Contract::Zero))));
+
+        parse_contract_ok(
+            "give give zero",
+            (
                 "",
-                Contract::Give(Box::new(Contract::Give(Box::new(Contract::Zero))))
-            ))
+                Contract::Give(Box::new(Contract::Give(Box::new(Contract::Zero)))),
+            ),
         );
     }
 }
