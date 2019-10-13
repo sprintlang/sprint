@@ -1,0 +1,63 @@
+module SomeCoolContract {
+
+  import 0x0.LibraAccount
+
+  import 0x0.LibraCoin
+
+
+  resource T {
+    counterparty: address,
+
+    locked_coins: LibraCoin.T,
+
+  }
+
+  public create(counterparty: address): Self.T {
+    let contract: Self.T;
+
+    locked_coins: LibraCoin.T;
+
+    deposit_coins: LibraCoin.T;
+
+
+    contract = T {
+      counterparty: move(counterparty),
+
+      locked_coins: LibraCoin.zero(),
+
+    };
+
+
+    deposit_coins = LibraAccnout.withdraw_from_sender(1);
+
+    LibraCoin.deposit(move(locked_coins), move(deposit_coins));
+
+
+    return move(contract);
+  }
+
+
+  // Acquires the contract and releases all inner resources.
+  public acquire(contract: Self.T) {
+    let counterparty: address;
+    let sender: address;
+
+    locked_coins: LibraCoin.T;
+
+
+
+    T { counterparty, locked_coins } = move(contract);
+
+    sender = get_txn_sender();
+    assert(copy(counterparty) == move(sender), 401);
+
+
+    LibraAccount.deposit(copy(counter_party), move(locked_coins));
+
+
+    return;
+  }
+
+
+
+}

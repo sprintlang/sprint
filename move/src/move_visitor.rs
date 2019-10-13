@@ -1,5 +1,5 @@
 use crate::jog::Template as JogTemplate;
-use askama::Template;
+use askama::Template as AskamaTemplate;
 use sprint_parser::ast::contract;
 use std::io;
 
@@ -61,8 +61,9 @@ impl contract::Visitor for MoveVisitor {
  */
 
 impl JogTemplate for ContractModule {
-    fn write(&self, _w: &mut impl io::Write) {
-        println!("{}", self.render().unwrap()); // then render it.
+    fn write(&self, w: &mut impl io::Write) {
+        let rendered_template = self.render().unwrap();
+        w.write_all(rendered_template.as_bytes()).unwrap();
     }
 }
 
@@ -71,34 +72,57 @@ mod tests {
     use super::*;
     use contract::Visitor;
     use std::fs::File;
+    use std::io::prelude::*;
+    use std::io::BufReader;
 
     #[test]
     fn visit_zero() {
         let mut visitor: MoveVisitor = MoveVisitor::default();
-        println!();
-        println!("-----------------");
-        println!("CONTRACT ZERO");
-        println!("-----------------");
         visitor.visit_zero();
 
-        let mut buffer = File::create("output.mvir").unwrap();
+        let module_file = "contracts/generated/zero.generated.mvir";
+
+        let mut buffer = File::create(module_file).unwrap();
         visitor.modules[0].write(&mut buffer);
 
-        println!();
+        test_output(module_file, "contracts/tests/zero.test.mvir");
     }
 
     #[test]
     fn visit_one() {
         let mut visitor: MoveVisitor = MoveVisitor::default();
-        println!();
-        println!("-----------------");
-        println!("CONTRACT ONE");
-        println!("-----------------");
         visitor.visit_one();
 
-        let mut buffer = File::create("output.mvir").unwrap();
+        let module_file = "contracts/generated/one.generated.mvir";
+
+        let mut buffer = File::create(module_file).unwrap();
         visitor.modules[0].write(&mut buffer);
 
-        println!();
+        test_output(module_file, "contracts/tests/one.test.mvir");
+    }
+
+    fn test_output(move_module_file: &str, test_module_file: &str) {
+        let mut test_file = File::create("test_file.mvir").unwrap();
+
+        let move_module_file = File::open(move_module_file).unwrap();
+        let mut buf_reader = BufReader::new(move_module_file);
+        let mut module_contents = String::new();
+        buf_reader.read_to_string(&mut module_contents).unwrap();
+
+        let test_module_file = File::open(test_module_file).unwrap();
+        let mut buf_reader = BufReader::new(test_module_file);
+        let mut test_contents = String::new();
+        buf_reader.read_to_string(&mut test_contents).unwrap();
+
+        writeln!(test_file, "//! account: sprint").unwrap();
+        writeln!(test_file, "//! account: alice").unwrap();
+        writeln!(test_file, "//! account: bob").unwrap();
+        writeln!(test_file, "//! account: chris").unwrap();
+        writeln!(test_file).unwrap();
+        writeln!(test_file, "//! new-transaction").unwrap();
+        writeln!(test_file, "//! sender: sprint").unwrap();
+
+        test_file.write_all(module_contents.as_bytes()).unwrap();
+        test_file.write_all(test_contents.as_bytes()).unwrap();
     }
 }

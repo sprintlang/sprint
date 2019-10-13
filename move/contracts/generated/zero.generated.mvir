@@ -1,0 +1,43 @@
+module SomeCoolContract {
+
+
+  resource T {
+    counterparty: address,
+
+  }
+
+  public create(counterparty: address): Self.T {
+    let contract: Self.T;
+
+
+    contract = T {
+      counterparty: move(counterparty),
+
+    };
+
+
+
+    return move(contract);
+  }
+
+
+  // Acquires the contract and releases all inner resources.
+  public acquire(contract: Self.T) {
+    let counterparty: address;
+    let sender: address;
+
+
+
+    T { counterparty } = move(contract);
+
+    sender = get_txn_sender();
+    assert(copy(counterparty) == move(sender), 401);
+
+
+
+    return;
+  }
+
+
+
+}
