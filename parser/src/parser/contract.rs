@@ -22,8 +22,8 @@ pub fn one(input: Span) -> IResult<Span, Contract, Error> {
 
 pub fn give(input: &str) -> IResult<&str, Contract> {
     let (input, _) = tag("give")(input)?;
-    let (input, sub_contract) = contract(input)?;
-    Ok((input, Contract::Give(Box::new(sub_contract))))
+    let (input, contract) = contract(input)?;
+    Ok((input, Contract::Give(Box::new(contract))))
 }
 
 #[cfg(test)]
@@ -66,30 +66,22 @@ mod tests {
     #[test]
     fn parse_give() {
         assert_eq!(
-            contract("give(zero)"),
-            Ok(("", Contract::Give(Box::new(Contract::Zero))))
-        );
-        assert_eq!(
             contract("give zero"),
             Ok(("", Contract::Give(Box::new(Contract::Zero))))
-        );
-        assert_eq!(
-            contract("give(one)"),
-            Ok(("", Contract::Give(Box::new(Contract::One))))
         );
         assert_eq!(
             contract("give one"),
             Ok(("", Contract::Give(Box::new(Contract::One))))
         );
         assert_eq!(
-            contract("give(give(one))"),
+            contract("give give one"),
             Ok((
                 "",
                 Contract::Give(Box::new(Contract::Give(Box::new(Contract::One))))
             ))
         );
         assert_eq!(
-            contract("give(give(zero))"),
+            contract("give give zero"),
             Ok((
                 "",
                 Contract::Give(Box::new(Contract::Give(Box::new(Contract::Zero))))
