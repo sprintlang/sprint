@@ -10,7 +10,7 @@ pub trait Visitor {
         match contract {
             Contract::Zero => self.visit_zero(),
             Contract::One => self.visit_one(),
-            Contract::Give(_) => self.visit_give(),
+            Contract::Give(contract) => self.visit_give(contract.as_ref()),
         }
     }
 
@@ -18,5 +18,5 @@ pub trait Visitor {
 
     fn visit_one(&mut self);
 
-    fn visit_give(&mut self);
+    fn visit_give(&mut self, contract: &Contract);
 }
