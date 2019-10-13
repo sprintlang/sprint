@@ -70,17 +70,6 @@ mod tests {
             Ok(("", Contract::Give(Box::new(Contract::Zero))))
         );
         assert_eq!(
-            contract("give one"),
-            Ok(("", Contract::Give(Box::new(Contract::One))))
-        );
-        assert_eq!(
-            contract("give give one"),
-            Ok((
-                "",
-                Contract::Give(Box::new(Contract::Give(Box::new(Contract::One))))
-            ))
-        );
-        assert_eq!(
             contract("give give zero"),
             Ok((
                 "",
