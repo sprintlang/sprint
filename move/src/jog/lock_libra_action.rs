@@ -6,7 +6,7 @@ use crate::jog::contract_module::VariableWithDefaultValue;
 pub struct LockLibraAction {
     amount: u64,
     /// The name of the variable used to store the Libra in the resource.
-    locked_var_name: String,
+    pub locked_var_name: String,
     /// The name of the variable to temporarily store the Libra being deposited.
     deposit_var_name: String,
 }
