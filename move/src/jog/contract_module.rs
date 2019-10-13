@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use askama::Template;
+use std::collections::HashSet;
 
 #[derive(Template)]
 #[template(path = "contract.mvir.template", escape = "none")]
@@ -17,7 +17,7 @@ pub struct ContractModule {
 impl ContractModule {
     pub fn new(name: String) -> Self {
         ContractModule {
-            name: name,
+            name,
             is_conditional: false,
             dependencies: HashSet::new(),
             contract_items: Vec::new(),

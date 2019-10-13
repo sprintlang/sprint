@@ -23,9 +23,7 @@ impl UnlockLibraAction {
         (*module)
             .dependencies
             .insert(String::from("0x0.LibraAccount"));
-        (*module)
-            .dependencies
-            .insert(String::from("0x0.LibraCoin"));
+        (*module).dependencies.insert(String::from("0x0.LibraCoin"));
     }
 
     /// # Arguments
@@ -35,8 +33,9 @@ impl UnlockLibraAction {
     }
 
     pub fn to_string(&self) -> [String; 1] {
-        [
-            format!("LibraAccount.deposit(copy(counter_party), move({}));", self.locked_var_name),
-        ]
+        [format!(
+            "LibraAccount.deposit(copy(counter_party), move({}));",
+            self.locked_var_name
+        )]
     }
 }

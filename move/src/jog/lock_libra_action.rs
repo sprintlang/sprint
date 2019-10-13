@@ -33,9 +33,7 @@ impl LockLibraAction {
         (*module)
             .dependencies
             .insert(String::from("0x0.LibraAccount"));
-        (*module)
-            .dependencies
-            .insert(String::from("0x0.LibraCoin"));
+        (*module).dependencies.insert(String::from("0x0.LibraCoin"));
 
         // Add item to contract resource to use to store the locked libra.
         (*module).contract_items.push(VariableWithDefaultValue {
@@ -63,8 +61,14 @@ impl LockLibraAction {
 
     pub fn to_string(&self) -> [String; 2] {
         [
-            format!("{} = LibraAccnout.withdraw_from_sender({});", self.deposit_var_name, self.amount),
-            format!("LibraCoin.deposit(move({}), move({}));", self.locked_var_name, self.deposit_var_name),
+            format!(
+                "{} = LibraAccnout.withdraw_from_sender({});",
+                self.deposit_var_name, self.amount
+            ),
+            format!(
+                "LibraCoin.deposit(move({}), move({}));",
+                self.locked_var_name, self.deposit_var_name
+            ),
         ]
     }
 }

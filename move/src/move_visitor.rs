@@ -45,8 +45,14 @@ impl contract::Visitor for MoveVisitor {
         unlock_action.init_in_method(&mut (*curr_module).create_method);
 
         // NOTE: If we do what is above we won't need to call .to_string() here anymore.
-        (*curr_module).create_method.actions.extend(lock_action.to_string().iter().cloned());
-        (*curr_module).acquire_method.actions.extend(unlock_action.to_string().iter().cloned());
+        (*curr_module)
+            .create_method
+            .actions
+            .extend(lock_action.to_string().iter().cloned());
+        (*curr_module)
+            .acquire_method
+            .actions
+            .extend(unlock_action.to_string().iter().cloned());
     }
 }
 
