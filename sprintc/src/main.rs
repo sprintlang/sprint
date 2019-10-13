@@ -46,12 +46,13 @@ fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
         Some(extension) => {
             if extension != SPRINT_EXTENSION {
                 // to_str() returns None if the OsStr is not valid Unicode.
-                let ext_str = extension
+                let extension = extension
                     .to_str()
-                    .unwrap_or("(source path is not valid unicode)");
+                    .ok_or("Source path is not valid unicode")?;
+
                 return Err(format!(
                     "Incorrect extension on source file: got `{}`, expected `{}`",
-                    ext_str, SPRINT_EXTENSION
+                    extension, SPRINT_EXTENSION
                 ));
             }
         }
