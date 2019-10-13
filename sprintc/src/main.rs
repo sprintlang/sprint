@@ -1,3 +1,4 @@
+use sprint_parser::parser;
 use std::{
     borrow::Cow,
     error::Error,
@@ -25,13 +26,18 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::from_args();
-
     let (source_path, output_path) = check_args(&args)?;
 
     let source = read_source(source_path)?;
 
-    // TODO: Parse and Move code generation.
+    let ast = parser::contract(&source).map_err(|err| {
+        eprintln!("{}", err.pretty(&source));
+        format!("Unable to parse file `{}`", source_path.display())
+    })?;
+
+    // TODO: Move code generation.
     // Currently the source file is written to output file as code generation has not been implemented.
+    println!("{:?}", ast);
     write_output(&output_path, source.as_bytes())?;
 
     Ok(())
