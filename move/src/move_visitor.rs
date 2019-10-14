@@ -1,6 +1,6 @@
 use crate::jog::Template as JogTemplate;
 use askama::Template as AskamaTemplate;
-use sprint_parser::ast::contract;
+use sprint_parser::ast::contract::{Contract, Visitor as ContractVisitor};
 use std::io;
 
 use crate::jog::contract_module::ContractModule;
@@ -25,7 +25,7 @@ impl MoveVisitor {
     }
 }
 
-impl contract::Visitor for MoveVisitor {
+impl ContractVisitor for MoveVisitor {
     /// The empty contract.
     fn visit_zero(&mut self) {}
 
@@ -54,6 +54,8 @@ impl contract::Visitor for MoveVisitor {
             .actions
             .extend(unlock_action.to_string().iter().cloned());
     }
+
+    fn visit_give(&mut self, _contract: &Contract) {}
 }
 
 /**
@@ -71,7 +73,6 @@ impl JogTemplate for ContractModule {
 mod tests {
     use super::*;
     use colored::*;
-    use contract::Visitor;
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
     use std::fs::copy;
