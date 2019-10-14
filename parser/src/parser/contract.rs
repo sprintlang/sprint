@@ -115,4 +115,29 @@ mod tests {
         parse_contract_err("or zero");
         parse_contract_err("or zero one zero");
     }
+
+    fn parse_and_prefix() {
+        // zero and zero
+        parse_contract_ok(
+            "and zero zero",
+            (
+                "",
+                Contract::And(Box::new(Contract::Zero), Box::new(Contract::Zero)),
+            ),
+        );
+        // (zero and zero) and zero
+        parse_contract_ok(
+            "and and zero zero zero",
+            (
+                "",
+                Contract::And(
+                    Box::new(Contract::And(
+                        Box::new(Contract::Zero),
+                        Box::new(Contract::Zero),
+                    )),
+                    Box::new(Contract::Zero),
+                ),
+            ),
+        );
+    }
 }
