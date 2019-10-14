@@ -10,7 +10,7 @@ pub struct ContractModule {
     // (name, type, initial_value)
     pub contract_items: Vec<VariableWithDefaultValue>,
 
-    pub create_method: Method,
+    pub initialize_method: Method,
     pub acquire_method: Method,
 }
 
@@ -21,7 +21,7 @@ impl ContractModule {
             is_conditional: false,
             dependencies: HashSet::new(),
             contract_items: Vec::new(),
-            create_method: Method::default(),
+            initialize_method: Method::default(),
             acquire_method: Method::default(),
         }
     }

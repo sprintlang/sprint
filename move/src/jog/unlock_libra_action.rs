@@ -34,7 +34,7 @@ impl UnlockLibraAction {
 
     pub fn to_string(&self) -> [String; 1] {
         [format!(
-            "LibraAccount.deposit(copy(counter_party), move({}));",
+            "LibraAccount.deposit(copy(counterparty), move({}));",
             self.locked_var_name
         )]
     }

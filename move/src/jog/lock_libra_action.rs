@@ -62,11 +62,11 @@ impl LockLibraAction {
     pub fn to_string(&self) -> [String; 2] {
         [
             format!(
-                "{} = LibraAccnout.withdraw_from_sender({});",
+                "{} = LibraAccount.withdraw_from_sender({});",
                 self.deposit_var_name, self.amount
             ),
             format!(
-                "LibraCoin.deposit(move({}), move({}));",
+                "LibraCoin.deposit(&mut move(contract_ref).{}, move({}));",
                 self.locked_var_name, self.deposit_var_name
             ),
         ]

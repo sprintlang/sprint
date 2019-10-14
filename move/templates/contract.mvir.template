@@ -10,11 +10,8 @@ module {{name}} {
         {%- endfor %}
     }
 
-    public create(counterparty: address{% for param in create_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}): Self.T {
+    public create(counterparty: address): Self.T {
         let contract: Self.T;
-        {%- for var in create_method.var_defs %}
-        {{ var.name }}: {{ var.type_name }};
-        {%- endfor %}
 
         contract = T {
             counterparty: move(counterparty),
@@ -23,11 +20,20 @@ module {{name}} {
             {%- endfor %}
         };
 
-        {%- for action in create_method.actions %}
+        return move(contract);
+    }
+
+    // Initialize the contract as the holder.
+    public initialize(contract_ref: &mut Self.T{% for param in initialize_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
+        {%- for var in initialize_method.var_defs %}
+        let {{ var.name }}: {{ var.type_name }};
+        {%- endfor %}
+
+        {%- for action in initialize_method.actions %}
         {{ action }}
         {%- endfor %}
 
-        return move(contract);
+        return;
     }
 
     {%- if is_conditional %}
@@ -38,7 +44,7 @@ module {{name}} {
         let counterparty_ref: &mut address;
         let sender: address;
         {%- for var in acquire_method.var_defs %}
-        {{ var.name }}: {{ var.type_name }};
+        ;et {{ var.name }}: {{ var.type_name }};
         {%- endfor %}
 
         // We can add checks here to see if you can still acquire the contract
@@ -64,10 +70,10 @@ module {{name}} {
         let counterparty: address;
         let sender: address;
         {%- for item in contract_items %}
-        {{ item.var.name }}: {{ item.var.type_name }};
+        let {{ item.var.name }}: {{ item.var.type_name }};
         {%- endfor %}
         {%- for var in acquire_method.var_defs %}
-        {{ var.name }}: {{ var.type_name }};
+        let {{ var.name }}: {{ var.type_name }};
         {%- endfor %}
 
         T { counterparty{% for item in contract_items %}, {{ item.var.name }}{% endfor %} } = move(contract);

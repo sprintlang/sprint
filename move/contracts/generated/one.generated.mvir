@@ -1,63 +1,46 @@
 module SomeCoolContract {
+    import 0x0.LibraAccount;
+    import 0x0.LibraCoin;
 
-  import 0x0.LibraAccount
+    resource T {
+        counterparty: address,
+        locked_coins: LibraCoin.T,
+    }
 
-  import 0x0.LibraCoin
+    public create(counterparty: address): Self.T {
+        let contract: Self.T;
 
+        contract = T {
+            counterparty: move(counterparty),
+            locked_coins: LibraCoin.zero(),
+        };
 
-  resource T {
-    counterparty: address,
+        return move(contract);
+    }
 
-    locked_coins: LibraCoin.T,
+    // Initialize the contract as the holder.
+    public initialize(contract_ref: &mut Self.T) {
+        let locked_coins: LibraCoin.T;
+        let deposit_coins: LibraCoin.T;
+        deposit_coins = LibraAccount.withdraw_from_sender(1);
+        LibraCoin.deposit(&mut move(contract_ref).locked_coins, move(deposit_coins));
 
-  }
+        return;
+    }
 
-  public create(counterparty: address): Self.T {
-    let contract: Self.T;
+    // Acquires the contract and releases all inner resources.
+    public acquire(contract: Self.T) {
+        let counterparty: address;
+        let sender: address;
+        let locked_coins: LibraCoin.T;
 
-    locked_coins: LibraCoin.T;
+        T { counterparty, locked_coins } = move(contract);
 
-    deposit_coins: LibraCoin.T;
+        sender = get_txn_sender();
+        assert(copy(counterparty) == move(sender), 401);
+        LibraAccount.deposit(copy(counterparty), move(locked_coins));
 
-
-    contract = T {
-      counterparty: move(counterparty),
-
-      locked_coins: LibraCoin.zero(),
-
-    };
-
-
-    deposit_coins = LibraAccnout.withdraw_from_sender(1);
-
-    LibraCoin.deposit(move(locked_coins), move(deposit_coins));
-
-
-    return move(contract);
-  }
-
-
-  // Acquires the contract and releases all inner resources.
-  public acquire(contract: Self.T) {
-    let counterparty: address;
-    let sender: address;
-
-    locked_coins: LibraCoin.T;
-
-
-
-    T { counterparty, locked_coins } = move(contract);
-
-    sender = get_txn_sender();
-    assert(copy(counterparty) == move(sender), 401);
-
-
-    LibraAccount.deposit(copy(counter_party), move(locked_coins));
-
-
-    return;
-  }
-
-
+        return;
+    }
 
 }
