@@ -1,85 +1,87 @@
 module {{name}} {
-  {% for dependency in dependencies %}
-  import {{ dependency }}
-  {% endfor %}
+    {%- for dependency in dependencies %}
+    import {{ dependency }};
+    {%- endfor %}
 
-  resource T {
-    counterparty: address,
-    {% for item in contract_items %}
-    {{ item.var.name }}: {{ item.var.type_name }},
-    {% endfor %}
-  }
+    resource T {
+        counterparty: address,
+        {%- for item in contract_items %}
+        {{ item.var.name }}: {{ item.var.type_name }},
+        {%- endfor %}
+    }
 
-  public create(counterparty: address{% for param in create_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}): Self.T {
-    let contract: Self.T;
-    {% for var in create_method.var_defs %}
-    {{ var.name }}: {{ var.type_name }};
-    {% endfor %}
+    public create(counterparty: address{% for param in create_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}): Self.T {
+        let contract: Self.T;
+        {%- for var in create_method.var_defs %}
+        {{ var.name }}: {{ var.type_name }};
+        {%- endfor %}
 
-    contract = T {
-      counterparty: move(counterparty),
-      {% for item in contract_items %}
-      {{ item.var.name }}: {{ item.default }},
-      {% endfor %}
-    };
+        contract = T {
+            counterparty: move(counterparty),
+            {%- for item in contract_items %}
+            {{ item.var.name }}: {{ item.default }},
+            {%- endfor %}
+        };
 
-    {% for action in create_method.actions %}
-    {{ action }}
-    {% endfor %}
+        {%- for action in create_method.actions %}
+        {{ action }}
+        {%- endfor %}
 
-    return move(contract);
-  }
+        return move(contract);
+    }
 
-  {% if is_conditional %}
-  // Acquires the contract, allowing you to claim the inner resource when the condition is true
-  public acquire(contract_ref: &mut Self.T{% for param in acquire_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
-    let acquired_ref: &mut bool;
-    let counterparty_ref: &mut address;
-    let sender: address;
-    {% for var in acquire_method.var_defs %}
-    {{ var.name }}: {{ var.type_name }};
-    {% endfor %}
+    {%- if is_conditional %}
 
-    // We can add checks here to see if you can still acquire the contract
-    // or if it is too late.
-    // TODO
+    // Acquires the contract, allowing you to claim the inner resource when the condition is true
+    public acquire(contract_ref: &mut Self.T{% for param in acquire_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
+        let acquired_ref: &mut bool;
+        let counterparty_ref: &mut address;
+        let sender: address;
+        {%- for var in acquire_method.var_defs %}
+        {{ var.name }}: {{ var.type_name }};
+        {%- endfor %}
 
-    counterparty_ref = &mut copy(contract_ref).counterparty;
-    sender = get_txn_sender();
-    assert(*move(counterparty_ref) == move(sender), 401);
+        // We can add checks here to see if you can still acquire the contract
+        // or if it is too late.
+        // TODO
 
-    acquired_ref = &mut move(contract_ref).acquired;
-    assert(*copy(acquired_ref) == false, 1);
+        counterparty_ref = &mut copy(contract_ref).counterparty;
+        sender = get_txn_sender();
+        assert(*move(counterparty_ref) == move(sender), 401);
 
-    *move(acquired_ref) = true;
+        acquired_ref = &mut move(contract_ref).acquired;
+        assert(*copy(acquired_ref) == false, 1);
 
-    return;
-  }
+        *move(acquired_ref) = true;
 
-  {% else %}
-  // Acquires the contract and releases all inner resources.
-  public acquire(contract: Self.T{% for param in acquire_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
-    let counterparty: address;
-    let sender: address;
-    {% for item in contract_items %}
-    {{ item.var.name }}: {{ item.var.type_name }};
-    {% endfor %}
-    {% for var in acquire_method.var_defs %}
-    {{ var.name }}: {{ var.type_name }};
-    {% endfor %}
+        return;
+    }
 
-    T { counterparty{% for item in contract_items %}, {{ item.var.name }}{% endfor %} } = move(contract);
+    {% else %}
 
-    sender = get_txn_sender();
-    assert(copy(counterparty) == move(sender), 401);
+    // Acquires the contract and releases all inner resources.
+    public acquire(contract: Self.T{% for param in acquire_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
+        let counterparty: address;
+        let sender: address;
+        {%- for item in contract_items %}
+        {{ item.var.name }}: {{ item.var.type_name }};
+        {%- endfor %}
+        {%- for var in acquire_method.var_defs %}
+        {{ var.name }}: {{ var.type_name }};
+        {%- endfor %}
 
-    {% for action in acquire_method.actions %}
-    {{ action }}
-    {% endfor %}
+        T { counterparty{% for item in contract_items %}, {{ item.var.name }}{% endfor %} } = move(contract);
 
-    return;
-  }
+        sender = get_txn_sender();
+        assert(copy(counterparty) == move(sender), 401);
 
-  {% endif %}
+        {%- for action in acquire_method.actions %}
+        {{ action }}
+        {%- endfor %}
+
+        return;
+    }
+
+    {%- endif %}
 
 }

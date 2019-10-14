@@ -41,12 +41,12 @@ impl contract::Visitor for MoveVisitor {
         // We could just stored Actions which have the init_in_module and init_in_method methods in the Method.actions Vector.
         lock_action.init_in_module(curr_module);
         unlock_action.init_in_module(curr_module);
-        lock_action.init_in_method(&mut (*curr_module).create_method);
-        unlock_action.init_in_method(&mut (*curr_module).create_method);
+        lock_action.init_in_method(&mut (*curr_module).initialize_method);
+        unlock_action.init_in_method(&mut (*curr_module).acquire_method);
 
         // NOTE: If we do what is above we won't need to call .to_string() here anymore.
         (*curr_module)
-            .create_method
+            .initialize_method
             .actions
             .extend(lock_action.to_string().iter().cloned());
         (*curr_module)
@@ -70,10 +70,18 @@ impl JogTemplate for ContractModule {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use colored::*;
     use contract::Visitor;
+    use rand::distributions::Alphanumeric;
+    use rand::{thread_rng, Rng};
+    use std::fs::copy;
+    use std::fs::create_dir_all;
+    use std::fs::remove_file;
     use std::fs::File;
     use std::io::prelude::*;
     use std::io::BufReader;
+    use std::path::Path;
+    use std::process::Command;
 
     #[test]
     fn visit_zero() {
@@ -102,8 +110,6 @@ mod tests {
     }
 
     fn test_output(move_module_file: &str, test_module_file: &str) {
-        let mut test_file = File::create("test_file.mvir").unwrap();
-
         let move_module_file = File::open(move_module_file).unwrap();
         let mut buf_reader = BufReader::new(move_module_file);
         let mut module_contents = String::new();
@@ -113,6 +119,18 @@ mod tests {
         let mut buf_reader = BufReader::new(test_module_file);
         let mut test_contents = String::new();
         buf_reader.read_to_string(&mut test_contents).unwrap();
+
+        if !Path::new("../../libra/language/functional_tests/tests/testsuite").exists() {
+            panic!("You must clone the libra repository as a subling of the sprint directory.");
+        }
+        create_dir_all("../../libra/language/functional_tests/tests/testsuite/sprint/").unwrap();
+
+        let file_name: String = thread_rng().sample_iter(&Alphanumeric).take(15).collect();
+        let test_file_path = format!(
+            "../../libra/language/functional_tests/tests/testsuite/sprint/{}.mvir",
+            file_name
+        );
+        let mut test_file = File::create(test_file_path.clone()).unwrap();
 
         writeln!(test_file, "//! account: sprint").unwrap();
         writeln!(test_file, "//! account: alice").unwrap();
@@ -124,5 +142,54 @@ mod tests {
 
         test_file.write_all(module_contents.as_bytes()).unwrap();
         test_file.write_all(test_contents.as_bytes()).unwrap();
+
+        drop(test_file);
+
+        let output = Command::new("cargo")
+            .arg("test")
+            .arg("--manifest-path=../../libra/Cargo.toml")
+            .arg("-p")
+            .arg("functional_tests")
+            .arg(format!("sprint/{}", file_name))
+            .output()
+            .expect("failed to execute process");
+
+        println!(
+            "{}",
+            "==================START=OF=LIBRA=TEST=SUITE=OUPUT==================\n"
+                .blue()
+                .bold()
+        );
+        println!("{}: {}", "STATUS".blue().bold(), output.status);
+        println!(
+            "{}: {}",
+            "STDOUT".blue().bold(),
+            String::from_utf8_lossy(&output.stdout)
+        );
+        println!(
+            "{}: {}",
+            "STDERR".red().bold(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        println!(
+            "{}",
+            "==================END=OF=LIBRA=TEST=SUITE=OUPUT==================\n"
+                .blue()
+                .bold()
+        );
+
+        if !output.status.success() {
+            copy(test_file_path.clone(), "failed_generated_code.mvir").unwrap();
+            println!(
+                "{}",
+                "Find the failing generated code in failed_generated_code.mvir"
+                    .bold()
+                    .red()
+            );
+        }
+
+        remove_file(test_file_path.clone()).unwrap();
+
+        assert!(output.status.success());
     }
 }
