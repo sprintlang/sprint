@@ -7,7 +7,7 @@ use crate::ast::contract::Contract;
 use nom::{branch::alt, bytes::complete::tag, IResult};
 
 pub fn contract(input: Span) -> IResult<Span, Contract, Error> {
-    padding(alt((brackets(contract), zero, one, give)))(input)
+    padding(alt((brackets(contract), zero, one, or, give)))(input)
 }
 
 pub fn zero(input: Span) -> IResult<Span, Contract, Error> {
@@ -18,6 +18,16 @@ pub fn zero(input: Span) -> IResult<Span, Contract, Error> {
 pub fn one(input: Span) -> IResult<Span, Contract, Error> {
     let (input, _) = tag("one")(input)?;
     Ok((input, Contract::One))
+}
+
+pub fn or(input: Span) -> IResult<Span, Contract, Error> {
+    let (input, _) = tag("or")(input)?;
+    let (input, first_contract) = contract(input)?;
+    let (input, second_contract) = contract(input)?;
+    Ok((
+        input,
+        Contract::Or(Box::new(first_contract), Box::new(second_contract)),
+    ))
 }
 
 pub fn give(input: Span) -> IResult<Span, Contract, Error> {
@@ -76,14 +86,14 @@ mod tests {
         );
     }
 
-    // #[test]
-    // fn parse_or() {
-    //     parse_contract_ok(
-    //         "zero or one",
-    //         (
-    //             "",
-    //             Contract::Or(Box::new(Contract::Zero), Box::new(Contract::One)),
-    //         ),
-    //     );
-    // }
+    #[test]
+    fn parse_or() {
+        parse_contract_ok(
+            "or zero one",
+            (
+                "",
+                Contract::Or(Box::new(Contract::Zero), Box::new(Contract::One)),
+            ),
+        );
+    }
 }
