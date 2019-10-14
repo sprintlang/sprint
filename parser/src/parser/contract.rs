@@ -95,5 +95,19 @@ mod tests {
                 Contract::Or(Box::new(Contract::Zero), Box::new(Contract::One)),
             ),
         );
+
+        parse_contract_ok(
+            "or or zero one zero",
+            (
+                "",
+                Contract::Or(
+                    Box::new(Contract::Or(
+                        Box::new(Contract::Zero),
+                        Box::new(Contract::One),
+                    )),
+                    Box::new(Contract::Zero),
+                ),
+            ),
+        );
     }
 }
