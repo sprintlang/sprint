@@ -102,11 +102,10 @@ import 0x0.LibraAccount;
 main() {
     let initial_balance: u64;
 
-    initial_balance = LibraAccount.balance({{default}});
+    initial_balance = LibraAccount.balance({{bob}});
     ContractManager.sign_proposal_by({{alice}});
 
-    // TODO: Figure out why this fails...
-    // assert(move(initial_balance) + 1 == LibraAccount.balance({{default}}), 10);
+    assert(move(initial_balance) + 1 == LibraAccount.balance({{bob}}), 1);
 
     return;
 }

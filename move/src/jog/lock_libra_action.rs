@@ -28,38 +28,42 @@ impl LockLibraAction {
 
     /// # Arguments
     /// `module` - The module in which to lock the libra's in.
-    pub fn init_in_module(&self, module: &mut ContractModule) {
+    pub fn in_module(self, module: &mut ContractModule) -> Self {
         // Add required imports to the module.
-        (*module)
-            .dependencies
-            .insert(String::from("0x0.LibraAccount"));
-        (*module).dependencies.insert(String::from("0x0.LibraCoin"));
+        module.dependencies.insert(String::from("0x0.LibraAccount"));
+        module.dependencies.insert(String::from("0x0.LibraCoin"));
 
         // Add item to contract resource to use to store the locked libra.
-        (*module).contract_items.push(VariableWithDefaultValue {
+        module.contract_items.push(VariableWithDefaultValue {
             var: Variable {
                 name: self.locked_var_name.clone(),
                 type_name: "LibraCoin.T".to_string(),
             },
             default: "LibraCoin.zero()".to_string(),
         });
+
+        self
     }
 
     /// # Arguments
     /// `method` - The method in which we want to execute the libra locking.
-    pub fn init_in_method(&self, method: &mut Method) {
+    pub fn in_method(self, method: &mut Method) -> Self {
         // Add required variable definitions to method.
-        (*method).var_defs.push(Variable {
+        method.var_defs.push(Variable {
             name: self.locked_var_name.clone(),
             type_name: "LibraCoin.T".to_string(),
         });
-        (*method).var_defs.push(Variable {
+        method.var_defs.push(Variable {
             name: self.deposit_var_name.clone(),
             type_name: "LibraCoin.T".to_string(),
         });
+
+        method.actions.extend(self.to_string().iter().cloned());
+
+        self
     }
 
-    pub fn to_string(&self) -> [String; 2] {
+    fn to_string(&self) -> [String; 2] {
         [
             format!(
                 "{} = LibraAccount.withdraw_from_sender({});",

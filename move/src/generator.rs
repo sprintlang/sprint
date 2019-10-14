@@ -1,71 +1,53 @@
 use crate::jog::Template as JogTemplate;
+use crate::jog::{
+    contract_module::ContractModule, lock_libra_action::LockLibraAction,
+    unlock_libra_action::UnlockLibraAction,
+};
 use askama::Template as AskamaTemplate;
 use sprint_parser::ast::contract::{Contract, Visitor as ContractVisitor};
 use std::io;
 
-use crate::jog::contract_module::ContractModule;
-use crate::jog::lock_libra_action::LockLibraAction;
-use crate::jog::unlock_libra_action::UnlockLibraAction;
-
-pub struct MoveVisitor {
-    modules: Vec<ContractModule>,
-    // The module we are currently generating at the stage of visiting we are at.
-    curr_module_index: usize,
+pub struct Generator {
+    module: ContractModule,
 }
 
-impl MoveVisitor {
+impl Generator {
     pub fn default() -> Self {
         let base_module = ContractModule::new(String::from("SomeCoolContract"));
 
-        MoveVisitor {
-            // base_module,
-            modules: vec![base_module],
-            curr_module_index: 0,
+        Generator {
+            module: base_module,
         }
     }
 }
 
 pub fn generate_move_code(contract: &Contract, w: &mut impl io::Write) {
-    let mut visitor: MoveVisitor = MoveVisitor::default();
+    let mut visitor = Generator::default();
 
     visitor.visit(contract);
 
-    visitor.modules[0].write(w);
+    visitor.module.write(w);
 }
 
-impl ContractVisitor for MoveVisitor {
+impl ContractVisitor for Generator {
     /// The empty contract.
     fn visit_zero(&mut self) {}
 
     fn visit_one(&mut self) {
-        let curr_module = &mut self.modules[self.curr_module_index];
+        let lock_action = LockLibraAction::new(1 /* * multipler*/)
+            .in_module(&mut self.module)
+            .in_method(&mut self.module.initialize_method);
 
-        let lock_action = LockLibraAction::new(1 /* * multipler*/);
-        let unlock_action = UnlockLibraAction::new(&lock_action);
-
-        // NOTE: These init method calls could be moved to be executed once we have visited everything.
-        // We could just go through every module and all the methods and init all the actions in them,
-        // with the correct modules, and methods. This would probably simplify the code in the visit methods.
-        // We could just stored Actions which have the init_in_module and init_in_method methods in the Method.actions Vector.
-        lock_action.init_in_module(curr_module);
-        unlock_action.init_in_module(curr_module);
-        lock_action.init_in_method(&mut (*curr_module).initialize_method);
-        unlock_action.init_in_method(&mut (*curr_module).acquire_method);
-
-        // NOTE: If we do what is above we won't need to call .to_string() here anymore.
-        (*curr_module)
-            .initialize_method
-            .actions
-            .extend(lock_action.to_string().iter().cloned());
-        (*curr_module)
-            .acquire_method
-            .actions
-            .extend(unlock_action.to_string().iter().cloned());
+        UnlockLibraAction::new(&lock_action)
+            .in_module(&mut self.module)
+            .in_method(&mut self.module.acquire_method);
     }
 
     fn visit_give(&mut self, _contract: &Contract) {}
 }
 
+// TODO: Figure out how I can move this out to contract_module.rs and still
+// use it here in the tests...
 /**
  * Templates
  */
@@ -94,26 +76,26 @@ mod tests {
 
     #[test]
     fn visit_zero() {
-        let mut visitor: MoveVisitor = MoveVisitor::default();
+        let mut visitor = Generator::default();
         visitor.visit_zero();
 
         let module_file = "contracts/generated/zero.generated.mvir";
 
         let mut buffer = File::create(module_file).unwrap();
-        visitor.modules[0].write(&mut buffer);
+        visitor.module.write(&mut buffer);
 
         test_output(module_file, "contracts/tests/zero.test.mvir");
     }
 
     #[test]
     fn visit_one() {
-        let mut visitor: MoveVisitor = MoveVisitor::default();
+        let mut visitor = Generator::default();
         visitor.visit_one();
 
         let module_file = "contracts/generated/one.generated.mvir";
 
         let mut buffer = File::create(module_file).unwrap();
-        visitor.modules[0].write(&mut buffer);
+        visitor.module.write(&mut buffer);
 
         test_output(module_file, "contracts/tests/one.test.mvir");
     }

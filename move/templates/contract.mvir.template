@@ -44,7 +44,7 @@ module {{name}} {
         let counterparty_ref: &mut address;
         let sender: address;
         {%- for var in acquire_method.var_defs %}
-        ;et {{ var.name }}: {{ var.type_name }};
+        let {{ var.name }}: {{ var.type_name }};
         {%- endfor %}
 
         // We can add checks here to see if you can still acquire the contract
@@ -61,6 +61,27 @@ module {{name}} {
         *move(acquired_ref) = true;
 
         return;
+    }
+
+    // TODO: Add templating to this when we require it -- when observables exist.
+    public acquire_inner_contract(contract: Self.T): InnerContractType {
+        let holder: address;
+        let counterparty: address;
+        let acquired: bool;
+        let sender: address;
+        let inner_contract: InnerContractType;
+
+        // TODO: Do some check to make sure we are past time t1.
+        assert(true, 401);
+
+        T { holder, counterparty, acquired, inner_contract } = move(contract);
+
+        sender = get_txn_sender();
+        // Thses checks might actually belong to the wrapper rather than the contract.
+        assert(move(counterparty) == move(sender), 401);
+        assert(move(acquired) == true, 1);
+
+        return move(inner_contract);
     }
 
     {% else %}

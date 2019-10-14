@@ -18,21 +18,23 @@ impl UnlockLibraAction {
 
     /// # Arguments
     /// `module` - The module in which to lock the libra's in.
-    pub fn init_in_module(&self, module: &mut ContractModule) {
+    pub fn in_module(self, module: &mut ContractModule) -> Self {
         // Add required imports to the module.
-        (*module)
-            .dependencies
-            .insert(String::from("0x0.LibraAccount"));
-        (*module).dependencies.insert(String::from("0x0.LibraCoin"));
+        module.dependencies.insert(String::from("0x0.LibraAccount"));
+        module.dependencies.insert(String::from("0x0.LibraCoin"));
+
+        self
     }
 
     /// # Arguments
     /// `method` - The method in which we want to execute the libra locking.
-    pub fn init_in_method(&self, _method: &mut Method) {
-        // Nothing to do.
+    pub fn in_method(self, method: &mut Method) -> Self {
+        method.actions.extend(self.to_string().iter().cloned());
+
+        self
     }
 
-    pub fn to_string(&self) -> [String; 1] {
+    fn to_string(&self) -> [String; 1] {
         [format!(
             "LibraAccount.deposit(copy(counterparty), move({}));",
             self.locked_var_name
