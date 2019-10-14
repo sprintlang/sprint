@@ -75,4 +75,15 @@ mod tests {
             ),
         );
     }
+
+    // #[test]
+    // fn parse_or() {
+    //     parse_contract_ok(
+    //         "zero or one",
+    //         (
+    //             "",
+    //             Contract::Or(Box::new(Contract::Zero), Box::new(Contract::One)),
+    //         ),
+    //     );
+    // }
 }
