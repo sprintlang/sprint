@@ -81,7 +81,7 @@ mod tests {
     use std::io::prelude::*;
     use std::io::BufReader;
     use std::path::Path;
-    use std::process::Command;
+    use std::process::{Command, Stdio};
 
     #[test]
     fn visit_zero() {
@@ -120,22 +120,33 @@ mod tests {
         let mut test_contents = String::new();
         buf_reader.read_to_string(&mut test_contents).unwrap();
 
-        if !Path::new("../../libra/language/functional_tests/tests/testsuite").exists() {
+        let path_to_libra = "../libra";
+
+        if !Path::new(&format!(
+            "{}/language/functional_tests/tests/testsuite",
+            path_to_libra
+        ))
+        .exists()
+        {
             panic!("You must clone the libra repository as a subling of the sprint directory.");
         }
-        create_dir_all("../../libra/language/functional_tests/tests/testsuite/sprint/").unwrap();
+        create_dir_all(format!(
+            "{}/language/functional_tests/tests/testsuite/sprint/",
+            path_to_libra
+        ))
+        .unwrap();
 
         let file_name: String = thread_rng().sample_iter(&Alphanumeric).take(15).collect();
         let test_file_path = format!(
-            "../../libra/language/functional_tests/tests/testsuite/sprint/{}.mvir",
-            file_name
+            "{}/language/functional_tests/tests/testsuite/sprint/{}.mvir",
+            path_to_libra, file_name
         );
         let mut test_file = File::create(test_file_path.clone()).unwrap();
 
-        writeln!(test_file, "//! account: sprint").unwrap();
-        writeln!(test_file, "//! account: alice").unwrap();
-        writeln!(test_file, "//! account: bob").unwrap();
-        writeln!(test_file, "//! account: chris").unwrap();
+        writeln!(test_file, "//! account: sprint, 1000000").unwrap();
+        writeln!(test_file, "//! account: alice, 1000000").unwrap();
+        writeln!(test_file, "//! account: bob, 1000000").unwrap();
+        writeln!(test_file, "//! account: chris, 1000000").unwrap();
         writeln!(test_file).unwrap();
         writeln!(test_file, "//! new-transaction").unwrap();
         writeln!(test_file, "//! sender: sprint").unwrap();
@@ -149,32 +160,44 @@ mod tests {
 
         drop(test_file);
 
-        let output = Command::new("cargo")
-            .arg("test")
-            .arg("--manifest-path=../../libra/Cargo.toml")
-            .arg("-p")
-            .arg("functional_tests")
-            .arg(format!("sprint/{}", file_name))
-            .output()
-            .expect("failed to execute process");
-
         println!(
             "{}",
             "==================START=OF=LIBRA=TEST=SUITE=OUPUT==================\n"
                 .blue()
                 .bold()
         );
-        println!("{}: {}", "STATUS".blue().bold(), output.status);
-        println!(
-            "{}: {}",
-            "STDOUT".blue().bold(),
-            String::from_utf8_lossy(&output.stdout)
-        );
-        println!(
-            "{}: {}",
-            "STDERR".red().bold(),
-            String::from_utf8_lossy(&output.stderr)
-        );
+
+        let mut cmd = Command::new("cargo")
+            .arg("test")
+            .arg(format!("--manifest-path={}/Cargo.toml", path_to_libra))
+            .arg("-p")
+            .arg("functional_tests")
+            .arg(format!("sprint/{}", file_name))
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+
+        {
+            let stdout = cmd.stdout.as_mut().unwrap();
+            let stdout_reader = BufReader::new(stdout);
+            let stdout_lines = stdout_reader.lines();
+
+            for line in stdout_lines {
+                println!("{} {}", ">>".blue().bold(), line.unwrap());
+            }
+
+            let stderr = cmd.stderr.as_mut().unwrap();
+            let stderr_reader = BufReader::new(stderr);
+            let stderr_lines = stderr_reader.lines();
+
+            for line in stderr_lines {
+                println!("{} {}", ">>!".red().bold(), line.unwrap());
+            }
+        }
+
+        let status = cmd.wait().unwrap();
+
         println!(
             "{}",
             "==================END=OF=LIBRA=TEST=SUITE=OUPUT==================\n"
@@ -182,7 +205,7 @@ mod tests {
                 .bold()
         );
 
-        if !output.status.success() {
+        if !status.success() {
             copy(test_file_path.clone(), "failed_generated_code.mvir").unwrap();
             println!(
                 "{}",
@@ -194,6 +217,6 @@ mod tests {
 
         remove_file(test_file_path.clone()).unwrap();
 
-        assert!(output.status.success());
+        assert!(status.success());
     }
 }

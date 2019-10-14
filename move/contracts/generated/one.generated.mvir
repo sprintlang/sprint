@@ -1,6 +1,6 @@
 module SomeCoolContract {
-    import 0x0.LibraAccount;
     import 0x0.LibraCoin;
+    import 0x0.LibraAccount;
 
     resource T {
         counterparty: address,
