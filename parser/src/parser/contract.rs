@@ -7,7 +7,7 @@ use crate::ast::contract::Contract;
 use nom::{branch::alt, bytes::complete::tag, IResult};
 
 pub fn contract(input: Span) -> IResult<Span, Contract, Error> {
-    padding(alt((brackets(contract), zero, one, give, or)))(input)
+    padding(alt((brackets(contract), zero, one, give, or, and)))(input)
 }
 
 pub fn zero(input: Span) -> IResult<Span, Contract, Error> {
@@ -34,6 +34,12 @@ pub fn or(input: Span) -> IResult<Span, Contract, Error> {
         input,
         Contract::Or(Box::new(first_contract), Box::new(second_contract)),
     ))
+}
+pub fn and(input: Span) -> IResult<Span, Contract, Error> {
+    let (input, _) = tag("and")(input)?;
+    let (input, c_1) = contract(input)?;
+    let (input, c_2) = contract(input)?;
+    Ok((input, Contract::And(Box::new(c_1), Box::new(c_2))))
 }
 
 #[cfg(test)]
@@ -116,7 +122,7 @@ mod tests {
         parse_contract_err("or zero one zero");
     }
 
-    fn parse_and_prefix() {
+    fn parse_and() {
         // zero and zero
         parse_contract_ok(
             "and zero zero",
