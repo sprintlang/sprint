@@ -109,5 +109,8 @@ mod tests {
                 ),
             ),
         );
+
+        parse_contract_err("or");
+        parse_contract_err("or zero");
     }
 }
