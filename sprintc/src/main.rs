@@ -1,3 +1,5 @@
+use sprint_move::ast_to_move_code;
+use sprint_parser::parser::contract;
 use std::{
     borrow::Cow,
     error::Error,
@@ -30,14 +32,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let source = read_source(source_path)?;
 
-    let ast = parser::contract(&source).map_err(|err| {
-        eprint!("{}", err.pretty(&source));
-        format!("Unable to parse file `{}`", source_path.display())
-    })?;
-
-    // TODO: Move code generation.
-    // Currently the source file is written to output file as code generation has not been implemented.
-    write_output(&output_path, source.as_bytes())?;
+    // TODO: Handle errors parsing :) Unless you like panics ;)
+    let ast = contract(&source).unwrap();
+    let generated_move_code = ast_to_move_code(&ast);
+    write_output(&output_path, &generated_move_code)?;
 
     Ok(())
 }

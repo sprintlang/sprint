@@ -25,6 +25,14 @@ impl MoveVisitor {
     }
 }
 
+pub fn generate_move_code(contract: &Contract, w: &mut impl io::Write) {
+    let mut visitor: MoveVisitor = MoveVisitor::default();
+
+    visitor.visit(contract);
+
+    visitor.modules[0].write(w);
+}
+
 impl ContractVisitor for MoveVisitor {
     /// The empty contract.
     fn visit_zero(&mut self) {}
