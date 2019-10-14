@@ -141,6 +141,10 @@ mod tests {
         writeln!(test_file, "//! sender: sprint").unwrap();
 
         test_file.write_all(module_contents.as_bytes()).unwrap();
+
+        writeln!(test_file).unwrap();
+        writeln!(test_file).unwrap();
+
         test_file.write_all(test_contents.as_bytes()).unwrap();
 
         drop(test_file);

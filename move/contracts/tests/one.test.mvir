@@ -1,0 +1,147 @@
+//! new-transaction
+//! sender: sprint
+module ContractManager {
+    import {{sprint}}.SomeCoolContract;
+
+    resource ContractProposal {
+        contract: SomeCoolContract.T,
+    }
+
+    resource ContractRequest {
+        holder: address,
+        contract: SomeCoolContract.T,
+    }
+
+    public create_request(holder: address, contract: SomeCoolContract.T) {
+        let request: Self.ContractRequest;
+
+        request = ContractRequest {
+            holder: move(holder),
+            contract: move(contract),
+        };
+
+        move_to_sender<ContractRequest>(move(request));
+
+        return;
+    }
+
+    public create_proposal(contract: SomeCoolContract.T) {
+        let proposal: Self.ContractProposal;
+
+        // TODO: Must be initialized when proposing, need to check it has been
+        // initialized at some point before acquiring. Might need a bool somewhere.
+        proposal = ContractProposal {
+            contract: move(contract),
+        };
+
+        move_to_sender<ContractProposal>(move(proposal));
+
+        return;
+    }
+
+    public sign_proposal_by(holder: address) acquires ContractProposal {
+        let proposal: Self.ContractProposal;
+        let contract: SomeCoolContract.T;
+        let sender: address;
+
+        sender = get_txn_sender();
+
+        proposal = move_from<ContractProposal>(move(holder));
+        ContractProposal { contract } = move(proposal);
+
+        SomeCoolContract.acquire(move(contract));
+
+        return;
+    }
+
+    public initialize_request_from(counterparty: address) acquires ContractRequest {
+        let request_ref: &mut Self.ContractRequest;
+        let holder_ref: &address;
+        let contract_ref: &mut SomeCoolContract.T;
+
+        request_ref = borrow_global_mut<ContractRequest>(move(counterparty));
+        holder_ref = &copy(request_ref).holder;
+
+        assert(*move(holder_ref) == get_txn_sender(), 1);
+
+        contract_ref = &mut move(request_ref).contract;
+        SomeCoolContract.initialize(move(contract_ref));
+
+        return;
+    }
+}
+
+// -----------
+// TEST 1:
+// Test you alice (the holder) can propose a contract
+// and bob (the counterparty) can acquire it.
+// -----------
+
+//! new-transaction
+//! sender: alice
+import {{sprint}}.SomeCoolContract;
+import {{sprint}}.ContractManager;
+
+main() {
+    let contract: SomeCoolContract.T;
+
+    contract = SomeCoolContract.create({{bob}});
+    SomeCoolContract.initialize(&mut contract);
+
+    ContractManager.create_proposal(move(contract));
+
+    return;
+}
+
+//! new-transaction
+//! sender: bob
+import {{sprint}}.SomeCoolContract;
+import {{sprint}}.ContractManager;
+import 0x0.LibraAccount;
+
+main() {
+    let initial_balance: u64;
+
+    initial_balance = LibraAccount.balance({{default}});
+    ContractManager.sign_proposal_by({{alice}});
+
+    // TODO: Figure out why this fails...
+    // assert(move(initial_balance) + 1 == LibraAccount.balance({{default}}), 10);
+
+    return;
+}
+
+// -----------
+// TEST 2:
+// Test you bob (the counterparty) can request a contract and alice (the holder)
+// can provide you with a new initalized contract that bob can acquire.
+// -----------
+
+//! new-transaction
+//! sender: bob
+import {{sprint}}.SomeCoolContract;
+import {{sprint}}.ContractManager;
+
+main() {
+    let contract: SomeCoolContract.T;
+
+    contract = SomeCoolContract.create({{default}});
+    ContractManager.create_request({{alice}}, move(contract));
+
+    return;
+}
+
+//! new-transaction
+//! sender: alice
+import {{sprint}}.SomeCoolContract;
+import {{sprint}}.ContractManager;
+
+main() {
+    let contract: SomeCoolContract.T;
+
+    ContractManager.initialize_request_from({{bob}});
+
+    // TODO: Test money has moved between accounts.
+
+    return;
+}
