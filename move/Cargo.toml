@@ -11,8 +11,6 @@ authors = [
 edition = "2018"
 
 [dependencies]
-askama = "0.8"
-colored = "1.8"
+askama = "0.8.0"
 functional_tests = { git = "https://github.com/libra/libra" }
-rand = "0.7"
 sprint-parser = {path = "../parser"}
