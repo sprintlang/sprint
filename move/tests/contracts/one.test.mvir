@@ -1,18 +1,18 @@
 //! new-transaction
-//! sender: sprint
+//! sender: alice
 module ContractManager {
-    import {{sprint}}.SomeCoolContract;
+    import {{alice}}.One;
 
     resource ContractProposal {
-        contract: SomeCoolContract.T,
+        contract: One.T,
     }
 
     resource ContractRequest {
         holder: address,
-        contract: SomeCoolContract.T,
+        contract: One.T,
     }
 
-    public create_request(holder: address, contract: SomeCoolContract.T) {
+    public create_request(holder: address, contract: One.T) {
         let request: Self.ContractRequest;
 
         request = ContractRequest {
@@ -25,7 +25,7 @@ module ContractManager {
         return;
     }
 
-    public create_proposal(contract: SomeCoolContract.T) {
+    public create_proposal(contract: One.T) {
         let proposal: Self.ContractProposal;
 
         // TODO: Must be initialized when proposing, need to check it has been
@@ -41,7 +41,7 @@ module ContractManager {
 
     public sign_proposal_by(holder: address) acquires ContractProposal {
         let proposal: Self.ContractProposal;
-        let contract: SomeCoolContract.T;
+        let contract: One.T;
         let sender: address;
 
         sender = get_txn_sender();
@@ -49,7 +49,7 @@ module ContractManager {
         proposal = move_from<ContractProposal>(move(holder));
         ContractProposal { contract } = move(proposal);
 
-        SomeCoolContract.acquire(move(contract));
+        One.acquire(move(contract));
 
         return;
     }
@@ -57,7 +57,7 @@ module ContractManager {
     public initialize_request_from(counterparty: address) acquires ContractRequest {
         let request_ref: &mut Self.ContractRequest;
         let holder_ref: &address;
-        let contract_ref: &mut SomeCoolContract.T;
+        let contract_ref: &mut One.T;
 
         request_ref = borrow_global_mut<ContractRequest>(move(counterparty));
         holder_ref = &copy(request_ref).holder;
@@ -65,7 +65,7 @@ module ContractManager {
         assert(*move(holder_ref) == get_txn_sender(), 1);
 
         contract_ref = &mut move(request_ref).contract;
-        SomeCoolContract.initialize(move(contract_ref));
+        One.initialize(move(contract_ref));
 
         return;
     }
@@ -79,14 +79,14 @@ module ContractManager {
 
 //! new-transaction
 //! sender: alice
-import {{sprint}}.SomeCoolContract;
-import {{sprint}}.ContractManager;
+import {{alice}}.One;
+import {{alice}}.ContractManager;
 
 main() {
-    let contract: SomeCoolContract.T;
+    let contract: One.T;
 
-    contract = SomeCoolContract.create({{bob}});
-    SomeCoolContract.initialize(&mut contract);
+    contract = One.create({{bob}});
+    One.initialize(&mut contract);
 
     ContractManager.create_proposal(move(contract));
 
@@ -95,8 +95,8 @@ main() {
 
 //! new-transaction
 //! sender: bob
-import {{sprint}}.SomeCoolContract;
-import {{sprint}}.ContractManager;
+import {{alice}}.One;
+import {{alice}}.ContractManager;
 import 0x0.LibraAccount;
 
 main() {
@@ -118,13 +118,13 @@ main() {
 
 //! new-transaction
 //! sender: bob
-import {{sprint}}.SomeCoolContract;
-import {{sprint}}.ContractManager;
+import {{alice}}.One;
+import {{alice}}.ContractManager;
 
 main() {
-    let contract: SomeCoolContract.T;
+    let contract: One.T;
 
-    contract = SomeCoolContract.create({{default}});
+    contract = One.create({{default}});
     ContractManager.create_request({{alice}}, move(contract));
 
     return;
@@ -132,11 +132,11 @@ main() {
 
 //! new-transaction
 //! sender: alice
-import {{sprint}}.SomeCoolContract;
-import {{sprint}}.ContractManager;
+import {{alice}}.One;
+import {{alice}}.ContractManager;
 
 main() {
-    let contract: SomeCoolContract.T;
+    let contract: One.T;
 
     ContractManager.initialize_request_from({{bob}});
 

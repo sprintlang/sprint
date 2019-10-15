@@ -1,12 +1,12 @@
 module {{name}} {
-    {%- for dependency in dependencies %}
+    {%- for dependency in self.dependencies() %}
     import {{ dependency }};
     {%- endfor %}
 
     resource T {
         counterparty: address,
-        {%- for item in contract_items %}
-        {{ item.var.name }}: {{ item.var.type_name }},
+        {%- for item in self.properties() %}
+        {{ item.name }}: {{ item.type_name }},
         {%- endfor %}
     }
 
@@ -15,8 +15,8 @@ module {{name}} {
 
         contract = T {
             counterparty: move(counterparty),
-            {%- for item in contract_items %}
-            {{ item.var.name }}: {{ item.default }},
+            {%- for item in self.properties() %}
+            {{ item.name }}: {{ item.default.unwrap() }},
             {%- endfor %}
         };
 
@@ -24,12 +24,12 @@ module {{name}} {
     }
 
     // Initialize the contract as the holder.
-    public initialize(contract_ref: &mut Self.T{% for param in initialize_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
-        {%- for var in initialize_method.var_defs %}
-        let {{ var.name }}: {{ var.type_name }};
+    public initialize(contract_ref: &mut Self.T) {
+        {%- for def in initialize.definitions() %}
+        let {{ def.name }}: {{ def.type_name }};
         {%- endfor %}
 
-        {%- for action in initialize_method.actions %}
+        {%- for action in initialize.actions() %}
         {{ action }}
         {%- endfor %}
 
@@ -39,12 +39,12 @@ module {{name}} {
     {%- if is_conditional %}
 
     // Acquires the contract, allowing you to claim the inner resource when the condition is true
-    public acquire(contract_ref: &mut Self.T{% for param in acquire_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
+    public acquire(contract_ref: &mut Self.T) {
         let acquired_ref: &mut bool;
         let counterparty_ref: &mut address;
         let sender: address;
-        {%- for var in acquire_method.var_defs %}
-        let {{ var.name }}: {{ var.type_name }};
+        {%- for def in acquire.definitions() %}
+        let {{ def.name }}: {{ def.type_name }};
         {%- endfor %}
 
         // We can add checks here to see if you can still acquire the contract
@@ -87,22 +87,22 @@ module {{name}} {
     {% else %}
 
     // Acquires the contract and releases all inner resources.
-    public acquire(contract: Self.T{% for param in acquire_method.params %}, {{param.name}}: {{param.type_name}}{% endfor %}) {
+    public acquire(contract: Self.T) {
         let counterparty: address;
         let sender: address;
-        {%- for item in contract_items %}
-        let {{ item.var.name }}: {{ item.var.type_name }};
+        {%- for item in self.properties() %}
+        let {{ item.name }}: {{ item.type_name }};
         {%- endfor %}
-        {%- for var in acquire_method.var_defs %}
-        let {{ var.name }}: {{ var.type_name }};
+        {%- for def in acquire.definitions() %}
+        let {{ def.name }}: {{ def.type_name }};
         {%- endfor %}
 
-        T { counterparty{% for item in contract_items %}, {{ item.var.name }}{% endfor %} } = move(contract);
+        T { counterparty{% for item in self.properties() %}, {{ item.name }}{% endfor %} } = move(contract);
 
         sender = get_txn_sender();
         assert(copy(counterparty) == move(sender), 401);
 
-        {%- for action in acquire_method.actions %}
+        {%- for action in acquire.actions() %}
         {{ action }}
         {%- endfor %}
 
