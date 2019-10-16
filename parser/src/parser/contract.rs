@@ -7,7 +7,7 @@ use crate::ast::contract::Contract;
 use nom::{branch::alt, bytes::complete::tag, IResult};
 
 pub fn contract(input: Span) -> IResult<Span, Contract, Error> {
-    padding(alt((brackets(contract), zero, one, or, give)))(input)
+    padding(alt((brackets(contract), zero, one, give, or)))(input)
 }
 
 pub fn zero(input: Span) -> IResult<Span, Contract, Error> {
@@ -20,6 +20,12 @@ pub fn one(input: Span) -> IResult<Span, Contract, Error> {
     Ok((input, Contract::One))
 }
 
+pub fn give(input: Span) -> IResult<Span, Contract, Error> {
+    let (input, _) = tag("give")(input)?;
+    let (input, contract) = contract(input)?;
+    Ok((input, Contract::Give(Box::new(contract))))
+}
+
 pub fn or(input: Span) -> IResult<Span, Contract, Error> {
     let (input, _) = tag("or")(input)?;
     let (input, first_contract) = contract(input)?;
@@ -30,23 +36,18 @@ pub fn or(input: Span) -> IResult<Span, Contract, Error> {
     ))
 }
 
-pub fn give(input: Span) -> IResult<Span, Contract, Error> {
-    let (input, _) = tag("give")(input)?;
-    let (input, contract) = contract(input)?;
-    Ok((input, Contract::Give(Box::new(contract))))
-}
-
 #[cfg(test)]
 mod tests {
     use super::super::combinator::span;
     use super::*;
+    use nom::combinator::all_consuming;
 
     fn parse_contract_ok(input: &str, expected: (&str, Contract)) {
         assert_eq!(span(contract)(input), Ok(expected));
     }
 
     fn parse_contract_err(input: &str) {
-        assert!(span(contract)(input).is_err());
+        assert!(span(all_consuming(contract))(input).is_err());
     }
 
     #[test]
@@ -112,5 +113,6 @@ mod tests {
 
         parse_contract_err("or");
         parse_contract_err("or zero");
+        parse_contract_err("or zero one zero");
     }
 }
