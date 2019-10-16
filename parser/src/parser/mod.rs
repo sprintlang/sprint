@@ -9,6 +9,7 @@ use nom::combinator::{all_consuming, complete};
 use nom_locate::LocatedSpan;
 
 type Span<'a> = LocatedSpan<&'a str>;
+type IResult<'a, I, O> = nom::IResult<I, O, Error<'a>>;
 
 pub fn contract(input: &str) -> Result<Contract, Error> {
     match span(all_consuming(complete(self::contract::contract)))(input) {

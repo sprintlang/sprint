@@ -1,39 +1,38 @@
 use super::{
     combinator::{brackets, padding},
-    error::Error,
-    Span,
+    IResult, Span,
 };
 use crate::ast::contract::Contract;
-use nom::{branch::alt, bytes::complete::tag, IResult};
+use nom::{branch::alt, bytes::complete::tag};
 
-pub fn contract(input: Span) -> IResult<Span, Contract, Error> {
+pub fn contract(input: Span) -> IResult<Span, Contract> {
     padding(alt((brackets(contract), zero, one, give, and, or)))(input)
 }
 
-pub fn zero(input: Span) -> IResult<Span, Contract, Error> {
+pub fn zero(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("zero")(input)?;
     Ok((input, Contract::Zero))
 }
 
-pub fn one(input: Span) -> IResult<Span, Contract, Error> {
+pub fn one(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("one")(input)?;
     Ok((input, Contract::One))
 }
 
-pub fn give(input: Span) -> IResult<Span, Contract, Error> {
+pub fn give(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("give")(input)?;
     let (input, contract) = contract(input)?;
     Ok((input, Contract::Give(Box::new(contract))))
 }
 
-pub fn and(input: Span) -> IResult<Span, Contract, Error> {
+pub fn and(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("and")(input)?;
     let (input, left) = contract(input)?;
     let (input, right) = contract(input)?;
     Ok((input, Contract::And(Box::new(left), Box::new(right))))
 }
 
-pub fn or(input: Span) -> IResult<Span, Contract, Error> {
+pub fn or(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("or")(input)?;
     let (input, left) = contract(input)?;
     let (input, right) = contract(input)?;

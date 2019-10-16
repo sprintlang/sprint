@@ -1,19 +1,19 @@
-use super::error::Error;
+use super::IResult;
 use nom::{
     character::complete::char,
     character::complete::multispace0,
     error::ParseError,
     multi::{count, many1_count},
     sequence::{delimited, terminated},
-    AsBytes, AsChar, IResult, InputIter, InputTakeAtPosition, Slice,
+    AsBytes, AsChar, InputIter, InputTakeAtPosition, Slice,
 };
 use nom_locate::LocatedSpan;
 use std::ops::RangeFrom;
 
-pub fn span<'a, I, O, F>(f: F) -> impl Fn(I) -> IResult<I, O, Error<'a>>
+pub fn span<'a, I, O, F>(f: F) -> impl Fn(I) -> IResult<'a, I, O>
 where
     I: AsBytes,
-    F: Fn(LocatedSpan<I>) -> IResult<LocatedSpan<I>, O, Error<'a>>,
+    F: Fn(LocatedSpan<I>) -> IResult<'a, LocatedSpan<I>, O>,
 {
     move |input: I| {
         let input = LocatedSpan::new(input);
@@ -21,22 +21,22 @@ where
     }
 }
 
-pub fn padding<I, O, E, F>(f: F) -> impl Fn(I) -> IResult<I, O, E>
+pub fn padding<I, O, E, F>(f: F) -> impl Fn(I) -> nom::IResult<I, O, E>
 where
     I: InputTakeAtPosition,
     <I as InputTakeAtPosition>::Item: AsChar + Clone,
     E: ParseError<I>,
-    F: Fn(I) -> IResult<I, O, E>,
+    F: Fn(I) -> nom::IResult<I, O, E>,
 {
     delimited(multispace0, f, multispace0)
 }
 
-pub fn brackets<I, O, E, F>(f: F) -> impl Fn(I) -> IResult<I, O, E>
+pub fn brackets<I, O, E, F>(f: F) -> impl Fn(I) -> nom::IResult<I, O, E>
 where
     I: Slice<RangeFrom<usize>> + InputIter + Clone + PartialEq,
     <I as InputIter>::Item: AsChar,
     E: ParseError<I>,
-    F: Fn(I) -> IResult<I, O, E> + Copy,
+    F: Fn(I) -> nom::IResult<I, O, E> + Copy,
 {
     move |input: I| {
         let (input, brackets) = many1_count(char('('))(input)?;
@@ -46,15 +46,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::super::Span;
+    use super::super::{error::Error, Span};
     use super::*;
     use nom::{bytes::complete::tag, character::complete::char, error::ErrorKind, Err};
 
-    fn parser(input: &str) -> IResult<&str, &str> {
+    fn parser(input: &str) -> nom::IResult<&str, &str> {
         tag("abc")(input)
     }
 
-    fn parser_span<'a>(input: Span) -> IResult<Span, &'a str, Error> {
+    fn parser_span(input: Span) -> IResult<Span, &str> {
         let (input, _) = char('a')(input)?;
         let (input, _) = char('b')(input)?;
         let (input, _) = char('c')(input)?;
