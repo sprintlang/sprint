@@ -42,9 +42,6 @@ module ContractManager {
     public sign_proposal_by(holder: address) acquires ContractProposal {
         let proposal: Self.ContractProposal;
         let contract: One.T;
-        let sender: address;
-
-        sender = get_txn_sender();
 
         proposal = move_from<ContractProposal>(move(holder));
         ContractProposal { contract } = move(proposal);
@@ -54,7 +51,7 @@ module ContractManager {
         return;
     }
 
-    public initialize_request_from(counterparty: address) acquires ContractRequest {
+    public approve_request_from(counterparty: address) acquires ContractRequest {
         let request_ref: &mut Self.ContractRequest;
         let holder_ref: &address;
         let contract_ref: &mut One.T;
@@ -66,6 +63,21 @@ module ContractManager {
 
         contract_ref = &mut move(request_ref).contract;
         One.initialize(move(contract_ref));
+
+        return;
+    }
+
+    public sign_approved_request() acquires ContractRequest {
+        let request: Self.ContractRequest;
+        let contract: One.T;
+        let holder: address;
+
+        // TODO: Must be initialized when proposing, need to check it has been
+        // initialized at some point before acquiring. Might need a bool somewhere.
+        request = move_from<ContractRequest>(get_txn_sender());
+        ContractRequest { holder, contract } = move(request);
+
+        One.acquire(move(contract));
 
         return;
     }
@@ -95,7 +107,6 @@ main() {
 
 //! new-transaction
 //! sender: bob
-import {{alice}}.One;
 import {{alice}}.ContractManager;
 import 0x0.LibraAccount;
 
@@ -124,7 +135,7 @@ import {{alice}}.ContractManager;
 main() {
     let contract: One.T;
 
-    contract = One.create({{default}});
+    contract = One.create({{bob}});
     ContractManager.create_request({{alice}}, move(contract));
 
     return;
@@ -138,9 +149,23 @@ import {{alice}}.ContractManager;
 main() {
     let contract: One.T;
 
-    ContractManager.initialize_request_from({{bob}});
+    ContractManager.approve_request_from({{bob}});
 
-    // TODO: Test money has moved between accounts.
+    return;
+}
+
+//! new-transaction
+//! sender: bob
+import {{alice}}.ContractManager;
+import 0x0.LibraAccount;
+
+main() {
+    let initial_balance: u64;
+
+    initial_balance = LibraAccount.balance({{bob}});
+    ContractManager.sign_approved_request();
+
+    assert(move(initial_balance) + 1 == LibraAccount.balance({{bob}}), 1);
 
     return;
 }
