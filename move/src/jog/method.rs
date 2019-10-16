@@ -2,10 +2,11 @@ use super::{action::Action, variable::Variable};
 use std::rc::Rc;
 
 #[derive(Default)]
-pub struct Method {
-    actions: Vec<Box<dyn Action>>,
+pub struct Method<'a> {
+    actions: Vec<Box<dyn Action + 'a>>,
 }
 
+impl<'a> Method<'a> {
     pub fn dependencies(&self) -> impl Iterator<Item = &str> {
         self.actions
             .iter()
@@ -24,11 +25,11 @@ pub struct Method {
             .collect()
     }
 
-    pub fn actions(&self) -> &[Box<dyn Action>] {
-        &self.actions
+    pub fn actions(&self) -> Vec<&dyn Action> {
+        self.actions.iter().map(AsRef::as_ref).collect()
     }
 
-    pub fn add_action(&mut self, action: Box<dyn Action>) {
-        self.actions.push(action);
+    pub fn add_action(&mut self, action: impl Action + 'a) {
+        self.actions.push(Box::new(action));
     }
 }

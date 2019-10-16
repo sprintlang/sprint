@@ -7,8 +7,8 @@ use std::{collections::HashSet, rc::Rc};
 pub struct Contract<'a> {
     name: &'a str,
     is_conditional: bool,
-    initialize: Method,
-    acquire: Method,
+    initialize: Method<'a>,
+    acquire: Method<'a>,
 }
 
 impl<'a> Contract<'a> {
@@ -21,11 +21,11 @@ impl<'a> Contract<'a> {
         }
     }
 
-    pub fn initialize(&mut self) -> &mut Method {
+    pub fn initialize(&mut self) -> &mut Method<'a> {
         &mut self.initialize
     }
 
-    pub fn acquire(&mut self) -> &mut Method {
+    pub fn acquire(&mut self) -> &mut Method<'a> {
         &mut self.acquire
     }
 

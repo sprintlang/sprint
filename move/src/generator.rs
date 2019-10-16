@@ -31,8 +31,8 @@ impl Visitor for Generator<'_> {
         let lock_action = Lock::new(1);
         let unlock_action = Unlock::new(&lock_action);
 
-        self.contract.initialize().add_action(Box::new(lock_action));
-        self.contract.acquire().add_action(Box::new(unlock_action));
+        self.contract.initialize().add_action(lock_action);
+        self.contract.acquire().add_action(unlock_action);
     }
 
     fn visit_give(&mut self, _contract: &ast::contract::Contract) {
