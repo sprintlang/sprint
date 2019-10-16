@@ -9,7 +9,6 @@ const DEPENDENCIES: &[&str] = &["0x0.LibraAccount", "0x0.LibraCoin"];
 pub struct Lock {
     amount: u64,
     locked: Rc<Variable>,
-    deposit: Rc<Variable>,
 }
 
 impl Lock {
@@ -21,12 +20,6 @@ impl Lock {
                 name: "locked",
                 type_name: "LibraCoin.T",
                 default: Some("LibraCoin.zero()"),
-            }),
-            deposit: Rc::new(Variable {
-                // TODO: generate name to avoid clash.
-                name: "deposit",
-                type_name: "LibraCoin.T",
-                default: None,
             }),
         }
     }
@@ -42,21 +35,16 @@ impl Action for Lock {
     }
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
-        vec![self.locked.clone(), self.deposit.clone()]
+        vec![]
     }
 }
 
 impl Display for Lock {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        writeln!(
-            f,
-            "{} = LibraAccount.withdraw_from_sender({});",
-            self.deposit.name, self.amount
-        )?;
         write!(
             f,
-            "LibraCoin.deposit(&mut move(contract_ref).{}, move({}));",
-            self.locked.name, self.deposit.name
+            "LibraCoin.deposit(&mut move(contract_ref).{}, LibraAccount.withdraw_from_sender({}));",
+            self.locked.name, self.amount
         )
     }
 }

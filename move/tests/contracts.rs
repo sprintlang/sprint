@@ -40,6 +40,7 @@ fn test(module: impl Display, suite: &Path) {
             format!("tests/generated/FAILED/{}", &file_name),
         )
         .unwrap();
+
         println!("{}", log);
         panic!(err);
     }
