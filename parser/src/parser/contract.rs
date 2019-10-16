@@ -3,7 +3,7 @@ use super::{
     IResult, Span,
 };
 use crate::ast::contract::Contract;
-use nom::{branch::alt, bytes::complete::tag};
+use nom::{branch::alt, bytes::complete::tag, sequence::tuple};
 
 pub fn contract(input: Span) -> IResult<Span, Contract> {
     padding(alt((brackets(contract), zero, one, give, and, or)))(input)
@@ -27,15 +27,13 @@ pub fn give(input: Span) -> IResult<Span, Contract> {
 
 pub fn and(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("and")(input)?;
-    let (input, left) = contract(input)?;
-    let (input, right) = contract(input)?;
+    let (input, (left, right)) = tuple((contract, contract))(input)?;
     Ok((input, Contract::And(Box::new(left), Box::new(right))))
 }
 
 pub fn or(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("or")(input)?;
-    let (input, left) = contract(input)?;
-    let (input, right) = contract(input)?;
+    let (input, (left, right)) = tuple((contract, contract))(input)?;
     Ok((input, Contract::Or(Box::new(left), Box::new(right))))
 }
 

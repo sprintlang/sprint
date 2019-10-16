@@ -48,16 +48,16 @@ where
 mod tests {
     use super::super::{error::Error, Span};
     use super::*;
-    use nom::{bytes::complete::tag, character::complete::char, error::ErrorKind, Err};
+    use nom::{
+        bytes::complete::tag, character::complete::char, error::ErrorKind, sequence::tuple, Err,
+    };
 
     fn parser(input: &str) -> nom::IResult<&str, &str> {
         tag("abc")(input)
     }
 
     fn parser_span(input: Span) -> IResult<Span, &str> {
-        let (input, _) = char('a')(input)?;
-        let (input, _) = char('b')(input)?;
-        let (input, _) = char('c')(input)?;
+        let (input, _) = tuple((char('a'), char('b'), char('c')))(input)?;
         Ok((input, "abc"))
     }
 
