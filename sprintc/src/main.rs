@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let source = read_source(source_path)?;
 
     let ast = parser::contract(&source).map_err(|err| {
-        eprintln!("{}", err.pretty(&source));
+        eprint!("{}", err.pretty(&source));
         format!("Unable to parse file `{}`", source_path.display())
     })?;
 

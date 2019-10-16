@@ -2,26 +2,26 @@ use super::Span;
 use nom::error::{convert_error, ErrorKind, ParseError, VerboseError};
 
 #[derive(Debug, PartialEq)]
-pub struct Error {
+pub struct Error<'a> {
     pub line: usize,
     pub column: usize,
-    pub input: String,
+    pub input: &'a str,
     pub kind: ErrorKind,
 }
 
-impl Error {
+impl Error<'_> {
     pub fn pretty(&self, original: &str) -> String {
         let error = VerboseError::<&str>::from_error_kind(&self.input, self.kind);
         convert_error(original, error)
     }
 }
 
-impl ParseError<Span<'_>> for Error {
-    fn from_error_kind(input: Span, kind: ErrorKind) -> Self {
+impl<'a> ParseError<Span<'a>> for Error<'a> {
+    fn from_error_kind(input: Span<'a>, kind: ErrorKind) -> Self {
         Error {
             line: input.line as usize,
             column: input.get_column(),
-            input: String::from(input.fragment),
+            input: input.fragment,
             kind,
         }
     }

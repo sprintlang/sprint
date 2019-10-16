@@ -10,10 +10,10 @@ use nom::{
 use nom_locate::LocatedSpan;
 use std::ops::RangeFrom;
 
-pub fn span<I, O, F>(f: F) -> impl Fn(I) -> IResult<I, O, Error>
+pub fn span<'a, I, O, F>(f: F) -> impl Fn(I) -> IResult<I, O, Error<'a>>
 where
     I: AsBytes,
-    F: Fn(LocatedSpan<I>) -> IResult<LocatedSpan<I>, O, Error>,
+    F: Fn(LocatedSpan<I>) -> IResult<LocatedSpan<I>, O, Error<'a>>,
 {
     move |input: I| {
         let input = LocatedSpan::new(input);
@@ -66,13 +66,15 @@ mod tests {
         assert_eq!(span(parser_span)("abc"), Ok(("", "abc")));
         assert_eq!(span(parser_span)("abcd"), Ok(("d", "abc")));
 
-        match span(parser_span)("abd").unwrap_err() {
+        let abd = "abd";
+
+        match span(parser_span)(abd).unwrap_err() {
             Err::Error(error) | Err::Failure(error) => assert_eq!(
                 error,
                 Error {
                     line: 1,
                     column: 3,
-                    input: String::from("d"),
+                    input: &abd[2..],
                     kind: ErrorKind::Char,
                 }
             ),
