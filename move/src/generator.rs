@@ -38,4 +38,12 @@ impl Visitor for Generator<'_> {
     fn visit_give(&mut self, _contract: &ast::contract::Contract) {
         unimplemented!();
     }
+
+    fn visit_and(&mut self, _left: &ast::contract::Contract, _right: &ast::contract::Contract) {
+        unimplemented!();
+    }
+
+    fn visit_or(&mut self, _left: &ast::contract::Contract, _right: &ast::contract::Contract) {
+        unimplemented!();
+    }
 }
