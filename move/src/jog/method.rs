@@ -6,19 +6,15 @@ pub struct Method {
     actions: Vec<Box<dyn Action>>,
 }
 
-impl Method {
-    pub fn dependencies(&self) -> Vec<&&str> {
+    pub fn dependencies(&self) -> impl Iterator<Item = &str> {
         self.actions
             .iter()
             .flat_map(|action| action.dependencies())
-            .collect()
+            .copied()
     }
 
-    pub fn properties(&self) -> Vec<Rc<Variable>> {
-        self.actions
-            .iter()
-            .flat_map(|action| action.properties())
-            .collect()
+    pub fn properties(&self) -> impl Iterator<Item = Rc<Variable>> + '_ {
+        self.actions.iter().flat_map(|action| action.properties())
     }
 
     pub fn definitions(&self) -> Vec<Rc<Variable>> {

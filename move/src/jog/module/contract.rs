@@ -35,10 +35,10 @@ impl<'a> Contract<'a> {
     }
 
     #[allow(dead_code)]
-    fn dependencies(&self) -> Vec<&&str> {
+    fn dependencies(&self) -> Vec<&str> {
         self.methods()
             .flat_map(|method| method.dependencies())
-            .collect::<HashSet<&&str>>()
+            .collect::<HashSet<&str>>()
             .into_iter()
             .collect()
     }
