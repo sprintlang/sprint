@@ -5,8 +5,8 @@ module {{name}} {
 
     resource T {
         counterparty: address,
-        {%- for item in self.properties() %}
-        {{ item.name }}: {{ item.type_name }},
+        {%- for property in self.properties() %}
+        {{ property.name }}: {{ property.type_name }},
         {%- endfor %}
     }
 
@@ -15,8 +15,8 @@ module {{name}} {
 
         contract = T {
             counterparty: move(counterparty),
-            {%- for item in self.properties() %}
-            {{ item.name }}: {{ item.default.unwrap() }},
+            {%- for property in self.properties() %}
+            {{ property.name }}: {{ property.default.unwrap() }},
             {%- endfor %}
         };
 
@@ -25,8 +25,8 @@ module {{name}} {
 
     // Initialize the contract as the holder.
     public initialize(contract_ref: &mut Self.T) {
-        {%- for def in initialize.definitions() %}
-        let {{ def.name }}: {{ def.type_name }};
+        {%- for definition in initialize.definitions() %}
+        let {{ definition.name }}: {{ definition.type_name }};
         {%- endfor %}
 
         {%- for action in initialize.actions() %}
@@ -43,8 +43,8 @@ module {{name}} {
         let acquired_ref: &mut bool;
         let counterparty_ref: &mut address;
         let sender: address;
-        {%- for def in acquire.definitions() %}
-        let {{ def.name }}: {{ def.type_name }};
+        {%- for definition in acquire.definitions() %}
+        let {{ definition.name }}: {{ definition.type_name }};
         {%- endfor %}
 
         // We can add checks here to see if you can still acquire the contract
@@ -90,14 +90,14 @@ module {{name}} {
     public acquire(contract: Self.T) {
         let counterparty: address;
         let sender: address;
-        {%- for item in self.properties() %}
-        let {{ item.name }}: {{ item.type_name }};
+        {%- for property in self.properties() %}
+        let {{ property.name }}: {{ property.type_name }};
         {%- endfor %}
-        {%- for def in acquire.definitions() %}
-        let {{ def.name }}: {{ def.type_name }};
+        {%- for definition in acquire.definitions() %}
+        let {{ definition.name }}: {{ definition.type_name }};
         {%- endfor %}
 
-        T { counterparty{% for item in self.properties() %}, {{ item.name }}{% endfor %} } = move(contract);
+        T { counterparty{% for property in self.properties() %}, {{ property.name }}{% endfor %} } = move(contract);
 
         sender = get_txn_sender();
         assert(copy(counterparty) == move(sender), 401);
