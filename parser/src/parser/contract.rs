@@ -28,22 +28,16 @@ pub fn give(input: Span) -> IResult<Span, Contract, Error> {
 
 pub fn and(input: Span) -> IResult<Span, Contract, Error> {
     let (input, _) = tag("and")(input)?;
-    let (input, first_contract) = contract(input)?;
-    let (input, second_contract) = contract(input)?;
-    Ok((
-        input,
-        Contract::And(Box::new(first_contract), Box::new(second_contract)),
-    ))
+    let (input, left) = contract(input)?;
+    let (input, right) = contract(input)?;
+    Ok((input, Contract::And(Box::new(left), Box::new(right))))
 }
 
 pub fn or(input: Span) -> IResult<Span, Contract, Error> {
     let (input, _) = tag("or")(input)?;
-    let (input, first_contract) = contract(input)?;
-    let (input, second_contract) = contract(input)?;
-    Ok((
-        input,
-        Contract::Or(Box::new(first_contract), Box::new(second_contract)),
-    ))
+    let (input, left) = contract(input)?;
+    let (input, right) = contract(input)?;
+    Ok((input, Contract::Or(Box::new(left), Box::new(right))))
 }
 
 #[cfg(test)]
