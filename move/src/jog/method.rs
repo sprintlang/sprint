@@ -7,15 +7,19 @@ pub struct Method<'a> {
 }
 
 impl<'a> Method<'a> {
-    pub fn dependencies(&self) -> impl Iterator<Item = &str> {
+    pub fn dependencies(&self) -> Vec<&str> {
         self.actions
             .iter()
             .flat_map(|action| action.dependencies())
             .copied()
+            .collect()
     }
 
-    pub fn properties(&self) -> impl Iterator<Item = Rc<Variable>> + '_ {
-        self.actions.iter().flat_map(|action| action.properties())
+    pub fn properties(&self) -> Vec<Rc<Variable>> {
+        self.actions
+            .iter()
+            .flat_map(|action| action.properties())
+            .collect()
     }
 
     pub fn definitions(&self) -> Vec<Rc<Variable>> {

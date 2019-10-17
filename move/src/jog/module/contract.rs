@@ -29,21 +29,16 @@ impl<'a> Contract<'a> {
         &mut self.acquire
     }
 
-    #[allow(dead_code)]
     fn methods(&self) -> impl Iterator<Item = &Method> {
         vec![&self.initialize, &self.acquire].into_iter()
     }
 
-    #[allow(dead_code)]
-    fn dependencies(&self) -> Vec<&str> {
+    fn dependencies(&self) -> HashSet<&str> {
         self.methods()
             .flat_map(|method| method.dependencies())
-            .collect::<HashSet<&str>>()
-            .into_iter()
             .collect()
     }
 
-    #[allow(dead_code)]
     fn properties(&self) -> HashSet<Rc<Variable>> {
         self.methods()
             .flat_map(|method| method.properties())
