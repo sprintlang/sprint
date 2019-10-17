@@ -24,6 +24,7 @@ fn test(module: impl Display, suite: &Path) {
     let mut suite = File::open(suite).unwrap();
     suite.read_to_string(&mut input).unwrap();
 
+    // TODO: Only create file if flag is set.
     fs::create_dir_all("tests/generated").unwrap();
     let generated_file = format!("tests/generated/{}", &file_name);
     let mut file = File::create(&generated_file).unwrap();
@@ -33,14 +34,6 @@ fn test(module: impl Display, suite: &Path) {
     let log = eval(&config, &transactions).unwrap();
 
     if let Err(err) = check(&log, &directives) {
-        fs::create_dir_all("tests/generated/FAILED").unwrap();
-        // Moves the file to the FAILED subdirectory.
-        fs::rename(
-            &generated_file,
-            format!("tests/generated/FAILED/{}", &file_name),
-        )
-        .unwrap();
-
         println!("{}", log);
         panic!(err);
     }
