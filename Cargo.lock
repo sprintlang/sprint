@@ -2208,6 +2208,7 @@ dependencies = [
 name = "sprintc"
 version = "0.1.0"
 dependencies = [
+ "sprint-parser 0.1.0",
  "structopt 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
