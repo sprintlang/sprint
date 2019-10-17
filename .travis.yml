@@ -6,7 +6,7 @@ jobs:
     - stage: build
       before_install: rustup component add rustfmt clippy
       script:
-        - cargo fmt --all -- --check
-        - cargo build --all --all-targets
-        - cargo clippy --all --all-targets -- -D warnings
-        - cargo test --all --all-targets
+        - cargo fmt --all -- --check || travis_terminate 1
+        - cargo build --all --all-targets || travis_terminate 1
+        - cargo clippy --all --all-targets -- -D warnings || travis_terminate 1
+        - cargo test --all --all-targets || travis_terminate 1
