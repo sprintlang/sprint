@@ -1,47 +1,43 @@
-use super::super::{method::Method, variable::Variable};
+use super::super::{method::Transition, variable::Variable};
 use askama::Template;
 use std::{collections::HashSet, rc::Rc};
 
 #[derive(Template)]
-#[template(path = "contract.mvir", escape = "none")]
+#[template(path = "fsm.mvir", escape = "none")]
 pub struct Contract<'a> {
     name: &'a str,
-    is_conditional: bool,
-    initialize: Method<'a>,
-    acquire: Method<'a>,
+    transition_methods: Vec<Transition<'a>>,
+    terminal_states: Vec<u64>,
 }
 
 impl<'a> Contract<'a> {
     pub fn new(name: &'a str) -> Self {
         Contract {
             name,
-            is_conditional: false,
-            initialize: Default::default(),
-            acquire: Default::default(),
+            transition_methods: Vec::new(),
+            terminal_states: Vec::new(),
         }
     }
 
-    pub fn initialize(&mut self) -> &mut Method<'a> {
-        &mut self.initialize
-    }
-
-    pub fn acquire(&mut self) -> &mut Method<'a> {
-        &mut self.acquire
-    }
-
-    fn methods(&self) -> impl Iterator<Item = &Method> {
-        vec![&self.initialize, &self.acquire].into_iter()
-    }
-
-    fn dependencies(&self) -> HashSet<&str> {
-        self.methods()
-            .flat_map(|method| method.dependencies())
+    pub fn dependencies(&self) -> HashSet<&str> {
+        self.transition_methods
+            .iter()
+            .flat_map(|transition| transition.dependencies())
             .collect()
     }
 
-    fn properties(&self) -> HashSet<Rc<Variable>> {
-        self.methods()
-            .flat_map(|method| method.properties())
+    pub fn properties(&self) -> HashSet<Rc<Variable>> {
+        self.transition_methods
+            .iter()
+            .flat_map(|transition| transition.properties())
             .collect()
+    }
+
+    pub fn add_method(&mut self, method: Transition<'a>) {
+        self.transition_methods.push(method);
+    }
+
+    pub fn add_terminal_state(&mut self, state_id: u64) {
+        self.terminal_states.push(state_id);
     }
 }

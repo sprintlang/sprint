@@ -1,0 +1,74 @@
+module {{ name }} {
+    import 0x0.LibraCoin;
+    import 0x0.LibraAccount;
+
+    resource T {
+        state: u64,
+        coin_store: LibraCoin.T,
+        holder: address,
+        counterparty: address,
+    }
+
+    // Create a contract with a holder and counterparty.
+    public create(holder: address, counterparty: address): Self.T {
+        let contract: Self.T;
+
+        contract = T {
+            state: 0,
+            coin_store: LibraCoin.zero(),
+            holder: move(holder),
+            counterparty: move(counterparty),
+        };
+
+        return move(contract);
+    }
+
+    {% for transition in transition_methods %}
+    public transition_{{transition.origin_state()}}_{{transition.to_state()}}(contract_ref: &mut Self.T) {
+        let state_ref: &mut u64;
+        let coin: LibraCoin.T;
+        let counterparty: address;
+
+        state_ref = &mut copy(contract_ref).state;
+
+        // This is where you should check the conditions of executing this transition include who can execute it (checking the sender).
+        {%- for condition in transition.conditions() %}
+        {{ condition }}
+        {%- endfor %}
+
+        // Check the current state to make sure we can execute this transition
+        assert(*copy(state_ref) == {{transition.origin_state()}}, 1);
+
+        {%- for action in transition.actions() %}
+        {{ action }}
+        {%- endfor %}
+
+        *move(state_ref) = {{transition.to_state()}};
+
+        return;
+    }
+    {% endfor %}
+
+    // Destroy the contract resource
+    public destroy(contract: Self.T) {
+        let state: u64;
+        let coin_store: LibraCoin.T;
+        let holder: address;
+        let counterparty: address;
+
+        // TODO: Allow destruction before initialization or acquiring.
+
+        // Destroy the contract
+        T { state, coin_store, holder, counterparty } = move(contract);
+
+        // Check we are in a terminal state
+        assert(true {% for terminal_state in terminal_states %}
+             || (copy(state) == {{terminal_state}})
+            {% endfor %}, 401);
+
+        LibraCoin.destroy_zero(move(coin_store));
+
+        return;
+    }
+
+}

@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // TODO: Move code generation.
     // Currently the source file is written to output file as code generation has not been implemented.
-    println!("{:?}", ast);
+    println!("{:#?}", ast);
     write_output(&output_path, source.as_bytes())?;
 
     Ok(())

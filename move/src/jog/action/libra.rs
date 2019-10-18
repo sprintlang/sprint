@@ -1,67 +1,73 @@
-use crate::jog::{action::Action, variable::Variable};
+use crate::jog::{action::Action, method::Condition, variable::Variable};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
 };
 
 const DEPENDENCIES: &[&str] = &["0x0.LibraAccount", "0x0.LibraCoin"];
+const COIN_STORE: &str = "coin_store";
 
-pub struct Lock {
+pub struct Deposit {
     amount: u64,
-    locked: Rc<Variable>,
+    conditions: Vec<Rc<Condition>>,
 }
 
-impl Lock {
+impl Deposit {
     pub fn new(amount: u64) -> Self {
-        Lock {
+        Deposit {
             amount,
-            locked: Rc::new(Variable {
-                // TODO: generate name to avoid clash.
-                name: "locked",
-                type_name: "LibraCoin.T",
-                default: Some("LibraCoin.zero()"),
-            }),
+            conditions: Vec::new(),
         }
     }
 }
 
-impl Action for Lock {
+impl Action for Deposit {
     fn dependencies(&self) -> &'static [&'static str] {
         DEPENDENCIES
     }
 
     fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![self.locked.clone()]
+        vec![Rc::new(Variable {
+            name: COIN_STORE,
+            type_name: "LibraCoin.T",
+            default: Some("LibraCoin.zero()"),
+        })]
     }
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
         vec![]
     }
+
+    fn conditions(&self) -> Vec<Rc<Condition>> {
+        self.conditions.clone()
+    }
 }
 
-impl Display for Lock {
+impl Display for Deposit {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
             "LibraCoin.deposit(&mut move(contract_ref).{}, LibraAccount.withdraw_from_sender({}));",
-            self.locked.name, self.amount
+            COIN_STORE, self.amount
         )
     }
 }
 
-pub struct Unlock {
-    locked: Rc<Variable>,
+pub struct Withdraw {
+    conditions: Vec<Rc<Condition>>,
+    payee: Address,
 }
 
-impl Unlock {
-    pub fn new(action: &Lock) -> Self {
-        Unlock {
-            locked: action.locked.clone(),
+impl Withdraw {
+    pub fn new(payee: Address) -> Self {
+        Withdraw {
+            conditions: Vec::new(),
+            payee,
         }
     }
 }
 
-impl Action for Unlock {
+impl Action for Withdraw {
     fn dependencies(&self) -> &'static [&'static str] {
         DEPENDENCIES
     }
@@ -73,14 +79,32 @@ impl Action for Unlock {
     fn definitions(&self) -> Vec<Rc<Variable>> {
         vec![]
     }
+
+    fn conditions(&self) -> Vec<Rc<Condition>> {
+        self.conditions.clone()
+    }
 }
 
-impl Display for Unlock {
+impl Display for Withdraw {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "LibraAccount.deposit(copy(counterparty), move({}));",
-            self.locked.name
+            "LibraAccount.deposit({payee}, LibraCoin.withdraw(&mut copy(contract_ref).{coin_store}, 1));",
+            payee = self.payee, coin_store = COIN_STORE
         )
+    }
+}
+
+pub enum Address {
+    Holder,
+    Counterparty,
+}
+
+impl fmt::Display for Address {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Address::Holder => write!(f, "*(&mut copy(contract_ref).holder)"),
+            Address::Counterparty => write!(f, "*(&mut copy(contract_ref).counterparty)"),
+        }
     }
 }
