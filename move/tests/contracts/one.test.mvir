@@ -56,13 +56,13 @@ module ContractManager {
         let holder_ref: &address;
         let contract_ref: &mut One.T;
 
-        request_ref = borrow_global_mut<ContractRequest>(move(counterparty));
+        request_ref = borrow_global_mut<ContractRequest>(copy(counterparty));
         holder_ref = &copy(request_ref).holder;
 
         assert(*move(holder_ref) == get_txn_sender(), 1);
 
         contract_ref = &mut move(request_ref).contract;
-        One.initialize(move(contract_ref));
+        One.initialize(move(contract_ref), move(counterparty));
 
         return;
     }
@@ -97,8 +97,8 @@ import {{alice}}.ContractManager;
 main() {
     let contract: One.T;
 
-    contract = One.create({{bob}});
-    One.initialize(&mut contract);
+    contract = One.create();
+    One.initialize(&mut contract, {{bob}});
 
     ContractManager.create_proposal(move(contract));
 
@@ -135,7 +135,7 @@ import {{alice}}.ContractManager;
 main() {
     let contract: One.T;
 
-    contract = One.create({{bob}});
+    contract = One.create();
     ContractManager.create_request({{alice}}, move(contract));
 
     return;

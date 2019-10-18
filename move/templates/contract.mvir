@@ -10,11 +10,11 @@ module {{name}} {
         {%- endfor %}
     }
 
-    public create(counterparty: address): Self.T {
+    public create(): Self.T {
         let contract: Self.T;
 
         contract = T {
-            counterparty: move(counterparty),
+            counterparty: 0x0,
             {%- for property in self.properties() %}
             {{ property.name }}: {{ property.default.unwrap() }},
             {%- endfor %}
@@ -24,10 +24,12 @@ module {{name}} {
     }
 
     // Initialize the contract as the holder.
-    public initialize(contract_ref: &mut Self.T) {
+    public initialize(contract_ref: &mut Self.T, counterparty: address) {
         {%- for definition in initialize.definitions() %}
         let {{ definition.name }}: {{ definition.type_name }};
         {%- endfor %}
+
+        *(&mut copy(contract_ref).counterparty) = move(counterparty);
 
         {%- for action in initialize.actions() %}
         {{ action }}
