@@ -5,16 +5,18 @@ module {{name}} {
 
     resource T {
         counterparty: address,
+        holder: address,
         {%- for property in self.properties() %}
         {{ property.name }}: {{ property.type_name }},
         {%- endfor %}
     }
 
-    public create(): Self.T {
+    public create(holder: address): Self.T {
         let contract: Self.T;
 
         contract = T {
             counterparty: 0x0,
+            holder: move(holder),
             {%- for property in self.properties() %}
             {{ property.name }}: {{ property.default.unwrap() }},
             {%- endfor %}
@@ -25,10 +27,18 @@ module {{name}} {
 
     // Initialize the contract as the holder.
     public initialize(contract_ref: &mut Self.T, counterparty: address) {
+        let sender: address;
+        let holder: address;
         {%- for definition in initialize.definitions() %}
         let {{ definition.name }}: {{ definition.type_name }};
         {%- endfor %}
 
+        // Check that the holder is calling this method
+        sender = get_txn_sender();
+        holder = *&copy(contract_ref).holder;
+        assert(move(holder) == move(sender), 401);
+
+        // Store the counterparty in the resource
         *(&mut copy(contract_ref).counterparty) = move(counterparty);
 
         {%- for action in initialize.actions() %}
@@ -92,6 +102,7 @@ module {{name}} {
     public acquire(contract: Self.T) {
         let counterparty: address;
         let sender: address;
+        let holder: address;
         {%- for property in self.properties() %}
         let {{ property.name }}: {{ property.type_name }};
         {%- endfor %}
@@ -99,7 +110,7 @@ module {{name}} {
         let {{ definition.name }}: {{ definition.type_name }};
         {%- endfor %}
 
-        T { counterparty{% for property in self.properties() %}, {{ property.name }}{% endfor %} } = move(contract);
+        T { counterparty, holder{% for property in self.properties() %}, {{ property.name }}{% endfor %} } = move(contract);
 
         sender = get_txn_sender();
         assert(copy(counterparty) == move(sender), 401);

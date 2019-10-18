@@ -97,7 +97,7 @@ import {{alice}}.ContractManager;
 main() {
     let contract: One.T;
 
-    contract = One.create();
+    contract = One.create({{alice}});
     One.initialize(&mut contract, {{bob}});
 
     ContractManager.create_proposal(move(contract));
@@ -135,7 +135,7 @@ import {{alice}}.ContractManager;
 main() {
     let contract: One.T;
 
-    contract = One.create();
+    contract = One.create({{alice}});
     ContractManager.create_request({{alice}}, move(contract));
 
     return;
