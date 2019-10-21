@@ -14,7 +14,7 @@ pub fn contract(input: Span) -> IResult<Span, State> {
 }
 
 pub fn binary(input: Span) -> IResult<Span, Contract> {
-    padding(and)(input)
+    padding(alt((and, or)))(input)
 }
 
 pub fn unary(input: Span) -> IResult<Span, Contract> {
@@ -28,7 +28,7 @@ pub fn and(input: Span) -> IResult<Span, Contract> {
     Ok((input, Contract::And(Box::new(left), Box::new(right))))
 }
 
-pub fn zero(input: Span) -> IResult<Span, State> {
+pub fn zero(input: Span) -> IResult<Span, Contract> {
     let (input, _) = tag("zero")(input)?;
     Ok((input, State::default()))
 }
