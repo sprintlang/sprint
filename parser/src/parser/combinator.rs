@@ -3,7 +3,6 @@ use nom::{
     character::complete::char,
     character::complete::multispace0,
     error::ParseError,
-    multi::{count, many1_count},
     sequence::{delimited, terminated},
     AsBytes, AsChar, InputIter, InputTakeAtPosition, Slice,
 };
@@ -39,8 +38,8 @@ where
     F: Fn(I) -> nom::IResult<I, O, E> + Copy,
 {
     move |input: I| {
-        let (input, brackets) = many1_count(char('('))(input)?;
-        terminated(f, count(char(')'), brackets))(input)
+        let (input, _) = char('(')(input)?;
+        terminated(f, char(')'))(input)
     }
 }
 
@@ -96,9 +95,6 @@ mod tests {
     #[test]
     fn parse_brackets() {
         assert_eq!(brackets(parser)("(abc)"), Ok(("", "abc")));
-        assert_eq!(brackets(parser)("((abc))"), Ok(("", "abc")));
-        assert_eq!(brackets(parser)("(((abc)))"), Ok(("", "abc")));
-        assert_eq!(brackets(parser)("(abc))"), Ok((")", "abc")));
         brackets(parser)("(abc").unwrap_err();
         brackets(parser)("((abc").unwrap_err();
         brackets(parser)("((abc)").unwrap_err();

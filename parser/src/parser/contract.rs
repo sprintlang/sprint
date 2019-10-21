@@ -12,24 +12,21 @@ use std::rc::Rc;
 pub fn contract(input: Span) -> IResult<Span, State> {
     padding(alt((brackets(contract), zero, one, give, and, or, anytime)))(input)
 }
-// pub fn contract(input: Span) -> IResult<Span, Contract> {
-//     // padding(alt(brackets(contract), disjunct)(input)
-//     padding(alt((brackets(contract), conjunct, primitive)))(input)
-// }
 
-// pub fn primitive(input: Span) -> IResult<Span, Contract> {
-//     padding(alt((brackets(primitive), zero, one)))(input)
-// }
+pub fn binary(input: Span) -> IResult<Span, Contract> {
+    padding(and)(input)
+}
 
-// pub fn conjunct(input: Span) -> IResult<Span, Contract> {
-//     let (input, left) = primitive(input)?;
-//     if input.fragment == "" {
-//         return Ok((input, left));
-//     }
-//     let (input, _) = tag("and")(input)?;
-//     let (input, right) = contract(input)?;
-//     Ok((input, Contract::And(Box::new(left), Box::new(right))))
-// }
+pub fn unary(input: Span) -> IResult<Span, Contract> {
+    padding(alt((brackets(contract), zero, one, give)))(input)
+}
+
+pub fn and(input: Span) -> IResult<Span, Contract> {
+    let (input, left) = unary(input)?;
+    let (input, _) = tag("and")(input)?;
+    let (input, right) = contract(input)?;
+    Ok((input, Contract::And(Box::new(left), Box::new(right))))
+}
 
 pub fn zero(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("zero")(input)?;
