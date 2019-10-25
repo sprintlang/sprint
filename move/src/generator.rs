@@ -29,7 +29,16 @@ impl<'a> Generator<'a> {
     }
 
     pub fn generate(&mut self, state: &State) -> usize {
-        let id = self.id(state);
+        let key = state as *const State;
+
+        if let Some(&id) = self.ids.get(&key) {
+            // Do not generate code for the same state twice!
+            return id;
+        }
+
+        // Zero is reserved for the terminal state.
+        let id = self.ids.len() + 1;
+        self.ids.insert(key, id);
 
         for transition in state.transitions() {
             let next_id = match transition.next() {
@@ -63,20 +72,6 @@ impl<'a> Generator<'a> {
 
     pub fn contract(&self) -> &Contract {
         &self.contract
-    }
-
-    fn id(&mut self, state: &State) -> usize {
-        let key = state as *const State;
-
-        if let Some(&id) = self.ids.get(&key) {
-            return id;
-        }
-
-        // Zero is reserved for the terminal state.
-        let id = self.ids.len() + 1;
-        self.ids.insert(key, id);
-
-        id
     }
 }
 
