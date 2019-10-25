@@ -32,11 +32,13 @@ pub fn one(input: Span) -> IResult<Span, State> {
 
 pub fn give(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("give")(input)?;
-    let (input, mut state) = contract(input)?;
+    let (input, next) = contract(input)?;
 
-    for transition in state.transitions_mut() {
-        transition.add_effect(Effect::Flip);
-    }
+    let mut transition = Transition::default();
+    transition.add_effect(Effect::Flip).set_next(next.into());
+
+    let mut state = State::default();
+    state.add_transition(transition);
 
     Ok((input, state))
 }

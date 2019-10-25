@@ -11,10 +11,6 @@ impl State {
         &self.transitions
     }
 
-    pub fn transitions_mut(&mut self) -> &mut [Transition] {
-        &mut self.transitions
-    }
-
     pub fn add_transition(&mut self, transition: Transition) -> &mut Self {
         self.transitions.push(transition);
         self
