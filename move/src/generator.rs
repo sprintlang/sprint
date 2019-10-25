@@ -11,7 +11,7 @@ use sprint_parser::ast::{
     },
     state::{Effect, State},
 };
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 
 pub struct Generator<'a> {
     contract: Contract<'a>,
@@ -28,11 +28,11 @@ impl<'a> Generator<'a> {
 
     pub fn generate(&mut self, state: State) {
         let starting_state = self.next_id();
-        self.visit(Rc::new(RefCell::new(state)), starting_state);
+        self.visit(state.into(), starting_state);
     }
 
-    fn visit(&mut self, state: Rc<RefCell<State>>, state_id: u64) {
-        for transition in state.borrow().transitions() {
+    fn visit(&mut self, state: Rc<State>, state_id: u64) {
+        for transition in state.transitions() {
             let to_state_id = self.next_id();
             let mut method = Transition::new(state_id, to_state_id);
 

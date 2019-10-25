@@ -1,5 +1,5 @@
 use super::expression::{kind::Observable, Expression};
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 
 #[derive(Default, Debug)]
 pub struct State {
@@ -25,7 +25,7 @@ impl State {
 pub struct Transition {
     conditions: Vec<Rc<dyn Expression>>,
     effects: Vec<Effect>,
-    next: Option<Rc<RefCell<State>>>,
+    next: Option<Rc<State>>,
 }
 
 impl Transition {
@@ -47,11 +47,11 @@ impl Transition {
         self
     }
 
-    pub fn next(&self) -> Option<Rc<RefCell<State>>> {
+    pub fn next(&self) -> Option<Rc<State>> {
         self.next.clone()
     }
 
-    pub fn set_next(&mut self, next: Rc<RefCell<State>>) -> &mut Self {
+    pub fn set_next(&mut self, next: Rc<State>) -> &mut Self {
         self.next = Some(next);
         self
     }

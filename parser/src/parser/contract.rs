@@ -7,7 +7,7 @@ use crate::ast::{
     state::{Effect, State, Transition},
 };
 use nom::{branch::alt, bytes::complete::tag, sequence::tuple};
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 
 pub fn contract(input: Span) -> IResult<Span, State> {
     padding(alt((brackets(contract), zero, one, give, and, or, anytime)))(input)
@@ -58,12 +58,12 @@ pub fn or(input: Span) -> IResult<Span, State> {
     let mut left_transition = Transition::default();
     left_transition
         .add_condition(is_holder.clone())
-        .set_next(Rc::new(left.into()));
+        .set_next(left.into());
 
     let mut right_transition = Transition::default();
     right_transition
         .add_condition(is_holder.clone())
-        .set_next(Rc::new(right.into()));
+        .set_next(right.into());
 
     let mut state = State::default();
     state
@@ -80,7 +80,7 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
     let mut transition = Transition::default();
     transition
         .add_condition(Rc::new(Observable::IsHolder))
-        .set_next(Rc::new(RefCell::new(next)));
+        .set_next(next.into());
 
     let mut state = State::default();
     state.add_transition(transition);
