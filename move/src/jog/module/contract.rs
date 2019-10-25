@@ -7,7 +7,6 @@ use std::{collections::HashSet, rc::Rc};
 pub struct Contract<'a> {
     name: &'a str,
     transition_methods: Vec<Transition<'a>>,
-    terminal_states: Vec<u64>,
 }
 
 impl<'a> Contract<'a> {
@@ -15,7 +14,6 @@ impl<'a> Contract<'a> {
         Contract {
             name,
             transition_methods: Vec::new(),
-            terminal_states: Vec::new(),
         }
     }
 
@@ -35,9 +33,5 @@ impl<'a> Contract<'a> {
 
     pub fn add_method(&mut self, method: Transition<'a>) {
         self.transition_methods.push(method);
-    }
-
-    pub fn add_terminal_state(&mut self, state_id: u64) {
-        self.terminal_states.push(state_id);
     }
 }

@@ -31,12 +31,12 @@ module {{ name }} {
 
         state_ref = &mut copy(contract_ref).state;
 
-        // This is where you should check the conditions of executing this transition include who can execute it (checking the sender).
+        // Check the conditions for this transition.
         {%- for condition in transition.conditions() %}
         {{ condition }}
         {%- endfor %}
 
-        // Check the current state to make sure we can execute this transition
+        // Check the current state to make sure we can execute this transition.
         assert(*copy(state_ref) == {{transition.origin_state()}}, 1);
 
         {%- for action in transition.actions() %}
@@ -49,22 +49,20 @@ module {{ name }} {
     }
     {% endfor %}
 
-    // Destroy the contract resource
+    // Destroy the contract resource.
     public destroy(contract: Self.T) {
         let state: u64;
         let coin_store: LibraCoin.T;
         let holder: address;
         let counterparty: address;
 
-        // TODO: Allow destruction before initialization or acquiring.
+        // TODO: allow destruction before initialization or acquiring.
 
-        // Destroy the contract
+        // Destroy the contract.
         T { state, coin_store, holder, counterparty } = move(contract);
 
-        // Check we are in a terminal state
-        assert(true {% for terminal_state in terminal_states %}
-             || (copy(state) == {{terminal_state}})
-            {% endfor %}, 401);
+        // Check we are in a terminal state.
+        assert(copy(state) == 0, 401);
 
         LibraCoin.destroy_zero(move(coin_store));
 

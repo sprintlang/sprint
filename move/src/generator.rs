@@ -11,30 +11,33 @@ use sprint_parser::ast::{
     },
     state::{Effect, State},
 };
-use std::rc::Rc;
+use std::collections::HashMap;
+
+const TERMINAL_ID: usize = 0;
 
 pub struct Generator<'a> {
     contract: Contract<'a>,
-    next_id: u64,
+    ids: HashMap<*const State, usize>,
 }
 
 impl<'a> Generator<'a> {
     pub fn new(name: &'a str) -> Self {
         Generator {
             contract: Contract::new(name),
-            next_id: 0,
+            ids: HashMap::new(),
         }
     }
 
-    pub fn generate(&mut self, state: State) {
-        let starting_state = self.next_id();
-        self.visit(state.into(), starting_state);
-    }
+    pub fn generate(&mut self, state: &State) -> usize {
+        let id = self.id(state);
 
-    fn visit(&mut self, state: Rc<State>, state_id: u64) {
         for transition in state.transitions() {
-            let to_state_id = self.next_id();
-            let mut method = Transition::new(state_id, to_state_id);
+            let next_id = match transition.next() {
+                Some(next) => self.generate(next.as_ref()),
+                None => TERMINAL_ID,
+            };
+
+            let mut method = Transition::new(id, next_id);
 
             for _condition in transition.conditions() {
                 // TODO: implement
@@ -53,23 +56,27 @@ impl<'a> Generator<'a> {
             }
 
             self.contract.add_method(method);
-
-            match transition.next() {
-                Some(next) => self.visit(next, to_state_id),
-                None => self.contract.add_terminal_state(to_state_id),
-            };
         }
-    }
 
-    fn next_id(&mut self) -> u64 {
-        let next = self.next_id;
-        self.next_id += 1;
-
-        next
+        id
     }
 
     pub fn contract(&self) -> &Contract {
         &self.contract
+    }
+
+    fn id(&mut self, state: &State) -> usize {
+        let key = state as *const State;
+
+        if let Some(&id) = self.ids.get(&key) {
+            return id;
+        }
+
+        // Zero is reserved for the terminal state.
+        let id = self.ids.len() + 1;
+        self.ids.insert(key, id);
+
+        id
     }
 }
 

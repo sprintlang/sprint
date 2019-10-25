@@ -4,12 +4,12 @@ use std::{fmt, rc::Rc};
 #[derive(Default)]
 pub struct Transition<'a> {
     actions: Vec<Box<dyn Action + 'a>>,
-    origin_state: u64,
-    to_state: u64,
+    origin_state: usize,
+    to_state: usize,
 }
 
 impl<'a> Transition<'a> {
-    pub fn new(origin_state: u64, to_state: u64) -> Self {
+    pub fn new(origin_state: usize, to_state: usize) -> Self {
         Transition {
             actions: Vec::new(),
             origin_state,
@@ -46,11 +46,11 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
-    pub fn origin_state(&self) -> u64 {
+    pub fn origin_state(&self) -> usize {
         self.origin_state
     }
 
-    pub fn to_state(&self) -> u64 {
+    pub fn to_state(&self) -> usize {
         self.to_state
     }
 
