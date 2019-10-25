@@ -18,25 +18,25 @@ pub fn contract(input: Span) -> IResult<Span, State> {
 //     padding(alt((or, disjunct)))(input)
 // }
 
-pub fn disjunct(input: Span) -> IResult<Span, Contract> {
+pub fn disjunct(input: Span) -> IResult<Span, State> {
     padding(alt((and, conjunct)))(input)
 }
 
-pub fn conjunct(input: Span) -> IResult<Span, Contract> {
+pub fn conjunct(input: Span) -> IResult<Span, State> {
     padding(alt((unary, nullary)))(input)
 }
 
-pub fn unary(input: Span) -> IResult<Span, Contract> {
+pub fn unary(input: Span) -> IResult<Span, State> {
     padding(alt((brackets(contract), give)))(input)
 }
 
-pub fn nullary(input: Span) -> IResult<Span, Contract> {
+pub fn nullary(input: Span) -> IResult<Span, State> {
     padding(alt((zero, one)))(input)
 }
 
 // Contract combinators
 
-pub fn zero(input: Span) -> IResult<Span, Contract> {
+pub fn zero(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("zero")(input)?;
     Ok((input, State::default()))
 }
