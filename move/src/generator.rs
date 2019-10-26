@@ -1,7 +1,5 @@
 use crate::jog::{
-    action::libra::{Address, Withdraw},
-    method::Transition,
-    module::contract::Contract,
+    action::flip::Flip, action::libra, method::Transition, module::contract::Contract,
 };
 use sprint_parser::ast::{
     expression::{Class, Expression, Observable},
@@ -51,12 +49,16 @@ impl<'a> Generator<'a> {
             for effect in transition.effects() {
                 match effect {
                     Effect::Flip => {
-                        // TODO: implement
+                        method.add_action(Flip::default());
                     }
                     Effect::Scale(_amount) => {
-                        // TODO: implement
+                        let mut _expression_generator = ExpressionGenerator::new(&method);
+                        // TODO: Add scale action to method
+                        // expression_generator.generate(amount);
                     }
-                    Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
+                    Effect::Withdraw => {
+                        method.add_action(libra::Withdraw::new(libra::Address::Holder))
+                    }
                 }
             }
 
@@ -77,7 +79,6 @@ pub struct ExpressionGenerator<'a> {
 }
 
 impl<'a> ExpressionGenerator<'a> {
-    #[allow(dead_code)]
     fn new(transition: &'a Transition) -> Self {
         ExpressionGenerator {
             _transition: transition,
