@@ -1,0 +1,63 @@
+//! new-transaction
+//! sender: alice
+module ContractStore {
+  import {{alice}}.One;
+
+  resource T {
+    contract: One.T,
+  }
+
+  public store(contract: One.T) {
+    let contract_holder: Self.T;
+
+    contract_holder = T {
+      contract: move(contract),
+    };
+
+    move_to_sender<T>(move(contract_holder));
+
+    return;
+  }
+
+  public get(holder: address): One.T acquires T {
+    let contract: One.T;
+
+    T { contract } = move_from<T>({{alice}});
+
+    return move(contract);
+  }
+}
+
+//! new-transaction
+//! sender: alice
+import {{alice}}.One;
+import {{alice}}.ContractStore;
+
+main() {
+  let contract: One.T;
+
+  contract = One.create({{bob}}, {{chris}});
+  ContractStore.store(move(contract));
+
+  return;
+}
+
+// TODO: Check bob can initialized the contract
+
+// Checks chris can execute the one
+//! new-transaction
+//! sender: chris
+import {{alice}}.One;
+import {{alice}}.ContractStore;
+
+main() {
+  let contract: One.T;
+
+  contract = ContractStore.get({{alice}});
+  // NOTE: This transaction will fail until a balance is deposited into the contract.
+  One.transition_1_0(&mut contract);
+
+  ContractStore.store(move(contract));
+
+  return;
+}

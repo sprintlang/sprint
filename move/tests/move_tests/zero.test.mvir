@@ -1,0 +1,45 @@
+//! new-transaction
+//! sender: alice
+module ContractStore {
+  import {{alice}}.Zero;
+
+  resource T {
+    contract: Zero.T,
+  }
+
+  public store(contract: Zero.T) {
+    let contract_holder: Self.T;
+
+    contract_holder = T {
+      contract: move(contract),
+    };
+
+    move_to_sender<T>(move(contract_holder));
+
+    return;
+  }
+
+  public get(holder: address): Zero.T acquires T {
+    let contract: Zero.T;
+
+    T { contract } = move_from<T>({{alice}});
+
+    return move(contract);
+  }
+}
+
+//! new-transaction
+//! sender: alice
+import {{alice}}.Zero;
+import {{alice}}.ContractStore;
+
+main() {
+  let contract: Zero.T;
+
+  contract = Zero.create({{bob}}, {{chris}});
+  ContractStore.store(move(contract));
+
+  return;
+}
+
+// TODO: Make sure we can destroy the contract.
