@@ -1,4 +1,4 @@
-use super::expression::{kind::Observable, Expression};
+use super::expression::{Expression, Observable};
 use std::rc::Rc;
 
 #[derive(Default, Debug)]
@@ -19,17 +19,17 @@ impl State {
 
 #[derive(Default, Debug)]
 pub struct Transition {
-    conditions: Vec<Rc<dyn Expression>>,
+    conditions: Vec<Rc<Expression>>,
     effects: Vec<Effect>,
     next: Option<Rc<State>>,
 }
 
 impl Transition {
-    pub fn conditions(&self) -> &[Rc<dyn Expression>] {
+    pub fn conditions(&self) -> &[Rc<Expression>] {
         &self.conditions
     }
 
-    pub fn add_condition(&mut self, condition: Rc<dyn Expression>) -> &mut Self {
+    pub fn add_condition(&mut self, condition: Rc<Expression>) -> &mut Self {
         self.conditions.push(condition);
         self
     }

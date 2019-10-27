@@ -1,10 +1,50 @@
-pub mod class;
-pub mod kind;
-pub mod visitor;
+mod class;
 
-use self::{kind::Kind, visitor::Accept};
-use std::fmt::Debug;
+pub use self::class::{Class, Comparable, Equatable, Numerable};
 
-pub trait Expression: Accept + Debug {
-    fn kind(&self) -> Kind;
+#[derive(PartialEq, Eq, Debug)]
+pub enum Expression {
+    Boolean(bool),
+    Class(Class),
+    Observable(Observable),
+    Word(u64),
+}
+
+#[derive(PartialEq, Eq)]
+pub enum Kind {
+    Boolean,
+    Observable(Box<Kind>),
+    Word,
+}
+
+impl Expression {
+    pub fn kind(&self) -> Kind {
+        match self {
+            Self::Boolean(_) => Kind::Boolean,
+            Self::Class(c) => match c {
+                Class::Comparable(_) => Kind::Boolean,
+                Class::Equatable(_) => Kind::Boolean,
+                Class::Numerable(n) => n.kind(),
+            },
+            Self::Observable(o) => Kind::Observable(Box::new(match o {
+                Observable::IsHolder => Kind::Boolean,
+                Observable::IsCounterparty => Kind::Boolean,
+                Observable::Konst(e) => e.kind(),
+            })),
+            Self::Word(_) => Kind::Word,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum Observable {
+    IsHolder,
+    IsCounterparty,
+    Konst(Box<Expression>),
+}
+
+impl From<Expression> for Observable {
+    fn from(e: Expression) -> Self {
+        Self::Konst(Box::new(e))
+    }
 }

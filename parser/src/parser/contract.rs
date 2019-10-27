@@ -3,7 +3,7 @@ use super::{
     IResult, Span,
 };
 use crate::ast::{
-    expression::kind::Observable,
+    expression::{Expression, Observable},
     state::{Effect, State, Transition},
 };
 use nom::{branch::alt, bytes::complete::tag, sequence::tuple};
@@ -55,7 +55,7 @@ pub fn or(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("or")(input)?;
     let (input, (left, right)) = tuple((contract, contract))(input)?;
 
-    let is_holder = Rc::new(Observable::IsHolder);
+    let is_holder = Rc::new(Expression::Observable(Observable::IsHolder));
 
     let mut left_transition = Transition::default();
     left_transition
@@ -81,7 +81,7 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
 
     let mut transition = Transition::default();
     transition
-        .add_condition(Rc::new(Observable::IsHolder))
+        .add_condition(Rc::new(Expression::Observable(Observable::IsHolder)))
         .set_next(next.into());
 
     let mut state = State::default();

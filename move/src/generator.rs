@@ -4,11 +4,7 @@ use crate::jog::{
     module::contract::Contract,
 };
 use sprint_parser::ast::{
-    expression::{
-        class::{Comparable, Equatable, Numerable},
-        kind::{Boolean, Observable, Word},
-        visitor::Visitor,
-    },
+    expression::{Class, Expression, Observable},
     state::{Effect, State},
 };
 use std::collections::HashMap;
@@ -29,7 +25,7 @@ impl<'a> Generator<'a> {
     }
 
     pub fn generate(&mut self, state: &State) -> usize {
-        let key = state as *const State;
+        let key = state as *const _;
 
         if let Some(&id) = self.ids.get(&key) {
             // Do not generate code for the same state twice!
@@ -88,36 +84,27 @@ impl<'a> ExpressionGenerator<'a> {
             expression: String::new(),
         }
     }
-}
 
-impl<'a> Visitor for ExpressionGenerator<'a> {
-    fn visit_boolean(&mut self, _value: &Boolean) {
-        unimplemented!();
-    }
+    #[allow(dead_code)]
+    fn generate(&mut self, expression: &Expression) {
+        match expression {
+            Expression::Boolean(_) => unimplemented!(),
 
-    fn visit_comparable(&mut self, _value: &Comparable) {
-        unimplemented!();
-    }
+            Expression::Class(class) => match class {
+                Class::Comparable(_) => unimplemented!(),
+                Class::Equatable(_) => unimplemented!(),
+                Class::Numerable(_) => unimplemented!(),
+            },
 
-    fn visit_equatable(&mut self, _value: &Equatable) {
-        unimplemented!();
-    }
+            Expression::Observable(observable) => match observable {
+                Observable::IsHolder => self.expression.push_str("get_txn_address() == holder"),
+                Observable::IsCounterparty => self
+                    .expression
+                    .push_str("get_txn_address() == counterparty"),
+                Observable::Konst(expression) => self.generate(expression),
+            },
 
-    fn visit_numerable(&mut self, _value: &Numerable) {
-        unimplemented!();
-    }
-
-    fn visit_observable(&mut self, value: &Observable) {
-        match value {
-            Observable::IsHolder => self.expression.push_str("get_txn_address() == holder"),
-            Observable::IsCounterparty => self
-                .expression
-                .push_str("get_txn_address() == counterparty"),
-            Observable::Konst(value) => value.accept(self),
-        }
-    }
-
-    fn visit_word(&mut self, &Word(value): &Word) {
-        self.expression.push_str(&value.to_string());
+            Expression::Word(word) => self.expression.push_str(&word.to_string()),
+        };
     }
 }
