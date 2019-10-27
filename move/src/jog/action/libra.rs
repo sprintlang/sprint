@@ -1,4 +1,4 @@
-use crate::jog::{action::Action, method::Condition, variable::Variable};
+use crate::jog::{action::Action, variable::Variable};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
@@ -9,15 +9,11 @@ const COIN_STORE: &str = "coin_store";
 
 pub struct Deposit {
     amount: u64,
-    conditions: Vec<Rc<Condition>>,
 }
 
 impl Deposit {
     pub fn new(amount: u64) -> Self {
-        Deposit {
-            amount,
-            conditions: Vec::new(),
-        }
+        Deposit { amount }
     }
 }
 
@@ -37,10 +33,6 @@ impl Action for Deposit {
     fn definitions(&self) -> Vec<Rc<Variable>> {
         vec![]
     }
-
-    fn conditions(&self) -> Vec<Rc<Condition>> {
-        self.conditions.clone()
-    }
 }
 
 impl Display for Deposit {
@@ -54,16 +46,12 @@ impl Display for Deposit {
 }
 
 pub struct Withdraw {
-    conditions: Vec<Rc<Condition>>,
     payee: Address,
 }
 
 impl Withdraw {
     pub fn new(payee: Address) -> Self {
-        Withdraw {
-            conditions: Vec::new(),
-            payee,
-        }
+        Withdraw { payee }
     }
 }
 
@@ -78,10 +66,6 @@ impl Action for Withdraw {
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
         vec![]
-    }
-
-    fn conditions(&self) -> Vec<Rc<Condition>> {
-        self.conditions.clone()
     }
 }
 

@@ -3,6 +3,7 @@ use std::{fmt, rc::Rc};
 
 #[derive(Default)]
 pub struct Transition<'a> {
+    conditions: Vec<Rc<Condition>>,
     actions: Vec<Box<dyn Action + 'a>>,
     origin_state: usize,
     to_state: usize,
@@ -11,6 +12,7 @@ pub struct Transition<'a> {
 impl<'a> Transition<'a> {
     pub fn new(origin_state: usize, to_state: usize) -> Self {
         Transition {
+            conditions: Vec::new(),
             actions: Vec::new(),
             origin_state,
             to_state,
@@ -40,10 +42,11 @@ impl<'a> Transition<'a> {
     }
 
     pub fn conditions(&self) -> Vec<Rc<Condition>> {
-        self.actions
-            .iter()
-            .flat_map(|action| action.conditions())
-            .collect()
+        self.conditions.clone()
+    }
+
+    pub fn add_condition(&mut self, condition: Rc<Condition>) {
+        self.conditions.push(condition);
     }
 
     pub fn origin_state(&self) -> usize {

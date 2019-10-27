@@ -1,11 +1,15 @@
 use crate::jog::{
-    action::flip::Flip, action::libra, method::Transition, module::contract::Contract,
+    action::flip::Flip,
+    action::libra,
+    method::{Condition, Transition},
+    module::contract::Contract,
 };
 use sprint_parser::ast::{
     expression::{Class, Expression, Observable},
     state::{Effect, State},
 };
 use std::collections::HashMap;
+use std::rc::Rc;
 
 const TERMINAL_ID: usize = 0;
 
@@ -42,8 +46,12 @@ impl<'a> Generator<'a> {
 
             let mut method = Transition::new(id, next_id);
 
-            for _condition in transition.conditions() {
-                // TODO: implement
+            for condition in transition.conditions() {
+                let mut expression_generator = ExpressionGenerator::new(&method);
+                condition.accept(&mut expression_generator);
+                let condition = expression_generator.expression;
+
+                method.add_condition(Rc::new(Condition::new(condition, 0)));
             }
 
             for effect in transition.effects() {
@@ -99,11 +107,13 @@ impl<'a> ExpressionGenerator<'a> {
             },
 
             Expression::Observable(observable) => match observable {
-                Observable::IsHolder => self.expression.push_str("get_txn_address() == holder"),
+                Observable::IsHolder => self
+                    .expression
+                    .push_str("get_txn_address() == *copy(contract_ref).holder"),
                 Observable::IsCounterparty => self
                     .expression
-                    .push_str("get_txn_address() == counterparty"),
-                Observable::Konst(expression) => self.generate(expression),
+                    .push_str("get_txn_address() == *copy(contract_ref).counterparty"),
+                Observable::Konst(value) => value.accept(self),
             },
 
             Expression::Word(word) => self.expression.push_str(&word.to_string()),
