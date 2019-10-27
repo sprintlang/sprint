@@ -4,6 +4,7 @@ use super::{Expression, Kind};
 pub enum Class {
     Comparable(Comparable),
     Equatable(Equatable),
+    Negatable(Negatable),
     Numerable(Numerable),
 }
 
@@ -19,6 +20,11 @@ pub enum Comparable {
 pub enum Equatable {
     Equal(Box<Expression>, Box<Expression>),
     NotEqual(Box<Expression>, Box<Expression>),
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum Negatable {
+    Negate(Box<Expression>),
 }
 
 #[derive(PartialEq, Eq, Debug)]

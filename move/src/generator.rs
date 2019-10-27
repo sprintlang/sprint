@@ -93,6 +93,7 @@ impl<'a> ExpressionGenerator<'a> {
             Expression::Class(class) => match class {
                 Class::Comparable(_) => unimplemented!(),
                 Class::Equatable(_) => unimplemented!(),
+                Class::Negatable(_) => unimplemented!(),
                 Class::Numerable(_) => unimplemented!(),
             },
 

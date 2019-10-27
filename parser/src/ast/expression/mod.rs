@@ -1,6 +1,6 @@
 mod class;
 
-pub use self::class::{Class, Comparable, Equatable, Numerable};
+pub use self::class::{Class, Comparable, Equatable, Negatable, Numerable};
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum Expression {
@@ -24,6 +24,7 @@ impl Expression {
             Self::Class(c) => match c {
                 Class::Comparable(_) => Kind::Boolean,
                 Class::Equatable(_) => Kind::Boolean,
+                Class::Negatable(Negatable::Negate(e)) => e.kind(),
                 Class::Numerable(n) => n.kind(),
             },
             Self::Observable(o) => Kind::Observable(Box::new(match o {
