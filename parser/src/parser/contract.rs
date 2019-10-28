@@ -114,15 +114,19 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("anytime")(input)?;
     let (input, next) = contract(input)?;
 
+    Ok((input, build_anytime_state(next)))
+}
+
+pub fn build_anytime_state(sub_contract: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_condition(Expression::from(Observable::IsHolder).into())
-        .set_next(next.into());
+        .set_next(sub_contract.into());
 
     let mut state = State::default();
     state.add_transition(transition);
 
-    Ok((input, state))
+    state
 }
 
 #[cfg(test)]
@@ -319,6 +323,21 @@ mod tests {
                 build_or_state(build_give_state(State::default()), State::default()),
             ),
         );
+    }
+
+    #[test]
+    fn build_anytime() {
+        let actual_state = build_anytime_state(State::default());
+
+        let mut transition = Transition::default();
+        transition
+            .add_condition(Expression::from(Observable::IsHolder).into())
+            .set_next(State::default().into());
+
+        let mut expected_state = State::default();
+        expected_state.add_transition(transition);
+
+        assert_eq!(actual_state, expected_state);
     }
 
     //     #[test]
