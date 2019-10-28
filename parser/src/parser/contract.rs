@@ -57,13 +57,19 @@ pub fn give(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("give")(input)?;
     let (input, next) = contract(input)?;
 
+    Ok((input, build_give_state(next)))
+}
+
+pub fn build_give_state(sub_contract: State) -> State {
     let mut transition = Transition::default();
-    transition.add_effect(Effect::Flip).set_next(next.into());
+    transition
+        .add_effect(Effect::Flip)
+        .set_next(sub_contract.into());
 
     let mut state = State::default();
     state.add_transition(transition);
 
-    Ok((input, state))
+    state
 }
 
 pub fn and(input: Span) -> IResult<Span, State> {
@@ -259,18 +265,33 @@ mod tests {
         );
     }
 
-    //     #[test]
-    //     fn parse_give() {
-    //         parse_contract_ok("give zero", ("", Contract::Give(Box::new(Contract::Zero))));
+    #[test]
+    fn build_give() {
+        let actual_state = build_give_state(State::default());
 
-    //         parse_contract_ok(
-    //             "give give zero",
-    //             (
-    //                 "",
-    //                 Contract::Give(Box::new(Contract::Give(Box::new(Contract::Zero)))),
-    //             ),
-    //         );
-    //     }
+        let mut transition = Transition::default();
+        transition
+            .add_effect(Effect::Flip)
+            .set_next(State::default().into());
+
+        let mut expected_state = State::default();
+        expected_state.add_transition(transition);
+
+        assert_eq!(actual_state, expected_state);
+    }
+
+    // #[test]
+    // fn parse_give() {
+    //     parse_contract_ok("give zero", ("", Contract::Give(Box::new(Contract::Zero))));
+
+    //     parse_contract_ok(
+    //         "give give zero",
+    //         (
+    //             "",
+    //             Contract::Give(Box::new(Contract::Give(Box::new(Contract::Zero)))),
+    //         ),
+    //     );
+    // }
 
     //     #[test]
     //     fn parse_and() {
