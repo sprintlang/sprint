@@ -340,6 +340,42 @@ mod tests {
         assert_eq!(actual_state, expected_state);
     }
 
+    #[test]
+    fn parse_anytime() {
+        parse_contract_ok("anytime zero", ("", build_anytime_state(State::default())));
+
+        parse_contract_ok(
+            "anytime (zero or give zero)",
+            (
+                "",
+                build_anytime_state(build_or_state(
+                    State::default(),
+                    build_give_state(State::default()),
+                )),
+            ),
+        );
+
+        parse_contract_ok(
+            "anytime give zero",
+            ("", build_anytime_state(build_give_state(State::default()))),
+        );
+    }
+
+    #[test]
+    fn parse_anytime_with_binary_operators() {
+        // Brackets to enforce precedence.
+        parse_contract_ok(
+            "(anytime zero) or (give zero)",
+            (
+                "",
+                build_or_state(
+                    build_anytime_state(State::default()),
+                    build_give_state(State::default()),
+                ),
+            ),
+        );
+    }
+
     //     #[test]
     //     fn parse_and() {
     //         parse_contract_ok(
