@@ -113,18 +113,31 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
 
 #[cfg(test)]
 mod tests {
-    // TODO: Reformat tests for state machine target.
+    use super::super::combinator::span;
+    use super::*;
+    // use nom::combinator::all_consuming;
 
-    //     use super::super::combinator::span;
-    //     use super::*;
-    //     use nom::combinator::all_consuming;
+    fn parse_contract_ok(input: &str, expected: (&str, State)) {
+        assert_eq!(span(contract)(input), Ok(expected));
+    }
 
-    //     fn parse_contract_ok(input: &str, expected: (&str, Contract)) {
-    //         assert_eq!(span(contract)(input), Ok(expected));
+    // fn parse_contract_err(input: &str) {
+    //     assert!(span(all_consuming(contract))(input).is_err());
+    // }
+
+    #[test]
+    fn parse_zero() {
+        parse_contract_ok("zero", ("", State::default()));
+    }
+
+    //     #[test]
+    //     fn parse_one() {
+    //         parse_contract_ok("one", ("", Contract::One));
     //     }
 
-    //     fn parse_contract_err(input: &str) {
-    //         assert!(span(all_consuming(contract))(input).is_err());
+    //     #[test]
+    //     fn parse_two() {
+    //         parse_contract_err("two");
     //     }
 
     //     #[test]
@@ -194,21 +207,6 @@ mod tests {
     //                 ),
     //             ),
     //         );
-    //     }
-
-    //     #[test]
-    //     fn parse_zero() {
-    //         parse_contract_ok("zero", ("", Contract::Zero));
-    //     }
-
-    //     #[test]
-    //     fn parse_one() {
-    //         parse_contract_ok("one", ("", Contract::One));
-    //     }
-
-    //     #[test]
-    //     fn parse_two() {
-    //         parse_contract_err("two");
     //     }
 
     //     #[test]
