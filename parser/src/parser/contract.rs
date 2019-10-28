@@ -40,13 +40,17 @@ pub fn zero(input: Span) -> IResult<Span, State> {
 pub fn one(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("one")(input)?;
 
+    Ok((input, build_one_state()))
+}
+
+pub fn build_one_state() -> State {
     let mut transition = Transition::default();
     transition.add_effect(Effect::Withdraw);
 
     let mut state = State::default();
     state.add_transition(transition);
 
-    Ok((input, state))
+    state
 }
 
 pub fn give(input: Span) -> IResult<Span, State> {
@@ -76,6 +80,10 @@ pub fn or(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("or")(input)?;
     let (input, right) = contract(input)?;
 
+    Ok((input, build_or_state(left, right)))
+}
+
+pub fn build_or_state(left: State, right: State) -> State {
     let is_holder = Rc::new(Expression::from(Observable::IsHolder));
 
     let mut left_transition = Transition::default();
@@ -93,7 +101,7 @@ pub fn or(input: Span) -> IResult<Span, State> {
         .add_transition(left_transition)
         .add_transition(right_transition);
 
-    Ok((input, state))
+    state
 }
 
 pub fn anytime(input: Span) -> IResult<Span, State> {
@@ -131,14 +139,21 @@ mod tests {
     }
 
     #[test]
-    fn parse_one() {
+    fn build_one() {
+        let actual_state = build_one_state();
+
         let mut transition = Transition::default();
         transition.add_effect(Effect::Withdraw);
 
-        let mut state = State::default();
-        state.add_transition(transition);
+        let mut expected_state = State::default();
+        expected_state.add_transition(transition);
 
-        parse_contract_ok("one", ("", state));
+        assert_eq!(actual_state, expected_state);
+    }
+
+    #[test]
+    fn parse_one() {
+        parse_contract_ok("one", ("", build_one_state()));
     }
 
     #[test]
@@ -146,33 +161,80 @@ mod tests {
         parse_contract_err("two");
     }
 
-    //     #[test]
-    //     fn parse_contract_with_padding_and_brackets() {
-    //         parse_contract_ok(" (zero) ", ("", Contract::Zero));
-    //         parse_contract_ok("( zero )", ("", Contract::Zero));
-    //         parse_contract_ok(" ( zero ) ", ("", Contract::Zero));
-    //         parse_contract_ok(" ( (zero) ) ", ("", Contract::Zero));
-    //         parse_contract_ok(" ( (zero))", ("", Contract::Zero));
+    #[test]
+    fn parse_contract_with_padding_and_brackets() {
+        parse_contract_ok(" (zero) ", ("", State::default()));
+        parse_contract_ok("( zero )", ("", State::default()));
+        parse_contract_ok(" ( zero ) ", ("", State::default()));
+        parse_contract_ok(" ( (zero) ) ", ("", State::default()));
+        parse_contract_ok(" ( (zero))", ("", State::default()));
+    }
+
+    #[test]
+    fn build_or() {
+        let actual_state = build_or_state(State::default(), State::default());
+
+        let is_holder = Rc::new(Expression::from(Observable::IsHolder));
+
+        let mut left_transition = Transition::default();
+        left_transition
+            .add_condition(is_holder.clone())
+            .set_next(State::default().into());
+
+        let mut right_transition = Transition::default();
+        right_transition
+            .add_condition(is_holder.clone())
+            .set_next(State::default().into());
+
+        let mut expected_state = State::default();
+        expected_state
+            .add_transition(left_transition)
+            .add_transition(right_transition);
+
+        assert_eq!(actual_state, expected_state);
+    }
+
+    // #[test]
+    // fn parse_or() {
+    // parse_contract_ok("zero or one", ("", or_state));
+
+    //         parse_contract_ok(
+    //             "zero or one or zero",
+    //             (
+    //                 "",
+    //                 Contract::Or(
+    //                     Box::new(Contract::Zero),
+    //                     Box::new(Contract::Or(
+    //                         Box::new(Contract::One),
+    //                         Box::new(Contract::Zero),
+    //                     )),
+    //                 ),
+    //             ),
+    //         );
+
+    //         parse_contract_err("or");
+    //         parse_contract_err("zero or");
+    //         parse_contract_err("zero or one zero");
     //     }
 
     //     #[test]
     //     fn parse_infix_contract_with_brackets() {
     //         parse_contract_ok(
-    //             "(zero) and (zero)",
+    //             "(zero) or (zero)",
     //             (
     //                 "",
     //                 Contract::And(Box::new(Contract::Zero), Box::new(Contract::Zero)),
     //             ),
     //         );
     //         parse_contract_ok(
-    //             "((zero) and (zero))",
+    //             "((zero) or (zero))",
     //             (
     //                 "",
     //                 Contract::And(Box::new(Contract::Zero), Box::new(Contract::Zero)),
     //             ),
     //         );
     //         parse_contract_ok(
-    //             "zero and (zero and zero)",
+    //             "zero or (zero or zero)",
     //             (
     //                 "",
     //                 Contract::And(
@@ -185,7 +247,7 @@ mod tests {
     //             ),
     //         );
     //         parse_contract_ok(
-    //             "(zero and zero) and zero",
+    //             "(zero or zero) or zero",
     //             (
     //                 "",
     //                 Contract::And(
@@ -198,7 +260,7 @@ mod tests {
     //             ),
     //         );
     //         parse_contract_ok(
-    //             "(zero and zero) and (zero and zero)",
+    //             "(zero or zero) or (zero or zero)",
     //             (
     //                 "",
     //                 Contract::And(
@@ -213,7 +275,7 @@ mod tests {
     //                 ),
     //             ),
     //         );
-    //     }
+    // }
 
     //     #[test]
     //     fn parse_give() {
@@ -268,35 +330,6 @@ mod tests {
     //         parse_contract_err("and");
     //         parse_contract_err("and zero");
     //         parse_contract_err("and zero zero");
-    //     }
-
-    //     #[test]
-    //     fn parse_or() {
-    //         parse_contract_ok(
-    //             "zero or one",
-    //             (
-    //                 "",
-    //                 Contract::Or(Box::new(Contract::Zero), Box::new(Contract::One)),
-    //             ),
-    //         );
-
-    //         parse_contract_ok(
-    //             "zero or one or zero",
-    //             (
-    //                 "",
-    //                 Contract::Or(
-    //                     Box::new(Contract::Zero),
-    //                     Box::new(Contract::Or(
-    //                         Box::new(Contract::One),
-    //                         Box::new(Contract::Zero),
-    //                     )),
-    //                 ),
-    //             ),
-    //         );
-
-    //         parse_contract_err("or");
-    //         parse_contract_err("zero or");
-    //         parse_contract_err("zero or one zero");
     //     }
 
     //     #[test]
