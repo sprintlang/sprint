@@ -48,7 +48,7 @@ impl<'a> Generator<'a> {
 
             for condition in transition.conditions() {
                 let mut expression_generator = ExpressionGenerator::new(&method);
-                condition.accept(&mut expression_generator);
+                expression_generator.generate(condition);
                 let condition = expression_generator.expression;
 
                 method.add_condition(Rc::new(Condition::new(condition, 0)));
@@ -113,7 +113,7 @@ impl<'a> ExpressionGenerator<'a> {
                 Observable::IsCounterparty => self
                     .expression
                     .push_str("get_txn_address() == *copy(contract_ref).counterparty"),
-                Observable::Konst(value) => value.accept(self),
+                Observable::Konst(value) => self.generate(value),
             },
 
             Expression::Word(word) => self.expression.push_str(&word.to_string()),
