@@ -55,7 +55,7 @@ pub fn or(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("or")(input)?;
     let (input, (left, right)) = tuple((contract, contract))(input)?;
 
-    let is_holder = Rc::new(Expression::Observable(Observable::IsHolder));
+    let is_holder = Rc::new(Expression::from(Observable::IsHolder));
 
     let mut left_transition = Transition::default();
     left_transition
@@ -81,7 +81,7 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
 
     let mut transition = Transition::default();
     transition
-        .add_condition(Rc::new(Expression::Observable(Observable::IsHolder)))
+        .add_condition(Expression::from(Observable::IsHolder).into())
         .set_next(next.into());
 
     let mut state = State::default();
