@@ -115,30 +115,36 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
 mod tests {
     use super::super::combinator::span;
     use super::*;
-    // use nom::combinator::all_consuming;
+    use nom::combinator::all_consuming;
 
     fn parse_contract_ok(input: &str, expected: (&str, State)) {
         assert_eq!(span(contract)(input), Ok(expected));
     }
 
-    // fn parse_contract_err(input: &str) {
-    //     assert!(span(all_consuming(contract))(input).is_err());
-    // }
+    fn parse_contract_err(input: &str) {
+        assert!(span(all_consuming(contract))(input).is_err());
+    }
 
     #[test]
     fn parse_zero() {
         parse_contract_ok("zero", ("", State::default()));
     }
 
-    //     #[test]
-    //     fn parse_one() {
-    //         parse_contract_ok("one", ("", Contract::One));
-    //     }
+    #[test]
+    fn parse_one() {
+        let mut transition = Transition::default();
+        transition.add_effect(Effect::Withdraw);
 
-    //     #[test]
-    //     fn parse_two() {
-    //         parse_contract_err("two");
-    //     }
+        let mut state = State::default();
+        state.add_transition(transition);
+
+        parse_contract_ok("one", ("", state));
+    }
+
+    #[test]
+    fn parse_two() {
+        parse_contract_err("two");
+    }
 
     //     #[test]
     //     fn parse_contract_with_padding_and_brackets() {
