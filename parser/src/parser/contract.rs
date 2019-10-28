@@ -280,18 +280,46 @@ mod tests {
         assert_eq!(actual_state, expected_state);
     }
 
-    // #[test]
-    // fn parse_give() {
-    //     parse_contract_ok("give zero", ("", Contract::Give(Box::new(Contract::Zero))));
+    #[test]
+    fn parse_give() {
+        parse_contract_ok("give zero", ("", build_give_state(State::default())));
 
-    //     parse_contract_ok(
-    //         "give give zero",
-    //         (
-    //             "",
-    //             Contract::Give(Box::new(Contract::Give(Box::new(Contract::Zero)))),
-    //         ),
-    //     );
-    // }
+        parse_contract_ok(
+            "give give zero",
+            ("", build_give_state(build_give_state(State::default()))),
+        );
+    }
+
+    #[test]
+    fn parse_give_with_binary_operators() {
+        // zero or (give zero).
+        parse_contract_ok(
+            "zero or give zero",
+            (
+                "",
+                build_or_state(State::default(), build_give_state(State::default())),
+            ),
+        );
+
+        // give has higher precedence or so without brackets is equivalent to
+        // give (zero or zero).
+        parse_contract_ok(
+            "give zero or zero",
+            (
+                "",
+                build_give_state(build_or_state(State::default(), State::default())),
+            ),
+        );
+
+        // Use brackets to enforce precedence.
+        parse_contract_ok(
+            "(give zero) or zero",
+            (
+                "",
+                build_or_state(build_give_state(State::default()), State::default()),
+            ),
+        );
+    }
 
     //     #[test]
     //     fn parse_and() {
