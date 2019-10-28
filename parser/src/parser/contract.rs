@@ -217,65 +217,47 @@ mod tests {
         parse_contract_err("zero or one zero");
     }
 
-    //     #[test]
-    //     fn parse_infix_contract_with_brackets() {
-    //         parse_contract_ok(
-    //             "(zero) or (zero)",
-    //             (
-    //                 "",
-    //                 Contract::And(Box::new(Contract::Zero), Box::new(Contract::Zero)),
-    //             ),
-    //         );
-    //         parse_contract_ok(
-    //             "((zero) or (zero))",
-    //             (
-    //                 "",
-    //                 Contract::And(Box::new(Contract::Zero), Box::new(Contract::Zero)),
-    //             ),
-    //         );
-    //         parse_contract_ok(
-    //             "zero or (zero or zero)",
-    //             (
-    //                 "",
-    //                 Contract::And(
-    //                     Box::new(Contract::Zero),
-    //                     Box::new(Contract::And(
-    //                         Box::new(Contract::Zero),
-    //                         Box::new(Contract::Zero),
-    //                     )),
-    //                 ),
-    //             ),
-    //         );
-    //         parse_contract_ok(
-    //             "(zero or zero) or zero",
-    //             (
-    //                 "",
-    //                 Contract::And(
-    //                     Box::new(Contract::And(
-    //                         Box::new(Contract::Zero),
-    //                         Box::new(Contract::Zero),
-    //                     )),
-    //                     Box::new(Contract::Zero),
-    //                 ),
-    //             ),
-    //         );
-    //         parse_contract_ok(
-    //             "(zero or zero) or (zero or zero)",
-    //             (
-    //                 "",
-    //                 Contract::And(
-    //                     Box::new(Contract::And(
-    //                         Box::new(Contract::Zero),
-    //                         Box::new(Contract::Zero),
-    //                     )),
-    //                     Box::new(Contract::And(
-    //                         Box::new(Contract::Zero),
-    //                         Box::new(Contract::Zero),
-    //                     )),
-    //                 ),
-    //             ),
-    //         );
-    // }
+    #[test]
+    fn parse_infix_contract_with_brackets() {
+        parse_contract_ok(
+            "(zero) or (zero)",
+            ("", build_or_state(State::default(), State::default())),
+        );
+        parse_contract_ok(
+            "((zero) or (zero))",
+            ("", build_or_state(State::default(), State::default())),
+        );
+        parse_contract_ok(
+            "zero or (zero or zero)",
+            (
+                "",
+                build_or_state(
+                    State::default(),
+                    build_or_state(State::default(), State::default()),
+                ),
+            ),
+        );
+        parse_contract_ok(
+            "(zero or zero) or zero",
+            (
+                "",
+                build_or_state(
+                    build_or_state(State::default(), State::default()),
+                    State::default(),
+                ),
+            ),
+        );
+        parse_contract_ok(
+            "(zero or zero) or (zero or zero)",
+            (
+                "",
+                build_or_state(
+                    build_or_state(State::default(), State::default()),
+                    build_or_state(State::default(), State::default()),
+                ),
+            ),
+        );
+    }
 
     //     #[test]
     //     fn parse_give() {
