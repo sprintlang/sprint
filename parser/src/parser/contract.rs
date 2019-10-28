@@ -194,28 +194,28 @@ mod tests {
         assert_eq!(actual_state, expected_state);
     }
 
-    // #[test]
-    // fn parse_or() {
-    // parse_contract_ok("zero or one", ("", or_state));
+    #[test]
+    fn parse_or() {
+        parse_contract_ok(
+            "zero or one",
+            ("", build_or_state(State::default(), build_one_state())),
+        );
 
-    //         parse_contract_ok(
-    //             "zero or one or zero",
-    //             (
-    //                 "",
-    //                 Contract::Or(
-    //                     Box::new(Contract::Zero),
-    //                     Box::new(Contract::Or(
-    //                         Box::new(Contract::One),
-    //                         Box::new(Contract::Zero),
-    //                     )),
-    //                 ),
-    //             ),
-    //         );
+        parse_contract_ok(
+            "zero or one or zero",
+            (
+                "",
+                build_or_state(
+                    State::default(),
+                    build_or_state(build_one_state(), State::default()),
+                ),
+            ),
+        );
 
-    //         parse_contract_err("or");
-    //         parse_contract_err("zero or");
-    //         parse_contract_err("zero or one zero");
-    //     }
+        parse_contract_err("or");
+        parse_contract_err("zero or");
+        parse_contract_err("zero or one zero");
+    }
 
     //     #[test]
     //     fn parse_infix_contract_with_brackets() {
