@@ -1,7 +1,7 @@
 use super::expression::{Expression, Observable};
 use std::rc::Rc;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Eq, PartialEq)]
 pub struct State {
     transitions: Vec<Transition>,
 }
@@ -17,7 +17,7 @@ impl State {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Eq, PartialEq)]
 pub struct Transition {
     conditions: Vec<Rc<Expression>>,
     effects: Vec<Effect>,
@@ -53,7 +53,7 @@ impl Transition {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum Effect {
     Flip,
     Scale(Rc<Observable>),
