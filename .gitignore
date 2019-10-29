@@ -3,6 +3,7 @@
 .vscode/
 
 # Folders
+move/tests/generated/
 target/
 
 # Files
