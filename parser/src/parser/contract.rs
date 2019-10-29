@@ -9,7 +9,7 @@ use crate::ast::{
 use nom::{branch::alt, bytes::complete::tag};
 use std::rc::Rc;
 
-// Precedence levels
+// Precedence levels.
 pub fn contract(input: Span) -> IResult<Span, State> {
     padding(alt((or, disjunct)))(input)
 }
@@ -30,8 +30,7 @@ pub fn nullary(input: Span) -> IResult<Span, State> {
     padding(alt((zero, one)))(input)
 }
 
-// Contract combinators
-
+// Contract combinators.
 pub fn zero(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("zero")(input)?;
     Ok((input, State::default()))
@@ -43,6 +42,38 @@ pub fn one(input: Span) -> IResult<Span, State> {
     Ok((input, build_one_state()))
 }
 
+pub fn give(input: Span) -> IResult<Span, State> {
+    let (input, _) = tag("give")(input)?;
+    let (input, next) = contract(input)?;
+
+    Ok((input, build_give_state(next)))
+}
+
+pub fn anytime(input: Span) -> IResult<Span, State> {
+    let (input, _) = tag("anytime")(input)?;
+    let (input, next) = contract(input)?;
+
+    Ok((input, build_anytime_state(next)))
+}
+
+pub fn and(input: Span) -> IResult<Span, State> {
+    let (input, _left) = conjunct(input)?;
+    let (input, _) = tag("and")(input)?;
+    let (input, _right) = disjunct(input)?;
+
+    // TODO: implement.
+    Ok((input, State::default()))
+}
+
+pub fn or(input: Span) -> IResult<Span, State> {
+    let (input, left) = disjunct(input)?;
+    let (input, _) = tag("or")(input)?;
+    let (input, right) = contract(input)?;
+
+    Ok((input, build_or_state(left, right)))
+}
+
+// Build state helper functions.
 pub fn build_one_state() -> State {
     let mut transition = Transition::default();
     transition.add_effect(Effect::Withdraw);
@@ -51,13 +82,6 @@ pub fn build_one_state() -> State {
     state.add_transition(transition);
 
     state
-}
-
-pub fn give(input: Span) -> IResult<Span, State> {
-    let (input, _) = tag("give")(input)?;
-    let (input, next) = contract(input)?;
-
-    Ok((input, build_give_state(next)))
 }
 
 pub fn build_give_state(sub_contract: State) -> State {
@@ -72,21 +96,16 @@ pub fn build_give_state(sub_contract: State) -> State {
     state
 }
 
-pub fn and(input: Span) -> IResult<Span, State> {
-    let (input, _left) = conjunct(input)?;
-    let (input, _) = tag("and")(input)?;
-    let (input, _right) = disjunct(input)?;
+pub fn build_anytime_state(sub_contract: State) -> State {
+    let mut transition = Transition::default();
+    transition
+        .add_condition(Expression::from(Observable::IsHolder).into())
+        .set_next(sub_contract.into());
 
-    // TODO: implement
-    Ok((input, State::default()))
-}
+    let mut state = State::default();
+    state.add_transition(transition);
 
-pub fn or(input: Span) -> IResult<Span, State> {
-    let (input, left) = disjunct(input)?;
-    let (input, _) = tag("or")(input)?;
-    let (input, right) = contract(input)?;
-
-    Ok((input, build_or_state(left, right)))
+    state
 }
 
 pub fn build_or_state(left: State, right: State) -> State {
@@ -106,25 +125,6 @@ pub fn build_or_state(left: State, right: State) -> State {
     state
         .add_transition(left_transition)
         .add_transition(right_transition);
-
-    state
-}
-
-pub fn anytime(input: Span) -> IResult<Span, State> {
-    let (input, _) = tag("anytime")(input)?;
-    let (input, next) = contract(input)?;
-
-    Ok((input, build_anytime_state(next)))
-}
-
-pub fn build_anytime_state(sub_contract: State) -> State {
-    let mut transition = Transition::default();
-    transition
-        .add_condition(Expression::from(Observable::IsHolder).into())
-        .set_next(sub_contract.into());
-
-    let mut state = State::default();
-    state.add_transition(transition);
 
     state
 }
