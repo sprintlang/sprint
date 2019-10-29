@@ -1,6 +1,6 @@
 use crate::jog::{
     action::flip::Flip,
-    action::libra,
+    action::libra::{Address, Withdraw},
     method::{Condition, Transition},
     module::contract::Contract,
 };
@@ -64,9 +64,7 @@ impl<'a> Generator<'a> {
                         // TODO: Add scale action to method
                         // expression_generator.generate(amount);
                     }
-                    Effect::Withdraw => {
-                        method.add_action(libra::Withdraw::new(libra::Address::Holder))
-                    }
+                    Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }
             }
 

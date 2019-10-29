@@ -29,21 +29,12 @@ impl Action for Flip {
 
 impl Display for Flip {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{temp_var} = *(copy(contract_ref).holder)",
-            temp_var = TEMP_FLIP_VAR
-        )
-        .ok();
+        write!(f, "{} = *(copy(contract_ref).holder)", TEMP_FLIP_VAR).ok();
         write!(
             f,
             "*(copy(contract_ref).holder) = *(copy(contract_ref).counterparty)"
         )
         .ok();
-        write!(
-            f,
-            "*(copy(contract_ref).holder) = {temp_var}",
-            temp_var = TEMP_FLIP_VAR
-        )
+        write!(f, "*(copy(contract_ref).holder) = {}", TEMP_FLIP_VAR)
     }
 }

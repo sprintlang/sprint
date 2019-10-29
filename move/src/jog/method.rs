@@ -41,8 +41,8 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
-    pub fn conditions(&self) -> Vec<Rc<Condition>> {
-        self.conditions.clone()
+    pub fn conditions(&self) -> &[Rc<Condition>] {
+        self.conditions.as_slice()
     }
 
     pub fn add_condition(&mut self, condition: Rc<Condition>) {
