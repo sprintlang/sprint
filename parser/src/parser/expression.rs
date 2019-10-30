@@ -3,17 +3,17 @@ use crate::ast::expression::{Expression, Observable};
 use nom::{branch::alt, bytes::complete::tag, character::complete::digit1};
 
 pub fn expression(input: Span) -> IResult<Span, Expression> {
-    padding(alt((literal, konst)))(input)
+    padding(alt((word, observable_konst)))(input)
 }
 
 // TODO: require definitions of observables, with types.
-pub fn literal(input: Span) -> IResult<Span, Expression> {
+pub fn word(input: Span) -> IResult<Span, Expression> {
     let (input, number) = digit1(input)?;
     let number = number.fragment.parse::<u64>().unwrap();
     Ok((input, Expression::Word(number)))
 }
 
-pub fn konst(input: Span) -> IResult<Span, Expression> {
+pub fn observable_konst(input: Span) -> IResult<Span, Expression> {
     let (input, _) = tag("konst")(input)?;
     let (input, expr) = expression(input)?;
     Ok((
@@ -26,18 +26,25 @@ pub fn konst(input: Span) -> IResult<Span, Expression> {
 mod tests {
     use super::super::combinator::span;
     use super::*;
+    use nom::combinator::all_consuming;
 
     fn parse_expression_ok(input: &str, expected: (&str, Expression)) {
         assert_eq!(span(expression)(input), Ok(expected));
     }
 
-    #[test]
-    fn parse_number_literal() {
-        parse_expression_ok("123", ("", Expression::Word(123)));
+    fn parse_expression_err(input: &str) {
+        assert!(span(all_consuming(expression))(input).is_err());
     }
 
     #[test]
-    fn parse_konst() {
+    fn parse_word() {
+        parse_expression_ok("123", ("", Expression::Word(123)));
+
+        parse_expression_err("-5");
+    }
+
+    #[test]
+    fn parse_observable_konst() {
         parse_expression_ok(
             "konst 123",
             (
@@ -45,5 +52,7 @@ mod tests {
                 Expression::Observable(Observable::Konst(Box::new(Expression::Word(123)))),
             ),
         );
+
+        parse_expression_err("konst");
     }
 }
