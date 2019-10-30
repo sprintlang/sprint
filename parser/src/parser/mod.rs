@@ -1,6 +1,6 @@
 pub mod contract;
 pub mod error;
-pub mod observable;
+pub mod expression;
 
 mod combinator;
 
