@@ -1,6 +1,6 @@
 use super::{combinator::padding, IResult, Span};
 use crate::ast::expression::{Expression, Observable};
-use nom::bytes::complete::tag;
+use nom::character::complete::digit1;
 
 pub fn observable(input: Span) -> IResult<Span, Observable> {
     padding(literal)(input)
@@ -8,8 +8,9 @@ pub fn observable(input: Span) -> IResult<Span, Observable> {
 
 // TODO: require definitions of observables, with types.
 pub fn literal(input: Span) -> IResult<Span, Observable> {
-    let (input, _) = tag("123")(input)?;
-    Ok((input, Observable::Konst(Box::new(Expression::Word(123)))))
+    let (input, number) = digit1(input)?;
+    let number = number.fragment.parse::<u64>().unwrap();
+    Ok((input, Observable::Konst(Box::new(Expression::Word(number)))))
 }
 
 #[cfg(test)]
@@ -26,6 +27,8 @@ mod tests {
         parse_observable_ok(
             "123",
             ("", Observable::Konst(Box::new(Expression::Word(123)))),
-        )
+        );
+
+        parse_observable_ok("0", ("", Observable::Konst(Box::new(Expression::Word(0)))));
     }
 }
