@@ -2,29 +2,38 @@
 //! sender: alice
 module ContractStore {
   import {{alice}}.One;
+  import 0x0.Vector;
 
   resource T {
-    contract: One.T,
+    contracts: Vector.T<One.T>,
   }
 
-  public store(contract: One.T) {
-    let contract_holder: Self.T;
+  // Have alice call this
+  public create_store() {
+    let store: Self.T;
 
-    contract_holder = T {
-      contract: move(contract),
+    store = T {
+      contracts: Vector.empty<One.T>(),
     };
 
-    move_to_sender<T>(move(contract_holder));
+    move_to_sender<T>(move(store));
+
+    return;
+  }
+
+  public store(contract: One.T, holder: address) acquires T {
+    let contract_holder: Self.T;
+    let contracts: &mut Vector.T<One.T>;
+
+    contracts = &mut borrow_global_mut<T>(move(holder)).contracts;
+
+    Vector.push_back<One.T>(move(contracts), move(contract));
 
     return;
   }
 
   public get(holder: address): One.T acquires T {
-    let contract: One.T;
-
-    T { contract } = move_from<T>(move(holder));
-
-    return move(contract);
+    return Vector.pop_back<One.T>(&mut borrow_global_mut<T>(move(holder)).contracts);
   }
 }
 
@@ -38,7 +47,8 @@ main() {
   let contract: One.T;
 
   contract = One.create({{bob}}, {{chris}});
-  ContractStore.store(move(contract));
+  ContractStore.create_store();
+  ContractStore.store(move(contract), {{alice}});
 
   return;
 }
@@ -60,7 +70,7 @@ main() {
   // TODO: REMOVE THIS LINE. This should happen in initialization in the future.
   One.deposit(&mut contract, LibraAccount.withdraw_from_sender(1));
 
-  ContractStore.store(move(contract));
+  ContractStore.store(move(contract), {{alice}});
 
   return;
 }
@@ -76,11 +86,11 @@ import 0x0.LibraAccount;
 main() {
   let contract: One.T;
 
-  contract = ContractStore.get({{bob}});
+  contract = ContractStore.get({{alice}});
 
   One.transition_1_0(&mut contract);
 
-  ContractStore.store(move(contract));
+  ContractStore.store(move(contract), {{alice}});
 
   return;
 }
