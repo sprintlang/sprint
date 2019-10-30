@@ -15,10 +15,10 @@ pub fn literal(input: Span) -> IResult<Span, Expression> {
 
 pub fn konst(input: Span) -> IResult<Span, Expression> {
     let (input, _) = tag("konst")(input)?;
-    let (input, next) = expression(input)?;
+    let (input, expr) = expression(input)?;
     Ok((
         input,
-        Expression::Observable(Observable::Konst(Box::new(next))),
+        Expression::Observable(Observable::Konst(Box::new(expr))),
     ))
 }
 
