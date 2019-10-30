@@ -23,6 +23,26 @@ module {{ name }} {
         return move(contract);
     }
 
+    public initialize(contract_ref: &mut Self.T) {
+        let state_ref: &mut u64;
+
+        state_ref = &mut copy(contract_ref).state;
+
+        assert(*copy(state_ref) == 0, 1);
+
+        // TODO: Make this do what is needed to initialize the contract, eg: deposit funds in escrow.
+
+        *move(state_ref) = 1;
+
+        return;
+    }
+
+    public deposit(contract_ref: &mut Self.T, coin: LibraCoin.T) {
+        LibraCoin.deposit(&mut move(contract_ref).coin_store, move(coin));
+
+        return;
+    }
+
     {% for transition in transition_methods %}
     public transition_{{transition.origin_state()}}_{{transition.to_state()}}(contract_ref: &mut Self.T) {
         let state_ref: &mut u64;
