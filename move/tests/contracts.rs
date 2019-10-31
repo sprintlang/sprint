@@ -40,18 +40,7 @@ fn test(module: impl Display, suite: &Path) {
 }
 
 #[test]
-fn generated_zero_is_valid_move() {
-    let suite = Path::new("tests/move_tests/none.test.mvir");
-
-    let mut generator = Generator::new("Zero");
-    let state = contract("zero").unwrap();
-    generator.generate(&state);
-
-    test(generator.contract(), suite);
-}
-
-#[test]
-fn generated_zero_has_correct_behavior() {
+fn generated_zero() {
     let suite = Path::new("tests/move_tests/zero.test.mvir");
 
     let mut generator = Generator::new("Zero");
@@ -62,18 +51,7 @@ fn generated_zero_has_correct_behavior() {
 }
 
 #[test]
-fn generated_one_is_valid_move() {
-    let suite = Path::new("tests/move_tests/none.test.mvir");
-
-    let mut generator = Generator::new("One");
-    let state = contract("one").unwrap();
-    generator.generate(&state);
-
-    test(generator.contract(), suite);
-}
-
-#[test]
-fn generated_one_has_correct_behavior() {
+fn generated_one() {
     let suite = Path::new("tests/move_tests/one.test.mvir");
 
     let mut generator = Generator::new("One");
