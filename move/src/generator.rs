@@ -64,6 +64,9 @@ impl<'a> Generator<'a> {
                         // TODO: Add scale action to method
                         // expression_generator.generate(amount);
                     }
+                    Effect::Spawn(_state) => {
+                        // TODO: implement
+                    }
                     Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }
             }

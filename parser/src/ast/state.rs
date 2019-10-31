@@ -57,5 +57,6 @@ impl Transition {
 pub enum Effect {
     Flip,
     Scale(Rc<Observable>),
+    Spawn(Rc<State>),
     Withdraw,
 }

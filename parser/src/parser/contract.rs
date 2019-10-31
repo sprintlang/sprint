@@ -50,12 +50,11 @@ pub fn give(input: Span) -> IResult<Span, State> {
 }
 
 pub fn and(input: Span) -> IResult<Span, State> {
-    let (input, _left) = conjunct(input)?;
+    let (input, left) = conjunct(input)?;
     let (input, _) = tag("and")(input)?;
-    let (input, _right) = disjunct(input)?;
+    let (input, right) = disjunct(input)?;
 
-    // TODO: implement.
-    Ok((input, State::default()))
+    Ok((input, build_and_state(left, right)))
 }
 
 pub fn or(input: Span) -> IResult<Span, State> {
@@ -89,6 +88,18 @@ pub fn build_give_state(sub_contract: State) -> State {
     transition
         .add_effect(Effect::Flip)
         .set_next(sub_contract.into());
+
+    let mut state = State::default();
+    state.add_transition(transition);
+
+    state
+}
+
+pub fn build_and_state(left: State, right: State) -> State {
+    let mut transition = Transition::default();
+    transition
+        .add_effect(Effect::Spawn(right.into()))
+        .set_next(left.into());
 
     let mut state = State::default();
     state.add_transition(transition);
