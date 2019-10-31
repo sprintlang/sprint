@@ -1,5 +1,6 @@
 use super::{
     combinator::{brackets, padding},
+    expression::observable,
     IResult, Span,
 };
 use crate::ast::{
@@ -72,6 +73,18 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
     Ok((input, build_anytime_state(next)))
 }
 
+pub fn scale(input: Span) -> IResult<Span, State> {
+    let (input, _) = tag("scale")(input)?;
+    let (input, factor) = observable(input)?;
+    let (input, sub_contract) = contract(input)?;
+
+    if let Expression::Observable(obs) = factor {
+        return Ok((input, build_scale_state(obs, sub_contract)));
+    }
+
+    panic!("Uh oh, I don't feel so good");
+}
+
 // Build state helper functions.
 pub fn build_one_state() -> State {
     let mut transition = Transition::default();
@@ -132,6 +145,19 @@ pub fn build_anytime_state(sub_contract: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_condition(Expression::from(Observable::IsHolder).into())
+        .set_next(sub_contract.into());
+
+    let mut state = State::default();
+    state.add_transition(transition);
+
+    state
+}
+
+// Semantic checks on Observable.
+pub fn build_scale_state(factor: Observable, sub_contract: State) -> State {
+    let mut transition = Transition::default();
+    transition
+        .add_effect(Effect::Scale(Rc::new(factor)))
         .set_next(sub_contract.into());
 
     let mut state = State::default();
