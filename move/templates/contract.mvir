@@ -62,16 +62,26 @@ module Contract {
     {% for transition in transition_methods %}
     public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(contract_ref: &mut Self.T) {
         let context_ref: &mut Self.Context;
+        {% for definition in transition.definitions() %}
+        let {{ definition.name }}: {{ definition.type_name }};
+        {% endfor %}
 
         context_ref = &mut copy(contract_ref).{{ transition.context() }};
+
+        // Check the current state to make sure we can execute this transition.
+        assert(*(&mut copy(context_ref).state) == {{ transition.origin_state() }}, 1);
 
         // Check the conditions for this transition.
         {%- for condition in transition.conditions() %}
         {{ condition }}
         {%- endfor %}
 
-        // Check the current state to make sure we can execute this transition.
-        assert(*(&mut copy(context_ref).state) == {{ transition.origin_state() }}, 1);
+        // Initialize the variable definitions
+        {% for definition in transition.definitions() %}
+        {% if !definition.default.is_none() %}
+        {{ definition.name }} = {{ definition.default.as_ref().unwrap() }};
+        {% endif %}
+        {% endfor %}
 
         {%- for action in transition.actions() %}
         {{ action }}
