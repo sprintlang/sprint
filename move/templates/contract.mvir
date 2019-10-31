@@ -60,12 +60,10 @@ module Contract {
     }
 
     {% for transition in transition_methods %}
-    public transition_{{transition.origin_state()}}_{{transition.to_state()}}(contract_ref: &mut Self.T) {
-        let state_ref: &mut u64;
-        let coin: LibraCoin.T;
-        let counterparty: address;
+    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(contract_ref: &mut Self.T) {
+        let context_ref: &mut Self.Context;
 
-        state_ref = &mut copy(contract_ref).state;
+        context_ref = &mut copy(contract_ref).{{ transition.context() }};
 
         // Check the conditions for this transition.
         {%- for condition in transition.conditions() %}
@@ -73,13 +71,13 @@ module Contract {
         {%- endfor %}
 
         // Check the current state to make sure we can execute this transition.
-        assert(*copy(state_ref) == {{transition.origin_state()}}, 1);
+        assert(*(&mut copy(context_ref).state) == {{ transition.origin_state() }}, 1);
 
         {%- for action in transition.actions() %}
         {{ action }}
         {%- endfor %}
 
-        *move(state_ref) = {{transition.to_state()}};
+        *(&mut move(context_ref).state) = {{ transition.to_state() }};
 
         return;
     }
