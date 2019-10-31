@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn parse_give_with_binary_operators() {
-        // zero or (give zero).
+        // Equivalent to 'zero or (give zero)'.
         parse_contract_ok(
             "zero or give zero",
             (
@@ -191,8 +191,8 @@ mod tests {
             ),
         );
 
-        // give has higher precedence or so without brackets is equivalent to
-        // give (zero or zero).
+        // 'give' has lower precedence than 'or' so without brackets the input is equivalent to
+        // 'give (zero or zero)'.
         parse_contract_ok(
             "give zero or zero",
             (
