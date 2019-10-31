@@ -1,4 +1,4 @@
-use crate::jog::{action::Action, method::Condition, variable::Variable};
+use crate::jog::{action::Action, variable::Variable};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
@@ -42,10 +42,6 @@ impl Action for Fork {
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
         vec![self.context.clone()]
-    }
-
-    fn conditions(&self) -> Vec<Rc<Condition>> {
-        vec![]
     }
 }
 
