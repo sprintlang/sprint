@@ -2,12 +2,22 @@ module Contract {
     // TODO: get imports from module.
     import 0x0.LibraCoin;
     import 0x0.LibraAccount;
+    {%- for dependency in self.dependencies() %}
+    import {{ dependency }};
+    {%- endfor %}
 
     resource T {
-        state: u64,
         coin_store: LibraCoin.T,
         holder: address,
         counterparty: address,
+        {%- for property in self.properties() %}
+        {{ property.name }}: {{ property.type_name }},
+        {%- endfor %}
+    }
+
+    resource Context {
+        state: u64,
+        flipped: bool,
         scale: u64,
     }
 
@@ -20,7 +30,9 @@ module Contract {
             coin_store: LibraCoin.zero(),
             holder: move(holder),
             counterparty: move(counterparty),
-            scale: 1,
+            {%- for property in self.properties() %}
+            {{ property.name }}: {{ property.default.unwrap() }},
+            {%- endfor %}
         };
 
         return move(contract);
