@@ -212,6 +212,29 @@ mod tests {
     }
 
     #[test]
+    fn parse_and() {
+        parse_contract_ok(
+            "zero and one",
+            ("", build_and_state(State::default(), build_one_state())),
+        );
+
+        parse_contract_ok(
+            "zero and one and zero",
+            (
+                "",
+                build_and_state(
+                    State::default(),
+                    build_and_state(build_one_state(), State::default()),
+                ),
+            ),
+        );
+
+        parse_contract_err("and");
+        parse_contract_err("zero and");
+        parse_contract_err("zero and one zero");
+    }
+
+    #[test]
     fn parse_or() {
         parse_contract_ok(
             "zero or one",
@@ -353,6 +376,35 @@ mod tests {
                         conditions: [],
                         effects: [
                             Flip,
+                        ],
+                        next: Some(
+                            State {
+                                transitions: [],
+                            },
+                        ),
+                    },
+                ],
+            }"
+        );
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn build_and() {
+        let actual = format!("{:#?}", build_and_state(State::default(), State::default()));
+
+        let expected = indoc!(
+            "State {
+                transitions: [
+                    Transition {
+                        conditions: [],
+                        effects: [
+                            Spawn(
+                                State {
+                                    transitions: [],
+                                },
+                            ),
                         ],
                         next: Some(
                             State {
