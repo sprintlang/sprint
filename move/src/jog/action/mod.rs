@@ -1,5 +1,6 @@
 pub mod flip;
 pub mod libra;
+pub mod scale;
 
 use super::variable::Variable;
 use std::{fmt::Display, rc::Rc};

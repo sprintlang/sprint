@@ -1,6 +1,9 @@
 use crate::jog::{
-    action::flip::Flip,
-    action::libra::{Address, Withdraw},
+    action::{
+        flip::Flip,
+        libra::{Address, Withdraw},
+        scale::Scale,
+    },
     method::{Condition, Transition},
     module::contract::Contract,
 };
@@ -59,10 +62,12 @@ impl<'a> Generator<'a> {
                     Effect::Flip => {
                         method.add_action(Flip::default());
                     }
-                    Effect::Scale(_amount) => {
-                        let mut _expression_generator = ExpressionGenerator::new(&method);
-                        // TODO: Add scale action to method
-                        // expression_generator.generate(amount);
+                    Effect::Scale(expression) => {
+                        let mut expression_generator = ExpressionGenerator::new(&method);
+                        expression_generator.generate_observable(expression);
+
+                        let expression = expression_generator.expression;
+                        method.add_action(Scale::new(expression));
                     }
                     Effect::Spawn(_state) => {
                         // TODO: implement
@@ -95,29 +100,33 @@ impl<'a> ExpressionGenerator<'a> {
         }
     }
 
-    #[allow(dead_code)]
-    fn generate(&mut self, expression: &Expression) {
+    pub fn generate(&mut self, expression: &Expression) {
         match expression {
             Expression::Boolean(_) => unimplemented!(),
-
-            Expression::Class(class) => match class {
-                Class::Comparable(_) => unimplemented!(),
-                Class::Equatable(_) => unimplemented!(),
-                Class::Negatable(_) => unimplemented!(),
-                Class::Numerable(_) => unimplemented!(),
-            },
-
-            Expression::Observable(observable) => match observable {
-                Observable::IsHolder => self
-                    .expression
-                    .push_str("get_txn_address() == *copy(contract_ref).holder"),
-                Observable::IsCounterparty => self
-                    .expression
-                    .push_str("get_txn_address() == *copy(contract_ref).counterparty"),
-                Observable::Konst(value) => self.generate(value),
-            },
-
+            Expression::Class(class) => self.generate_class(class),
+            Expression::Observable(observable) => self.generate_observable(observable),
             Expression::Word(word) => self.expression.push_str(&word.to_string()),
+        };
+    }
+
+    pub fn generate_class(&mut self, class: &Class) {
+        match class {
+            Class::Comparable(_) => unimplemented!(),
+            Class::Equatable(_) => unimplemented!(),
+            Class::Negatable(_) => unimplemented!(),
+            Class::Numerable(_) => unimplemented!(),
+        };
+    }
+
+    pub fn generate_observable(&mut self, observable: &Observable) {
+        match observable {
+            Observable::IsHolder => self
+                .expression
+                .push_str("get_txn_address() == *copy(contract_ref).holder"),
+            Observable::IsCounterparty => self
+                .expression
+                .push_str("get_txn_address() == *copy(contract_ref).counterparty"),
+            Observable::Konst(value) => self.generate(value),
         };
     }
 }

@@ -73,8 +73,8 @@ impl Display for Withdraw {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "LibraAccount.deposit({payee}, LibraCoin.withdraw(&mut copy(contract_ref).{coin_store}, 1));",
-            payee = self.payee, coin_store = COIN_STORE
+            "LibraAccount.deposit({}, LibraCoin.withdraw(&mut copy(contract_ref).{}, *(&mut copy(contract_ref).scale)));",
+            self.payee, COIN_STORE
         )
     }
 }

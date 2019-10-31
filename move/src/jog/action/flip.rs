@@ -7,7 +7,7 @@ use std::{
 const TEMP_FLIP_VAR: &str = "temp_flip_address";
 
 #[derive(Default)]
-pub struct Flip();
+pub struct Flip;
 
 impl Action for Flip {
     fn dependencies(&self) -> &'static [&'static str] {
@@ -29,12 +29,11 @@ impl Action for Flip {
 
 impl Display for Flip {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{} = *(copy(contract_ref).holder)", TEMP_FLIP_VAR).ok();
+        write!(f, "{} = *(copy(contract_ref).holder)", TEMP_FLIP_VAR)?;
         write!(
             f,
             "*(copy(contract_ref).holder) = *(copy(contract_ref).counterparty)"
-        )
-        .ok();
+        )?;
         write!(f, "*(copy(contract_ref).holder) = {}", TEMP_FLIP_VAR)
     }
 }
