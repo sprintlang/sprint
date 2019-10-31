@@ -6,6 +6,10 @@ pub fn expression(input: Span) -> IResult<Span, Expression> {
     padding(alt((word, observable_konst)))(input)
 }
 
+pub fn literal(input: Span) -> IResult<Span, Expression> {
+    padding(word)(input)
+}
+
 // TODO: require definitions of observables, with types.
 pub fn word(input: Span) -> IResult<Span, Expression> {
     let (input, number) = digit1(input)?;
@@ -15,7 +19,7 @@ pub fn word(input: Span) -> IResult<Span, Expression> {
 
 pub fn observable_konst(input: Span) -> IResult<Span, Expression> {
     let (input, _) = tag("konst")(input)?;
-    let (input, expr) = expression(input)?;
+    let (input, expr) = literal(input)?;
     Ok((
         input,
         Expression::Observable(Observable::Konst(Box::new(expr))),
@@ -54,5 +58,7 @@ mod tests {
         );
 
         parse_expression_err("konst");
+        parse_expression_err("konst -5");
+        parse_expression_err("konst konst 123");
     }
 }
