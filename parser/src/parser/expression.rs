@@ -17,6 +17,10 @@ pub fn word(input: Span) -> IResult<Span, Expression> {
     Ok((input, Expression::Word(number)))
 }
 
+pub fn observable(input: Span) -> IResult<Span, Expression> {
+    padding(observable_konst)(input)
+}
+
 pub fn observable_konst(input: Span) -> IResult<Span, Expression> {
     let (input, _) = tag("konst")(input)?;
     let (input, expr) = literal(input)?;
