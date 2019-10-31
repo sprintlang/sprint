@@ -1,9 +1,11 @@
 use crate::jog::{
-    action::flip::Flip,
-    action::libra::{Address, Withdraw},
+    action::{
+        flip::Flip,
+        fork::Fork,
+        libra::{Address, Withdraw},
+    },
     method::{Condition, Transition},
     module::contract::Contract,
-    variable::Variable,
 };
 use sprint_parser::ast::{
     expression::{Class, Expression, Observable},
@@ -17,15 +19,15 @@ const TERMINAL_ID: usize = 0;
 pub struct Generator<'a> {
     contract: Contract<'a>,
     ids: HashMap<*const State, usize>,
+    context_id: usize,
 }
 
 impl<'a> Generator<'a> {
     pub fn new(name: &'a str) -> Self {
-        let contract = Contract::new(name);
-
         Generator {
-            contract,
+            contract: Contract::new(name),
             ids: HashMap::new(),
+            context_id: 0,
         }
     }
 
@@ -47,7 +49,7 @@ impl<'a> Generator<'a> {
                 None => TERMINAL_ID,
             };
 
-            let mut method = Transition::new(id, next_id, context);
+            let mut method = Transition::new(id, next_id, String::from(context));
 
             for condition in transition.conditions() {
                 let mut expression_generator = ExpressionGenerator::new(&method);
@@ -67,8 +69,11 @@ impl<'a> Generator<'a> {
                         // TODO: Add scale action to method
                         // expression_generator.generate(amount);
                     }
-                    Effect::Spawn(_state) => {
-                        // TODO: implement
+                    Effect::Spawn(root_state) => {
+                        self.context_id += 1;
+                        let context_name = &format!("context_{}", self.context_id);
+                        let root_id = self.generate(root_state, context_name);
+                        method.add_action(Fork::new(context_name, root_id));
                     }
                     Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }
@@ -79,8 +84,6 @@ impl<'a> Generator<'a> {
 
         id
     }
-
-    pub fn fork_context() -> &str {}
 
     pub fn contract(&self) -> &Contract {
         &self.contract

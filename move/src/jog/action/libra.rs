@@ -26,9 +26,9 @@ impl Action for Deposit {
 
     fn properties(&self) -> Vec<Rc<Variable>> {
         vec![Rc::new(Variable {
-            name: COIN_STORE,
+            name: String::from(COIN_STORE),
             type_name: "LibraCoin.T",
-            default: Some("LibraCoin.zero()"),
+            default: Some(String::from("LibraCoin.zero()")),
         })]
     }
 

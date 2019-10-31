@@ -31,7 +31,7 @@ module Contract {
             holder: move(holder),
             counterparty: move(counterparty),
             {%- for property in self.properties() %}
-            {{ property.name }}: {{ property.default.unwrap() }},
+            {{ property.name }}: {{ property.default.as_ref().unwrap() }},
             {%- endfor %}
         };
 

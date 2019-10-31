@@ -10,11 +10,11 @@ pub struct Transition<'a> {
     actions: Vec<Box<dyn Action + 'a>>,
     origin_state: usize,
     to_state: usize,
-    context: &'a str,
+    context: String,
 }
 
 impl<'a> Transition<'a> {
-    pub fn new(origin_state: usize, to_state: usize, context: &'a str) -> Self {
+    pub fn new(origin_state: usize, to_state: usize, context: String) -> Self {
         Transition {
             conditions: Vec::new(),
             actions: Vec::new(),
@@ -61,6 +61,10 @@ impl<'a> Transition<'a> {
 
     pub fn add_action(&mut self, action: impl Action + 'a) {
         self.actions.push(Box::new(action));
+    }
+
+    pub fn context(&self) -> &str {
+        &self.context
     }
 }
 
