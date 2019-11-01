@@ -148,10 +148,10 @@ pub fn build_anytime_state(next: State) -> State {
     state
 }
 
-pub fn build_scale_state(factor: Expression, next: State) -> State {
+pub fn build_scale_state(scalar: Expression, next: State) -> State {
     let mut transition = Transition::default();
     transition
-        .add_effect(Effect::Scale(Rc::new(factor)))
+        .add_effect(Effect::Scale(Rc::new(scalar)))
         .set_next(next.into());
 
     let mut state = State::default();
