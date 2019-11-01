@@ -511,4 +511,42 @@ mod tests {
 
         assert_eq!(actual, expected);
     }
+
+    #[test]
+    fn build_scale() {
+        let konst_observable = Observable::Konst(Expression::Word(123).into());
+        let actual = format!(
+            "{:#?}",
+            build_scale_state(konst_observable, State::default())
+        );
+
+        let expected = indoc!(
+            "State {
+                transitions: [
+                    Transition {
+                        conditions: [],
+                        effects: [
+                            Scale(
+                                Konst(
+                                    Word(
+                                        123,
+                                    ),
+                                ),
+                            ),
+                        ],
+                        next: Some(
+                            State {
+                                transitions: [],
+                            },
+                        ),
+                    },
+                ],
+            }"
+        );
+
+        println!("{}", actual);
+        println!("{}", expected);
+
+        pretty_assertions::assert_eq!(actual, expected);
+    }
 }

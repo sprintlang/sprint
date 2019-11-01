@@ -3,7 +3,7 @@ use crate::ast::expression::{Expression, Observable};
 use nom::{branch::alt, bytes::complete::tag, character::complete::digit1};
 
 pub fn expression(input: Span) -> IResult<Span, Expression> {
-    padding(alt((word, observable_konst)))(input)
+    padding(alt((word, observable)))(input)
 }
 
 pub fn literal(input: Span) -> IResult<Span, Expression> {
