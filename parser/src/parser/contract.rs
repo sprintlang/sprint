@@ -77,9 +77,9 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
 pub fn scale(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("scale")(input)?;
     let (input, scalar) = expression(input)?;
-    let (input, sub_contract) = contract(input)?;
+    let (input, next) = contract(input)?;
 
-    Ok((input, build_scale_state(scalar, sub_contract)))
+    Ok((input, build_scale_state(scalar, next)))
 }
 
 // Build state helper functions.
@@ -93,11 +93,9 @@ pub fn build_one_state() -> State {
     state
 }
 
-pub fn build_give_state(sub_contract: State) -> State {
+pub fn build_give_state(next: State) -> State {
     let mut transition = Transition::default();
-    transition
-        .add_effect(Effect::Flip)
-        .set_next(sub_contract.into());
+    transition.add_effect(Effect::Flip).set_next(next.into());
 
     let mut state = State::default();
     state.add_transition(transition);
@@ -138,11 +136,11 @@ pub fn build_or_state(left: State, right: State) -> State {
     state
 }
 
-pub fn build_anytime_state(sub_contract: State) -> State {
+pub fn build_anytime_state(next: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_condition(Expression::from(Observable::IsHolder).into())
-        .set_next(sub_contract.into());
+        .set_next(next.into());
 
     let mut state = State::default();
     state.add_transition(transition);
@@ -150,11 +148,11 @@ pub fn build_anytime_state(sub_contract: State) -> State {
     state
 }
 
-pub fn build_scale_state(factor: Expression, sub_contract: State) -> State {
+pub fn build_scale_state(factor: Expression, next: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_effect(Effect::Scale(Rc::new(factor)))
-        .set_next(sub_contract.into());
+        .set_next(next.into());
 
     let mut state = State::default();
     state.add_transition(transition);
