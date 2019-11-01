@@ -1,4 +1,4 @@
-use super::expression::{Expression, Observable};
+use super::expression::Expression;
 use std::rc::Rc;
 
 #[derive(Default, Debug, Eq, PartialEq)]
@@ -56,7 +56,7 @@ impl Transition {
 #[derive(Debug, Eq, PartialEq)]
 pub enum Effect {
     Flip,
-    Scale(Rc<Observable>),
+    Scale(Rc<Expression>),
     Spawn(Rc<State>),
     Withdraw,
 }

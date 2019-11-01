@@ -1,6 +1,6 @@
 use super::{
     combinator::{brackets, padding},
-    expression::observable,
+    expression::expression,
     IResult, Span,
 };
 use crate::ast::{
@@ -24,7 +24,7 @@ pub fn conjunct(input: Span) -> IResult<Span, State> {
 }
 
 pub fn unary(input: Span) -> IResult<Span, State> {
-    padding(alt((brackets(contract), give, anytime)))(input)
+    padding(alt((brackets(contract), give, anytime, scale)))(input)
 }
 
 pub fn nullary(input: Span) -> IResult<Span, State> {
@@ -73,16 +73,13 @@ pub fn anytime(input: Span) -> IResult<Span, State> {
     Ok((input, build_anytime_state(next)))
 }
 
+// TODO: semantic checks on Expression.
 pub fn scale(input: Span) -> IResult<Span, State> {
     let (input, _) = tag("scale")(input)?;
-    let (input, factor) = observable(input)?;
+    let (input, scalar) = expression(input)?;
     let (input, sub_contract) = contract(input)?;
 
-    if let Expression::Observable(obs) = factor {
-        return Ok((input, build_scale_state(obs, sub_contract)));
-    }
-
-    panic!("Uh oh, I don't feel so good");
+    Ok((input, build_scale_state(scalar, sub_contract)))
 }
 
 // Build state helper functions.
@@ -153,8 +150,7 @@ pub fn build_anytime_state(sub_contract: State) -> State {
     state
 }
 
-// Semantic checks on Observable.
-pub fn build_scale_state(factor: Observable, sub_contract: State) -> State {
+pub fn build_scale_state(factor: Expression, sub_contract: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_effect(Effect::Scale(Rc::new(factor)))
@@ -371,6 +367,15 @@ mod tests {
     }
 
     #[test]
+    fn parse_scale() {
+        let konst = Expression::Observable(Observable::Konst(Expression::Word(123).into()));
+        parse_contract_ok(
+            "scale (konst 123) zero",
+            ("", build_scale_state(konst, State::default())),
+        );
+    }
+
+    #[test]
     fn build_one() {
         let actual = format!("{:#?}", build_one_state());
 
@@ -514,11 +519,8 @@ mod tests {
 
     #[test]
     fn build_scale() {
-        let konst_observable = Observable::Konst(Expression::Word(123).into());
-        let actual = format!(
-            "{:#?}",
-            build_scale_state(konst_observable, State::default())
-        );
+        let konst = Expression::Observable(Observable::Konst(Expression::Word(123).into()));
+        let actual = format!("{:#?}", build_scale_state(konst, State::default()));
 
         let expected = indoc!(
             "State {
@@ -527,9 +529,11 @@ mod tests {
                         conditions: [],
                         effects: [
                             Scale(
-                                Konst(
-                                    Word(
-                                        123,
+                                Observable(
+                                    Konst(
+                                        Word(
+                                            123,
+                                        ),
                                     ),
                                 ),
                             ),
@@ -544,9 +548,6 @@ mod tests {
             }"
         );
 
-        println!("{}", actual);
-        println!("{}", expected);
-
-        pretty_assertions::assert_eq!(actual, expected);
+        assert_eq!(actual, expected);
     }
 }

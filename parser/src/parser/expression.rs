@@ -1,9 +1,10 @@
 use super::{combinator::padding, IResult, Span};
 use crate::ast::expression::{Expression, Observable};
+use crate::parser::combinator::brackets;
 use nom::{branch::alt, bytes::complete::tag, character::complete::digit1};
 
 pub fn expression(input: Span) -> IResult<Span, Expression> {
-    padding(alt((word, observable)))(input)
+    padding(alt((brackets(expression), word, observable)))(input)
 }
 
 pub fn literal(input: Span) -> IResult<Span, Expression> {

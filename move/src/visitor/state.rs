@@ -51,9 +51,9 @@ impl<'a> State<'a> {
                     ast::Effect::Flip => {
                         method.add_action(Flip::default());
                     }
-                    ast::Effect::Scale(observable) => {
+                    ast::Effect::Scale(scalar) => {
                         let mut visitor = Expression::default();
-                        visitor.visit_observable(observable);
+                        visitor.visit(scalar);
                         method.add_action(Scale::new(visitor.expression()));
                     }
                     ast::Effect::Spawn(_state) => {
