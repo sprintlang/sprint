@@ -39,6 +39,13 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
+    pub fn definitions(&self) -> Vec<Rc<Variable>> {
+        self.actions
+            .iter()
+            .flat_map(|action| action.definitions())
+            .collect()
+    }
+
     pub fn conditions(&self) -> &[Rc<Condition>] {
         self.conditions.as_slice()
     }

@@ -4,6 +4,7 @@ use crate::jog::{
         flip::Flip,
         libra::{Address, Withdraw},
         scale::Scale,
+        spawn::Spawn,
     },
     method::{Condition, Transition},
     module,
@@ -16,11 +17,16 @@ const TERMINAL_ID: usize = 0;
 #[derive(Default)]
 pub struct State<'a> {
     contract: module::Contract<'a>,
-    ids: HashMap<*const ast::State<'a>, usize>,
+    ids: HashMap<*const ast::State, usize>,
+    context_id: usize,
 }
 
 impl<'a> State<'a> {
-    pub fn visit(&mut self, state: &ast::State<'a>) -> usize {
+    pub fn visit(&mut self, state: &ast::State) {
+        self.visit_helper(state, "initial_context");
+    }
+
+    pub fn visit_helper(&mut self, state: &ast::State, context: &str) -> usize {
         let key = state as *const _;
 
         if let Some(&id) = self.ids.get(&key) {
@@ -34,11 +40,11 @@ impl<'a> State<'a> {
 
         for transition in state.transitions() {
             let next_id = match transition.next() {
-                Some(next) => self.visit(next.as_ref()),
+                Some(next) => self.visit_helper(next.as_ref(), context),
                 None => TERMINAL_ID,
             };
 
-            let mut method = Transition::new(id, next_id);
+            let mut method = Transition::new(id, next_id, String::from(context));
 
             for condition in transition.conditions() {
                 let mut visitor = Expression::default();
@@ -56,8 +62,11 @@ impl<'a> State<'a> {
                         visitor.visit(scalar);
                         method.add_action(Scale::new(visitor.expression()));
                     }
-                    ast::Effect::Spawn(_state) => {
-                        // TODO: implement
+                    ast::Effect::Spawn(root_state) => {
+                        self.context_id += 1;
+                        let context_name = &format!("context_{}", self.context_id);
+                        let root_id = self.visit_helper(root_state, context_name);
+                        method.add_action(Spawn::new(context_name, root_id));
                     }
                     ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }

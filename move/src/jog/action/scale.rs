@@ -35,7 +35,7 @@ impl Display for Scale {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "*(&mut copy(contract_ref).scale) = *(&copy(contract_ref).scale) * {}",
+            "*(&mut copy(context_ref).scale) = *(&copy(context_ref).scale) * {}",
             self.scalar
         )
     }
