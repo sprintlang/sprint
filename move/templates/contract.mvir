@@ -98,24 +98,8 @@ module Contract {
     }
     {% endfor %}
 
+    // TODO: Figure out destroy, requires destroying all contexts as well.
     // Destroy the contract resource.
-    public destroy(contract: Self.T) {
-        let state: u64;
-        let coin_store: LibraCoin.T;
-        let holder: address;
-        let counterparty: address;
-        let scale: u64;
+    // public destroy(contract: Self.T) {}
 
-        // TODO: allow destruction before initialization or acquiring.
-
-        // Destroy the contract.
-        T { state, coin_store, holder, counterparty, scale } = move(contract);
-
-        // Check we are in a terminal state.
-        assert(copy(state) == 0, 401);
-
-        LibraCoin.destroy_zero(move(coin_store));
-
-        return;
-    }
 }
