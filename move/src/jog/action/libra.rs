@@ -90,8 +90,8 @@ pub enum Address {
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Address::Holder => write!(f, "*(&mut copy(contract_ref).holder)"),
-            Address::Counterparty => write!(f, "*(&mut copy(contract_ref).counterparty)"),
+            Address::Holder => write!(f, "*(&copy(contract_ref).holder)"),
+            Address::Counterparty => write!(f, "*(&copy(contract_ref).counterparty)"),
         }
     }
 }

@@ -28,10 +28,10 @@ impl Expression {
     pub fn visit_observable(&mut self, observable: &ast::Observable) {
         match observable {
             ast::Observable::IsHolder => {
-                self.expression = "get_txn_address() == *copy(contract_ref).holder".into()
+                self.expression = "get_txn_address() == *(&copy(contract_ref).holder)".into()
             }
             ast::Observable::IsCounterparty => {
-                self.expression = "get_txn_address() == *copy(contract_ref).counterparty".into()
+                self.expression = "get_txn_address() == *(&copy(contract_ref).counterparty)".into()
             }
             ast::Observable::Konst(e) => self.visit(e),
         };
