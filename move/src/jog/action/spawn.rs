@@ -12,17 +12,17 @@ pub struct Spawn {
 
 impl Spawn {
     pub fn new(context_name: &str, root_state: usize) -> Self {
-        let type_name = "Self.Context";
-
         Spawn {
             context: Rc::new(Variable {
                 name: String::from(context_name),
-                type_name,
-                default: Some(format!("Context {{ state: 0, flipped: false, scale: 1 }}",)),
+                type_name: "Self.Context",
+                default: Some(String::from(
+                    "Context {{ state: 0, flipped: false, scale: 1 }}",
+                )),
             }),
             context_ref: Rc::new(Variable {
                 name: String::from(context_name),
-                type_name,
+                type_name: "&mut Self.Context",
                 default: Some(format!("&mut copy(contract_ref).{}", context_name)),
             }),
             root_state,
