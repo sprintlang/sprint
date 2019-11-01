@@ -10,6 +10,7 @@ module Contract {
         coin_store: LibraCoin.T,
         holder: address,
         counterparty: address,
+        initial_context: Self.Context,
         {%- for property in self.properties() %}
         {{ property.name }}: {{ property.type_name }},
         {%- endfor %}
@@ -26,10 +27,14 @@ module Contract {
         let contract: Self.T;
 
         contract = T {
-            state: 0,
             coin_store: LibraCoin.zero(),
             holder: move(holder),
             counterparty: move(counterparty),
+            initial_context: Context {
+                state: 0,
+                flipped: false,
+                scale: 1,
+            },
             {%- for property in self.properties() %}
             {{ property.name }}: {{ property.default.as_ref().unwrap() }},
             {%- endfor %}
@@ -41,7 +46,7 @@ module Contract {
     public initialize(contract_ref: &mut Self.T) {
         let state_ref: &mut u64;
 
-        state_ref = &mut copy(contract_ref).state;
+        state_ref = &mut (&mut copy(contract_ref).initial_context).state;
 
         assert(*copy(state_ref) == 0, 1);
 

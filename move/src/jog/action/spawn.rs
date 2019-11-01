@@ -4,16 +4,16 @@ use std::{
     rc::Rc,
 };
 
-pub struct Fork {
+pub struct Spawn {
     context: Rc<Variable>,
     context_ref: Rc<Variable>,
 }
 
-impl Fork {
+impl Spawn {
     pub fn new(context_name: &str, root_state: usize) -> Self {
         let type_name = "Self.Context";
 
-        Fork {
+        Spawn {
             context: Rc::new(Variable {
                 name: String::from(context_name),
                 type_name,
@@ -31,7 +31,7 @@ impl Fork {
     }
 }
 
-impl Action for Fork {
+impl Action for Spawn {
     fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
@@ -45,7 +45,7 @@ impl Action for Fork {
     }
 }
 
-impl Display for Fork {
+impl Display for Spawn {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,

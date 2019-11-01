@@ -1,8 +1,8 @@
 use crate::jog::{
     action::{
         flip::Flip,
-        fork::Fork,
         libra::{Address, Withdraw},
+        spawn::Spawn,
     },
     method::{Condition, Transition},
     module::contract::Contract,
@@ -31,7 +31,11 @@ impl<'a> Generator<'a> {
         }
     }
 
-    pub fn generate(&mut self, state: &State, context: &str) -> usize {
+    pub fn generate(&mut self, state: &State) {
+        self.generate_helper(state, "initial_context");
+    }
+
+    fn generate_helper(&mut self, state: &State, context: &str) -> usize {
         let key = state as *const _;
 
         if let Some(&id) = self.ids.get(&key) {
@@ -45,7 +49,7 @@ impl<'a> Generator<'a> {
 
         for transition in state.transitions() {
             let next_id = match transition.next() {
-                Some(next) => self.generate(next.as_ref(), context),
+                Some(next) => self.generate_helper(next.as_ref(), context),
                 None => TERMINAL_ID,
             };
 
@@ -72,8 +76,8 @@ impl<'a> Generator<'a> {
                     Effect::Spawn(root_state) => {
                         self.context_id += 1;
                         let context_name = &format!("context_{}", self.context_id);
-                        let root_id = self.generate(root_state, context_name);
-                        method.add_action(Fork::new(context_name, root_id));
+                        let root_id = self.generate_helper(root_state, context_name);
+                        method.add_action(Spawn::new(context_name, root_id));
                     }
                     Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }
