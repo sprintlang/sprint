@@ -7,6 +7,7 @@ use std::{
 pub struct Spawn {
     context: Rc<Variable>,
     context_ref: Rc<Variable>,
+    root_state: usize,
 }
 
 impl Spawn {
@@ -17,16 +18,14 @@ impl Spawn {
             context: Rc::new(Variable {
                 name: String::from(context_name),
                 type_name,
-                default: Some(format!(
-                    "Context {{ state: {}, flipped: false, scale: 1 }}",
-                    root_state
-                )),
+                default: Some(format!("Context {{ state: 0, flipped: false, scale: 1 }}",)),
             }),
             context_ref: Rc::new(Variable {
                 name: String::from(context_name),
                 type_name,
                 default: Some(format!("&mut copy(contract_ref).{}", context_name)),
             }),
+            root_state,
         }
     }
 }
@@ -41,13 +40,19 @@ impl Action for Spawn {
     }
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
-        vec![self.context.clone()]
+        vec![self.context_ref.clone()]
     }
 }
 
 impl Display for Spawn {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(
+        writeln!(
+            f,
+            "*(&mut copy({new_context_ref}).state) = {root_state};",
+            new_context_ref = self.context_ref.name,
+            root_state = self.root_state,
+        )?;
+        writeln!(
             f,
             "*(&mut copy({new_context_ref}).flipped) = *(&copy(context_ref).flipped);",
             new_context_ref = self.context_ref.name
