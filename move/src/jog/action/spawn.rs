@@ -17,7 +17,7 @@ impl Spawn {
                 name: String::from(context_name),
                 type_name: "Self.Context",
                 default: Some(String::from(
-                    "Context {{ state: 0, flipped: false, scale: 1 }}",
+                    "Context { state: 0, flipped: false, scale: 1 }",
                 )),
             }),
             context_ref: Rc::new(Variable {
