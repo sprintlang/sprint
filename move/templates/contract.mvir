@@ -1,4 +1,5 @@
-module {{ name }} {
+module Contract {
+    // TODO: get imports from module.
     import 0x0.LibraCoin;
     import 0x0.LibraAccount;
 
@@ -32,7 +33,8 @@ module {{ name }} {
 
         assert(*copy(state_ref) == 0, 1);
 
-        // TODO: Make this do what is needed to initialize the contract, eg: deposit funds in escrow.
+        // TODO: make this do what is needed to initialize the contract, for
+        // example deposit funds in escrow.
 
         *move(state_ref) = 1;
 
@@ -77,11 +79,12 @@ module {{ name }} {
         let coin_store: LibraCoin.T;
         let holder: address;
         let counterparty: address;
+        let scale: u64;
 
         // TODO: allow destruction before initialization or acquiring.
 
         // Destroy the contract.
-        T { state, coin_store, holder, counterparty } = move(contract);
+        T { state, coin_store, holder, counterparty, scale } = move(contract);
 
         // Check we are in a terminal state.
         assert(copy(state) == 0, 401);
@@ -90,5 +93,4 @@ module {{ name }} {
 
         return;
     }
-
 }

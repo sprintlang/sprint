@@ -1,17 +1,19 @@
-use crate::jog::{action::Action, variable::Variable};
+use super::{
+    super::{expression::Expression, variable::Variable},
+    Action,
+};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
 };
 
-#[derive(Default)]
 pub struct Scale {
-    expression: String,
+    scalar: Expression,
 }
 
 impl Scale {
-    pub fn new(expression: String) -> Self {
-        Scale { expression }
+    pub fn new(scalar: Expression) -> Self {
+        Scale { scalar }
     }
 }
 
@@ -34,7 +36,7 @@ impl Display for Scale {
         write!(
             f,
             "*(&mut copy(contract_ref).scale) = *(&copy(contract_ref).scale) * {}",
-            self.expression
+            self.scalar
         )
     }
 }

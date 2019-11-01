@@ -1,11 +1,11 @@
 //! new-transaction
 //! sender: alice
 module ContractStore {
-  import {{alice}}.One;
+  import {{alice}}.Contract;
   import 0x0.Vector;
 
   resource T {
-    contracts: Vector.T<One.T>,
+    contracts: Vector.T<Contract.T>,
   }
 
   // Have alice call this
@@ -13,7 +13,7 @@ module ContractStore {
     let store: Self.T;
 
     store = T {
-      contracts: Vector.empty<One.T>(),
+      contracts: Vector.empty<Contract.T>(),
     };
 
     move_to_sender<T>(move(store));
@@ -21,32 +21,32 @@ module ContractStore {
     return;
   }
 
-  public store(contract: One.T, holder: address) acquires T {
+  public store(contract: Contract.T, holder: address) acquires T {
     let contract_holder: Self.T;
-    let contracts: &mut Vector.T<One.T>;
+    let contracts: &mut Vector.T<Contract.T>;
 
     contracts = &mut borrow_global_mut<T>(move(holder)).contracts;
 
-    Vector.push_back<One.T>(move(contracts), move(contract));
+    Vector.push_back<Contract.T>(move(contracts), move(contract));
 
     return;
   }
 
-  public get(holder: address): One.T acquires T {
-    return Vector.pop_back<One.T>(&mut borrow_global_mut<T>(move(holder)).contracts);
+  public get(holder: address): Contract.T acquires T {
+    return Vector.pop_back<Contract.T>(&mut borrow_global_mut<T>(move(holder)).contracts);
   }
 }
 
 // Create the contract and store it somewhere.
 //! new-transaction
 //! sender: alice
-import {{alice}}.One;
+import {{alice}}.Contract;
 import {{alice}}.ContractStore;
 
 main() {
-  let contract: One.T;
+  let contract: Contract.T;
 
-  contract = One.create({{bob}}, {{chris}});
+  contract = Contract.create({{bob}}, {{chris}});
   ContractStore.create_store();
   ContractStore.store(move(contract), {{alice}});
 
@@ -56,19 +56,19 @@ main() {
 // Checks the contract can be initialized properly
 //! new-transaction
 //! sender: bob
-import {{alice}}.One;
+import {{alice}}.Contract;
 import {{alice}}.ContractStore;
 import 0x0.LibraCoin;
 import 0x0.LibraAccount;
 
 main() {
-  let contract: One.T;
+  let contract: Contract.T;
 
   contract = ContractStore.get({{alice}});
 
-  One.initialize(&mut contract);
+  Contract.initialize(&mut contract);
   // TODO: REMOVE THIS LINE. This should happen in initialization in the future.
-  One.deposit(&mut contract, LibraAccount.withdraw_from_sender(1));
+  Contract.deposit(&mut contract, LibraAccount.withdraw_from_sender(1));
 
   ContractStore.store(move(contract), {{alice}});
 
@@ -78,17 +78,17 @@ main() {
 // Checks chris can execute the one
 //! new-transaction
 //! sender: chris
-import {{alice}}.One;
+import {{alice}}.Contract;
 import {{alice}}.ContractStore;
 import 0x0.LibraCoin;
 import 0x0.LibraAccount;
 
 main() {
-  let contract: One.T;
+  let contract: Contract.T;
 
   contract = ContractStore.get({{alice}});
 
-  One.transition_1_0(&mut contract);
+  Contract.transition_1_0(&mut contract);
 
   ContractStore.store(move(contract), {{alice}});
 

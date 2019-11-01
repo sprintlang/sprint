@@ -1,4 +1,4 @@
-use crate::jog::{action::Action, variable::Variable};
+use super::{super::variable::Variable, Action};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
@@ -7,11 +7,13 @@ use std::{
 const DEPENDENCIES: &[&str] = &["0x0.LibraAccount", "0x0.LibraCoin"];
 const COIN_STORE: &str = "coin_store";
 
+#[allow(dead_code)]
 pub struct Deposit {
     amount: u64,
 }
 
 impl Deposit {
+    #[allow(dead_code)]
     pub fn new(amount: u64) -> Self {
         Deposit { amount }
     }
@@ -81,6 +83,7 @@ impl Display for Withdraw {
 
 pub enum Address {
     Holder,
+    #[allow(dead_code)]
     Counterparty,
 }
 

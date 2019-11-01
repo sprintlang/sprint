@@ -1,5 +1,8 @@
-use super::{action::Action, variable::Variable};
-use std::{fmt, rc::Rc};
+use super::{action::Action, expression::Expression, variable::Variable};
+use std::{
+    fmt::{self, Display, Formatter},
+    rc::Rc,
+};
 
 #[derive(Default)]
 pub struct Transition<'a> {
@@ -34,13 +37,6 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
-    pub fn definitions(&self) -> Vec<Rc<Variable>> {
-        self.actions
-            .iter()
-            .flat_map(|action| action.definitions())
-            .collect()
-    }
-
     pub fn conditions(&self) -> &[Rc<Condition>] {
         self.conditions.as_slice()
     }
@@ -67,18 +63,21 @@ impl<'a> Transition<'a> {
 }
 
 pub struct Condition {
-    check: String,
+    condition: Expression,
     error_code: u64,
 }
 
 impl Condition {
-    pub fn new(check: String, error_code: u64) -> Self {
-        Condition { check, error_code }
+    pub fn new(condition: Expression, error_code: u64) -> Self {
+        Condition {
+            condition,
+            error_code,
+        }
     }
 }
 
-impl fmt::Display for Condition {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "assert({}, {});", self.check, self.error_code)
+impl Display for Condition {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "assert({}, {});", self.condition, self.error_code)
     }
 }

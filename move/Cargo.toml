@@ -12,5 +12,7 @@ edition = "2018"
 
 [dependencies]
 askama = "0.8.0"
-functional_tests = { git = "https://github.com/libra/libra" }
 sprint-parser = { path = "../parser" }
+
+[dev-dependencies]
+functional_tests = { git = "https://github.com/libra/libra" }

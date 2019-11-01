@@ -1,3 +1,4 @@
+use sprint_move::generate;
 use sprint_parser::parser;
 use std::{
     borrow::Cow,
@@ -13,15 +14,19 @@ const MVIR_EXTENSION: &str = "mvir";
 const SPRINT_EXTENSION: &str = "sprint";
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR.")]
+#[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR")]
 struct Args {
-    // File to be compiled.
+    /// File to be compiled
     #[structopt(parse(from_os_str))]
     source_path: PathBuf,
 
-    // Optional path to output file.
+    /// Optional path to output file
     #[structopt(parse(from_os_str))]
     output_path: Option<PathBuf>,
+
+    /// Prints extra debugging output
+    #[structopt(short, long)]
+    verbose: bool,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -35,10 +40,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         format!("Unable to parse file `{}`", source_path.display())
     })?;
 
-    // TODO: Move code generation.
-    // Currently the source file is written to output file as code generation has not been implemented.
-    println!("{:#?}", ast);
-    write_output(&output_path, source.as_bytes())?;
+    if args.verbose {
+        println!("{:#?}", ast);
+    }
+
+    let output = generate(&ast);
+    write_output(&output_path, output.as_bytes())?;
 
     Ok(())
 }
@@ -131,6 +138,7 @@ mod tests {
         let args = Args {
             source_path: PathBuf::from("test.sprint"),
             output_path: None,
+            verbose: false,
         };
 
         assert_eq!(
@@ -144,6 +152,7 @@ mod tests {
         let args = Args {
             source_path: PathBuf::from("test.sprint"),
             output_path: Some(PathBuf::from("output.mvir")),
+            verbose: false,
         };
 
         assert_eq!(

@@ -1,4 +1,4 @@
-use crate::jog::{action::Action, variable::Variable};
+use super::{super::variable::Variable, Action};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,

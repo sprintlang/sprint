@@ -1,5 +1,5 @@
 use functional_tests::{checker::check, evaluator::eval, utils::parse_input};
-use sprint_move::generator::Generator;
+use sprint_move::generate;
 use sprint_parser::parser::contract;
 use std::{
     fmt::Display,
@@ -41,22 +41,16 @@ fn test(module: impl Display, suite: &Path) {
 
 #[test]
 fn generated_zero() {
-    let suite = Path::new("tests/move_tests/zero.test.mvir");
+    let suite = Path::new("tests/suites/zero.test.mvir");
+    let contract = contract("zero").unwrap();
 
-    let mut generator = Generator::new("Zero");
-    let state = contract("zero").unwrap();
-    generator.generate(&state);
-
-    test(generator.contract(), suite);
+    test(generate(&contract), suite);
 }
 
 #[test]
 fn generated_one() {
-    let suite = Path::new("tests/move_tests/one.test.mvir");
+    let suite = Path::new("tests/suites/one.test.mvir");
+    let contract = contract("one").unwrap();
 
-    let mut generator = Generator::new("One");
-    let state = contract("one").unwrap();
-    generator.generate(&state);
-
-    test(generator.contract(), suite);
+    test(generate(&contract), suite);
 }
