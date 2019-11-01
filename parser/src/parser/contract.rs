@@ -151,7 +151,7 @@ pub fn build_anytime_state(next: State) -> State {
 pub fn build_scale_state(scalar: Expression, next: State) -> State {
     let mut transition = Transition::default();
     transition
-        .add_effect(Effect::Scale(Rc::new(scalar)))
+        .add_effect(Effect::Scale(scalar.into()))
         .set_next(next.into());
 
     let mut state = State::default();
