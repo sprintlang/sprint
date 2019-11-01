@@ -1,4 +1,4 @@
-mod contract;
 mod expression;
+mod state;
 
-pub use self::{contract::Contract, expression::Expression};
+pub use self::{expression::Expression, state::State};

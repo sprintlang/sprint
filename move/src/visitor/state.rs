@@ -14,12 +14,12 @@ use std::collections::HashMap;
 const TERMINAL_ID: usize = 0;
 
 #[derive(Default)]
-pub struct Contract<'a> {
+pub struct State<'a> {
     contract: module::Contract<'a>,
     ids: HashMap<*const ast::State, usize>,
 }
 
-impl<'a> Contract<'a> {
+impl<'a> State<'a> {
     pub fn visit(&mut self, state: &ast::State) -> usize {
         let key = state as *const _;
 
