@@ -1,10 +1,11 @@
 mod jog;
 mod visitor;
 
-use sprint_parser::ast::state::State;
+use self::visitor::State;
+use sprint_parser::ast::state as ast;
 
-pub fn generate(state: &State) -> String {
-    let mut visitor = visitor::State::default();
+pub fn generate(state: &ast::State) -> String {
+    let mut visitor = State::default();
     visitor.visit(state);
     visitor.contract().to_string()
 }
