@@ -1,6 +1,8 @@
 use super::{combinator::padding, IResult, Span};
-use crate::ast::expression::{Expression, Observable};
-use crate::parser::combinator::brackets;
+use crate::{
+    ast::{Expression, Observable},
+    parser::combinator::brackets,
+};
 use nom::{branch::alt, bytes::complete::tag, character::complete::digit1};
 
 pub fn expression(input: Span) -> IResult<Span, Expression> {

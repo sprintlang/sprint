@@ -1,5 +1,5 @@
 use crate::jog::expression;
-use sprint_parser::ast::expression as ast;
+use sprint_parser::ast;
 
 #[derive(Default)]
 pub struct Expression {

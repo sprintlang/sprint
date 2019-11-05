@@ -4,8 +4,8 @@ use super::{
     IResult, Span,
 };
 use crate::ast::{
-    expression::{Expression, Observable},
     state::{Effect, State, Transition},
+    {Expression, Observable},
 };
 use nom::{branch::alt, bytes::complete::tag};
 use std::rc::Rc;
