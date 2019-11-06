@@ -14,24 +14,36 @@ use std::collections::HashMap;
 
 const TERMINAL_ID: usize = 0;
 
-#[derive(Default)]
 pub struct State<'a> {
     contract: module::Contract<'a>,
+
+    // Used for state id generation
     ids: HashMap<*const ast::State, usize>,
-    context_id: usize,
+
+    // Tracking of the visiting state
+    current_context: String,
+}
+
+impl<'a> Default for State<'a> {
+    fn default() -> State<'a> {
+        let contract = module::Contract::default();
+        let current_context = contract.initial_context();
+
+        State {
+            contract,
+            ids: HashMap::new(),
+            current_context,
+        }
+    }
 }
 
 impl<'a> State<'a> {
-    pub fn visit(&mut self, state: &ast::State) {
-        self.visit_helper(state, "initial_context");
-    }
-
-    pub fn visit_helper(&mut self, state: &ast::State, context: &str) -> usize {
+    pub fn visit(&mut self, state: &ast::State) -> usize {
         let key = state as *const _;
 
-        if let Some(&id) = self.ids.get(&key) {
+        if let Some(&state_id) = self.ids.get(&key) {
             // Do not generate code for the same state twice!
-            return id;
+            return state_id;
         }
 
         // Zero is reserved for the terminal state.
@@ -40,11 +52,11 @@ impl<'a> State<'a> {
 
         for transition in state.transitions() {
             let next_id = match transition.next() {
-                Some(next) => self.visit_helper(next.as_ref(), context),
+                Some(next) => self.visit(next.as_ref()),
                 None => TERMINAL_ID,
             };
 
-            let mut method = Transition::new(id, next_id, String::from(context));
+            let mut method = Transition::new(id, next_id, self.current_context.clone());
 
             for condition in transition.conditions() {
                 let mut visitor = Expression::default();
@@ -63,10 +75,13 @@ impl<'a> State<'a> {
                         method.add_action(Scale::new(visitor.expression()));
                     }
                     ast::Effect::Spawn(root_state) => {
-                        self.context_id += 1;
-                        let context_name = format!("context_{}", self.context_id);
-                        let root_id = self.visit_helper(root_state, &context_name);
-                        method.add_action(Spawn::new(context_name, root_id));
+                        let context_save = self.current_context.clone();
+                        self.current_context = self.contract.next_context();
+
+                        let root_id = self.visit(root_state);
+                        method.add_action(Spawn::new(self.current_context.clone(), root_id));
+
+                        self.current_context = context_save;
                     }
                     ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }
