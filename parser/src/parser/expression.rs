@@ -29,7 +29,7 @@ pub fn observable_konst(input: Span) -> IResult<Span, Expression> {
     let (input, expr) = literal(input)?;
     Ok((
         input,
-        Expression::Observable(Observable::Konst(Box::new(expr))),
+        Expression::Observable(Observable::Konst(expr.into())),
     ))
 }
 
@@ -60,7 +60,7 @@ mod tests {
             "konst 123",
             (
                 "",
-                Expression::Observable(Observable::Konst(Box::new(Expression::Word(123)))),
+                Expression::Observable(Observable::Konst(Expression::Word(123).into())),
             ),
         );
 

@@ -4,13 +4,16 @@ mod class;
 
 pub use self::class::{Class, Comparable, Equatable, Negatable, Numerable};
 
+use std::rc::Rc;
+
 #[derive(PartialEq, Eq, Debug)]
-pub enum Expression<'a> {
-    Application(Box<Expression<'a>>, Box<Expression<'a>>),
+pub enum Expression {
+    Abstraction(Rc<Expression>, Rc<Expression>),
+    Application(Rc<Expression>, Rc<Expression>),
+    Argument(Kind),
     Boolean(bool),
-    Class(Class<'a>),
-    Identifier(&'a str, Kind),
-    Observable(Observable<'a>),
+    Class(Class),
+    Observable(Observable),
     Word(u64),
 }
 
@@ -22,13 +25,17 @@ pub enum Kind {
     Word,
 }
 
-impl Expression<'_> {
+impl Expression {
     pub fn kind(&self) -> Kind {
         match self {
+            Self::Abstraction(k, e) => Kind::Abstraction(k.kind().into(), e.kind().into()),
+
             Self::Application(f, _) => match f.kind() {
                 Kind::Abstraction(_, k) => k.as_ref().clone(),
                 _ => unreachable!(),
             },
+
+            Self::Argument(k) => k.clone(),
 
             Self::Boolean(_) => Kind::Boolean,
 
@@ -38,8 +45,6 @@ impl Expression<'_> {
                 Class::Negatable(Negatable::Negate(e)) => e.kind(),
                 Class::Numerable(n) => n.kind(),
             },
-
-            Self::Identifier(_, k) => k.clone(),
 
             Self::Observable(o) => Kind::Observable(Box::new(match o {
                 Observable::IsHolder => Kind::Boolean,
@@ -52,39 +57,45 @@ impl Expression<'_> {
     }
 }
 
-impl From<bool> for Expression<'_> {
+impl From<bool> for Expression {
     fn from(b: bool) -> Self {
         Self::Boolean(b)
     }
 }
 
-impl<'a> From<Class<'a>> for Expression<'a> {
-    fn from(c: Class<'a>) -> Self {
+impl From<Class> for Expression {
+    fn from(c: Class) -> Self {
         Self::Class(c)
     }
 }
 
-impl<'a> From<Observable<'a>> for Expression<'a> {
-    fn from(o: Observable<'a>) -> Self {
+impl From<Kind> for Expression {
+    fn from(k: Kind) -> Self {
+        Self::Argument(k)
+    }
+}
+
+impl From<Observable> for Expression {
+    fn from(o: Observable) -> Self {
         Self::Observable(o)
     }
 }
 
-impl From<u64> for Expression<'_> {
+impl From<u64> for Expression {
     fn from(w: u64) -> Self {
         Self::Word(w)
     }
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum Observable<'a> {
+pub enum Observable {
     IsHolder,
     IsCounterparty,
-    Konst(Box<Expression<'a>>),
+    Konst(Rc<Expression>),
 }
 
-impl<'a> From<Expression<'a>> for Observable<'a> {
-    fn from(e: Expression<'a>) -> Self {
+impl From<Expression> for Observable {
+    fn from(e: Expression) -> Self {
         Self::Konst(e.into())
     }
 }
@@ -96,12 +107,13 @@ mod tests {
     #[test]
     fn kind_of_application() {
         // one :: Word -> Word -> Boolean
-        let one = Expression::Identifier(
-            "one",
-            Kind::Abstraction(
-                Kind::Word.into(),
-                Kind::Abstraction(Kind::Word.into(), Kind::Boolean.into()).into(),
-            ),
+        let one = Expression::Abstraction(
+            Expression::Argument(Kind::Word).into(),
+            Expression::Abstraction(
+                Expression::Argument(Kind::Word).into(),
+                Expression::Boolean(true).into(),
+            )
+            .into(),
         );
 
         // two = one 42

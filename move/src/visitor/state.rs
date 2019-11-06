@@ -19,13 +19,11 @@ const TERMINAL_ID: usize = 0;
 #[derive(Default)]
 pub struct State<'a> {
     contract: module::Contract<'a>,
-
-    // Used for state id generation
-    ids: HashMap<*const ast::State<'a>, usize>,
+    ids: HashMap<*const ast::State, usize>,
 }
 
 impl<'a> State<'a> {
-    pub fn visit(&mut self, state: &ast::State<'a>) -> usize {
+    pub fn visit(&mut self, state: &ast::State) -> usize {
         let key = state as *const _;
 
         if let Some(&state_id) = self.ids.get(&key) {
