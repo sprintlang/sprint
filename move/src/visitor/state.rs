@@ -64,8 +64,8 @@ impl<'a> State<'a> {
                     }
                     ast::Effect::Spawn(root_state) => {
                         self.context_id += 1;
-                        let context_name = &format!("context_{}", self.context_id);
-                        let root_id = self.visit_helper(root_state, context_name);
+                        let context_name = format!("context_{}", self.context_id);
+                        let root_id = self.visit_helper(root_state, &context_name);
                         method.add_action(Spawn::new(context_name, root_id));
                     }
                     ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),

@@ -11,19 +11,17 @@ pub struct Spawn {
 }
 
 impl Spawn {
-    pub fn new(context_name: &str, root_state: usize) -> Self {
+    pub fn new(context_name: String, root_state: usize) -> Self {
         Spawn {
             context: Rc::new(Variable {
-                name: String::from(context_name),
+                name: context_name.clone().into(),
                 type_name: "Self.Context",
-                default: Some(String::from(
-                    "Context { state: 0, flipped: false, scale: 1 }",
-                )),
+                default: Some("Context { state: 0, flipped: false, scale: 1 }".into()),
             }),
             context_ref: Rc::new(Variable {
-                name: String::from(context_name),
+                name: context_name.clone().into(),
                 type_name: "&mut Self.Context",
-                default: Some(format!("&mut copy(contract_ref).{}", context_name)),
+                default: Some(format!("&mut copy(contract_ref).{}", context_name).into()),
             }),
             root_state,
         }
