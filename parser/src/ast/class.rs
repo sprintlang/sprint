@@ -1,41 +1,41 @@
 use super::{Expression, Kind};
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum Class {
-    Comparable(Comparable),
-    Equatable(Equatable),
-    Negatable(Negatable),
-    Numerable(Numerable),
+pub enum Class<'a> {
+    Comparable(Comparable<'a>),
+    Equatable(Equatable<'a>),
+    Negatable(Negatable<'a>),
+    Numerable(Numerable<'a>),
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum Comparable {
-    Greater(Box<Expression>, Box<Expression>),
-    Less(Box<Expression>, Box<Expression>),
-    GreaterEqual(Box<Expression>, Box<Expression>),
-    LessEqual(Box<Expression>, Box<Expression>),
+pub enum Comparable<'a> {
+    Greater(Box<Expression<'a>>, Box<Expression<'a>>),
+    Less(Box<Expression<'a>>, Box<Expression<'a>>),
+    GreaterEqual(Box<Expression<'a>>, Box<Expression<'a>>),
+    LessEqual(Box<Expression<'a>>, Box<Expression<'a>>),
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum Equatable {
-    Equal(Box<Expression>, Box<Expression>),
-    NotEqual(Box<Expression>, Box<Expression>),
+pub enum Equatable<'a> {
+    Equal(Box<Expression<'a>>, Box<Expression<'a>>),
+    NotEqual(Box<Expression<'a>>, Box<Expression<'a>>),
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum Negatable {
-    Negate(Box<Expression>),
+pub enum Negatable<'a> {
+    Negate(Box<Expression<'a>>),
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum Numerable {
-    Add(Box<Expression>, Box<Expression>),
-    Subtract(Box<Expression>, Box<Expression>),
-    Multiply(Box<Expression>, Box<Expression>),
-    Divide(Box<Expression>, Box<Expression>),
+pub enum Numerable<'a> {
+    Add(Box<Expression<'a>>, Box<Expression<'a>>),
+    Subtract(Box<Expression<'a>>, Box<Expression<'a>>),
+    Multiply(Box<Expression<'a>>, Box<Expression<'a>>),
+    Divide(Box<Expression<'a>>, Box<Expression<'a>>),
 }
 
-impl Numerable {
+impl Numerable<'_> {
     pub(super) fn kind(&self) -> Kind {
         match self {
             Self::Add(e, _) | Self::Subtract(e, _) | Self::Multiply(e, _) | Self::Divide(e, _) => {

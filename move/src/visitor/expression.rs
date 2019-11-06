@@ -6,11 +6,13 @@ pub struct Expression {
     expression: expression::Expression,
 }
 
-impl Expression {
-    pub fn visit(&mut self, expression: &ast::Expression) {
+impl<'a> Expression {
+    pub fn visit(&mut self, expression: &ast::Expression<'a>) {
         match expression {
+            ast::Expression::Application(_, _) => unimplemented!(),
             ast::Expression::Boolean(_) => unimplemented!(),
             ast::Expression::Class(c) => self.visit_class(c),
+            ast::Expression::Identifier(_, _) => unimplemented!(),
             ast::Expression::Observable(o) => self.visit_observable(o),
             ast::Expression::Word(w) => self.expression = w.to_string().into(),
         };

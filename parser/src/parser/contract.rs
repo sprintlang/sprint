@@ -83,7 +83,7 @@ pub fn scale(input: Span) -> IResult<Span, State> {
 }
 
 // Build state helper functions.
-pub fn build_one_state() -> State {
+pub fn build_one_state<'a>() -> State<'a> {
     let mut transition = Transition::default();
     transition.add_effect(Effect::Withdraw);
 
@@ -93,7 +93,7 @@ pub fn build_one_state() -> State {
     state
 }
 
-pub fn build_give_state(next: State) -> State {
+pub fn build_give_state(next: State<'_>) -> State<'_> {
     let mut transition = Transition::default();
     transition.add_effect(Effect::Flip).set_next(next.into());
 
@@ -103,7 +103,7 @@ pub fn build_give_state(next: State) -> State {
     state
 }
 
-pub fn build_and_state(left: State, right: State) -> State {
+pub fn build_and_state<'a>(left: State<'a>, right: State<'a>) -> State<'a> {
     let mut transition = Transition::default();
     transition
         .add_effect(Effect::Spawn(right.into()))
@@ -115,7 +115,7 @@ pub fn build_and_state(left: State, right: State) -> State {
     state
 }
 
-pub fn build_or_state(left: State, right: State) -> State {
+pub fn build_or_state<'a>(left: State<'a>, right: State<'a>) -> State<'a> {
     let is_holder = Rc::new(Expression::from(Observable::IsHolder));
 
     let mut left_transition = Transition::default();
@@ -136,7 +136,7 @@ pub fn build_or_state(left: State, right: State) -> State {
     state
 }
 
-pub fn build_anytime_state(next: State) -> State {
+pub fn build_anytime_state(next: State<'_>) -> State<'_> {
     let mut transition = Transition::default();
     transition
         .add_condition(Expression::from(Observable::IsHolder).into())
@@ -148,7 +148,7 @@ pub fn build_anytime_state(next: State) -> State {
     state
 }
 
-pub fn build_scale_state(scalar: Expression, next: State) -> State {
+pub fn build_scale_state<'a>(scalar: Expression<'a>, next: State<'a>) -> State<'a> {
     let mut transition = Transition::default();
     transition
         .add_effect(Effect::Scale(scalar.into()))
