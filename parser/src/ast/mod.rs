@@ -4,6 +4,7 @@ mod class;
 
 pub use self::class::{Class, Comparable, Equatable, Negatable, Numerable};
 
+use state::State;
 use std::rc::Rc;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -14,6 +15,7 @@ pub enum Expression {
     Boolean(bool),
     Class(Class),
     Observable(Observable),
+    State(State),
     Word(u64),
 }
 
@@ -22,6 +24,7 @@ pub enum Kind {
     Abstraction(Box<Kind>, Box<Kind>),
     Boolean,
     Observable(Box<Kind>),
+    State,
     Word,
 }
 
@@ -51,6 +54,8 @@ impl Expression {
                 Observable::IsCounterparty => Kind::Boolean,
                 Observable::Konst(e) => e.kind(),
             })),
+
+            Self::State(_) => Kind::State,
 
             Self::Word(_) => Kind::Word,
         }
