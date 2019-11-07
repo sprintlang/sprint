@@ -95,7 +95,9 @@ pub fn build_one_state() -> State {
 
 pub fn build_give_state(next: State) -> State {
     let mut transition = Transition::default();
-    transition.add_effect(Effect::Flip).set_next(next.into());
+    transition
+        .add_effect(Effect::Flip)
+        .set_next(Expression::State(next).into());
 
     let mut state = State::default();
     state.add_transition(transition);
@@ -107,7 +109,7 @@ pub fn build_and_state(left: State, right: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_effect(Effect::Spawn(right.into()))
-        .set_next(left.into());
+        .set_next(Expression::State(left).into());
 
     let mut state = State::default();
     state.add_transition(transition);
@@ -121,12 +123,12 @@ pub fn build_or_state(left: State, right: State) -> State {
     let mut left_transition = Transition::default();
     left_transition
         .add_condition(is_holder.clone())
-        .set_next(left.into());
+        .set_next(Expression::State(left).into());
 
     let mut right_transition = Transition::default();
     right_transition
         .add_condition(is_holder.clone())
-        .set_next(right.into());
+        .set_next(Expression::State(right).into());
 
     let mut state = State::default();
     state
@@ -140,7 +142,7 @@ pub fn build_anytime_state(next: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_condition(Expression::from(Observable::IsHolder).into())
-        .set_next(next.into());
+        .set_next(Expression::State(next).into());
 
     let mut state = State::default();
     state.add_transition(transition);
@@ -152,7 +154,7 @@ pub fn build_scale_state(scalar: Expression, next: State) -> State {
     let mut transition = Transition::default();
     transition
         .add_effect(Effect::Scale(scalar.into()))
-        .set_next(next.into());
+        .set_next(Expression::State(next).into());
 
     let mut state = State::default();
     state.add_transition(transition);
@@ -407,9 +409,11 @@ mod tests {
                             Flip,
                         ],
                         next: Some(
-                            State {
-                                transitions: [],
-                            },
+                            State(
+                                State {
+                                    transitions: [],
+                                },
+                            ),
                         ),
                     },
                 ],
@@ -436,9 +440,11 @@ mod tests {
                             ),
                         ],
                         next: Some(
-                            State {
-                                transitions: [],
-                            },
+                            State(
+                                State {
+                                    transitions: [],
+                                },
+                            ),
                         ),
                     },
                 ],
@@ -463,9 +469,11 @@ mod tests {
                         ],
                         effects: [],
                         next: Some(
-                            State {
-                                transitions: [],
-                            },
+                            State(
+                                State {
+                                    transitions: [],
+                                },
+                            ),
                         ),
                     },
                     Transition {
@@ -476,9 +484,11 @@ mod tests {
                         ],
                         effects: [],
                         next: Some(
-                            State {
-                                transitions: [],
-                            },
+                            State(
+                                State {
+                                    transitions: [],
+                                },
+                            ),
                         ),
                     },
                 ],
@@ -503,9 +513,11 @@ mod tests {
                         ],
                         effects: [],
                         next: Some(
-                            State {
-                                transitions: [],
-                            },
+                            State(
+                                State {
+                                    transitions: [],
+                                },
+                            ),
                         ),
                     },
                 ],
@@ -537,9 +549,11 @@ mod tests {
                             ),
                         ],
                         next: Some(
-                            State {
-                                transitions: [],
-                            },
+                            State(
+                                State {
+                                    transitions: [],
+                                },
+                            ),
                         ),
                     },
                 ],

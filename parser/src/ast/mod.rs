@@ -86,6 +86,12 @@ impl From<Observable> for Expression {
     }
 }
 
+impl From<State> for Expression {
+    fn from(s: State) -> Self {
+        Self::State(s)
+    }
+}
+
 impl From<u64> for Expression {
     fn from(w: u64) -> Self {
         Self::Word(w)

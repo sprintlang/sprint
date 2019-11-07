@@ -37,7 +37,10 @@ impl<'a> State<'a> {
 
         for transition in state.transitions() {
             let next_id = match transition.next() {
-                Some(next) => self.visit(next.as_ref()),
+                Some(next) => match next.as_ref() {
+                    sprint_parser::ast::Expression::State(s) => self.visit(&s),
+                    _ => unreachable!(),
+                },
                 None => TERMINAL_ID,
             };
 

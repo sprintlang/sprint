@@ -21,7 +21,7 @@ impl State {
 pub struct Transition {
     conditions: Vec<Rc<Expression>>,
     effects: Vec<Effect>,
-    next: Option<Rc<State>>,
+    next: Option<Rc<Expression>>,
 }
 
 impl Transition {
@@ -43,11 +43,11 @@ impl Transition {
         self
     }
 
-    pub fn next(&self) -> Option<Rc<State>> {
+    pub fn next(&self) -> Option<Rc<Expression>> {
         self.next.clone()
     }
 
-    pub fn set_next(&mut self, next: Rc<State>) -> &mut Self {
+    pub fn set_next(&mut self, next: Rc<Expression>) -> &mut Self {
         self.next = Some(next);
         self
     }
