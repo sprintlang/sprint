@@ -19,7 +19,7 @@ pub struct State<'a> {
     contract: module::Contract<'a>,
 
     // Used for state id generation
-    ids: HashMap<*const ast::State, usize>,
+    ids: HashMap<*const ast::State<'a>, usize>,
     last_generated_context_id: usize,
 
     // Tracking of the visiting state
@@ -27,7 +27,7 @@ pub struct State<'a> {
 }
 
 impl<'a> State<'a> {
-    pub fn visit(&mut self, state: &ast::State) -> usize {
+    pub fn visit(&mut self, state: &ast::State<'a>) -> usize {
         let key = state as *const _;
 
         if let Some(&state_id) = self.ids.get(&key) {
