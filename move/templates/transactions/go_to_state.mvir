@@ -1,0 +1,13 @@
+import 0x0.LibraAccount;
+import {{holder}}.Contract;
+
+// Note: to date, accounts can only have one contract, stored
+// as the Contract module in the holder's account.
+
+main() {
+    let holder: address;
+
+    holder = {{holder}};
+    {{to_state}}(move_from<Contract>(move(holder)));
+    return;
+}
