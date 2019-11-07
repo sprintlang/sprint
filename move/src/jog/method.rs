@@ -1,4 +1,4 @@
-use super::{action::Action, expression::Expression, variable::Variable};
+use super::{action::Action, expression::Expression, generate_context_name, variable::Variable};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
@@ -10,17 +10,17 @@ pub struct Transition<'a> {
     actions: Vec<Box<dyn Action + 'a>>,
     origin_state: usize,
     to_state: usize,
-    context: String,
+    context_id: usize,
 }
 
 impl<'a> Transition<'a> {
-    pub fn new(origin_state: usize, to_state: usize, context: String) -> Self {
+    pub fn new(origin_state: usize, to_state: usize, context_id: usize) -> Self {
         Transition {
             conditions: Vec::new(),
             actions: Vec::new(),
             origin_state,
             to_state,
-            context,
+            context_id,
         }
     }
 
@@ -70,8 +70,8 @@ impl<'a> Transition<'a> {
         self.actions.push(Box::new(action));
     }
 
-    pub fn context(&self) -> &str {
-        &self.context
+    pub fn context(&self) -> String {
+        generate_context_name(self.context_id)
     }
 }
 
