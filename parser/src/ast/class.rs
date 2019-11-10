@@ -1,7 +1,7 @@
 use super::{Expression, Kind};
 use std::rc::Rc;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Class {
     Comparable(Comparable),
     Equatable(Equatable),
@@ -9,7 +9,7 @@ pub enum Class {
     Numerable(Numerable),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Comparable {
     Greater(Rc<Expression>, Rc<Expression>),
     Less(Rc<Expression>, Rc<Expression>),
@@ -17,18 +17,18 @@ pub enum Comparable {
     LessEqual(Rc<Expression>, Rc<Expression>),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Equatable {
     Equal(Rc<Expression>, Rc<Expression>),
     NotEqual(Rc<Expression>, Rc<Expression>),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Negatable {
     Negate(Rc<Expression>),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Numerable {
     Add(Rc<Expression>, Rc<Expression>),
     Subtract(Rc<Expression>, Rc<Expression>),
@@ -37,7 +37,7 @@ pub enum Numerable {
 }
 
 impl Numerable {
-    pub(super) fn kind(&self) -> Kind {
+    pub(super) fn kind(&self) -> Rc<Kind> {
         match self {
             Self::Add(e, _) | Self::Subtract(e, _) | Self::Multiply(e, _) | Self::Divide(e, _) => {
                 e.kind()

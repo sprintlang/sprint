@@ -27,6 +27,10 @@ struct Args {
     /// Prints extra debugging output
     #[structopt(short, long)]
     verbose: bool,
+
+    /// Checks program without code generation
+    #[structopt(short, long)]
+    check: bool,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -41,11 +45,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     })?;
 
     if args.verbose {
-        println!("{:#?}", ast);
+        for (id, definition) in &ast {
+            println!("{} :: {}", id, definition.kind);
+            println!("{} = {:#?}", id, definition.expression);
+        }
     }
 
-    let output = generate(&ast);
-    write_output(&output_path, output.as_bytes())?;
+    if !args.check {
+        let output = generate(&ast);
+        write_output(&output_path, output.as_bytes())?;
+    }
 
     Ok(())
 }
@@ -139,6 +148,7 @@ mod tests {
             source_path: PathBuf::from("test.sprint"),
             output_path: None,
             verbose: false,
+            check: false,
         };
 
         assert_eq!(
@@ -153,6 +163,7 @@ mod tests {
             source_path: PathBuf::from("test.sprint"),
             output_path: Some(PathBuf::from("output.mvir")),
             verbose: false,
+            check: false,
         };
 
         assert_eq!(

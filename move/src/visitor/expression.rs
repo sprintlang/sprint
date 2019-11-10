@@ -11,11 +11,11 @@ impl Expression {
         match expression {
             ast::Expression::Abstraction(_, _) => unimplemented!(),
             ast::Expression::Application(_, _) => unimplemented!(),
-            ast::Expression::Argument(_) => unimplemented!(),
             ast::Expression::Boolean(_) => unimplemented!(),
             ast::Expression::Class(c) => self.visit_class(c),
             ast::Expression::Observable(o) => self.visit_observable(o),
             ast::Expression::State(_) => unimplemented!(),
+            ast::Expression::Variable(_) => unimplemented!(),
             ast::Expression::Word(w) => self.expression = w.to_string().into(),
         };
     }

@@ -1,7 +1,6 @@
 use super::Expression;
-use std::rc::Rc;
 
-#[derive(Default, Debug, Eq, PartialEq)]
+#[derive(Default, Debug)]
 pub struct State {
     transitions: Vec<Transition>,
 }
@@ -17,19 +16,19 @@ impl State {
     }
 }
 
-#[derive(Default, Debug, Eq, PartialEq)]
+#[derive(Default, Debug)]
 pub struct Transition {
-    conditions: Vec<Rc<Expression>>,
+    conditions: Vec<Expression>,
     effects: Vec<Effect>,
-    next: Option<Rc<Expression>>,
+    next: Option<Expression>,
 }
 
 impl Transition {
-    pub fn conditions(&self) -> &[Rc<Expression>] {
+    pub fn conditions(&self) -> &[Expression] {
         &self.conditions
     }
 
-    pub fn add_condition(&mut self, condition: Rc<Expression>) -> &mut Self {
+    pub fn add_condition(&mut self, condition: Expression) -> &mut Self {
         self.conditions.push(condition);
         self
     }
@@ -43,20 +42,20 @@ impl Transition {
         self
     }
 
-    pub fn next(&self) -> Option<Rc<Expression>> {
-        self.next.clone()
+    pub fn next(&self) -> Option<&Expression> {
+        self.next.as_ref()
     }
 
-    pub fn set_next(&mut self, next: Rc<Expression>) -> &mut Self {
+    pub fn set_next(&mut self, next: Expression) -> &mut Self {
         self.next = Some(next);
         self
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug)]
 pub enum Effect {
     Flip,
-    Scale(Rc<Expression>),
-    Spawn(Rc<State>),
+    Scale(Expression),
+    Spawn(Expression),
     Withdraw,
 }

@@ -1,63 +1,82 @@
 pub mod state;
 
 mod class;
+mod kind;
 
-pub use self::class::{Class, Comparable, Equatable, Negatable, Numerable};
+pub use self::{
+    class::{Class, Comparable, Equatable, Negatable, Numerable},
+    kind::Kind,
+};
 
-use state::State;
-use std::rc::Rc;
+use self::state::State;
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
 
-#[derive(PartialEq, Eq, Debug)]
+pub type Reference = Rc<RefCell<Variable>>;
+
+#[derive(Debug)]
+pub struct Definition {
+    pub kind: Rc<Kind>,
+    pub expression: Expression,
+}
+
+impl From<Expression> for Definition {
+    fn from(e: Expression) -> Self {
+        Self {
+            kind: e.kind(),
+            expression: e,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum Expression {
-    Abstraction(Rc<Expression>, Rc<Expression>),
-    Application(Rc<Expression>, Rc<Expression>),
-    Argument(Kind),
+    Abstraction(Rc<Argument>, Box<Self>),
+    Application(Box<Self>, Box<Self>),
     Boolean(bool),
     Class(Class),
     Observable(Observable),
     State(State),
+    Variable(Reference),
     Word(u64),
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum Kind {
-    Abstraction(Box<Kind>, Box<Kind>),
-    Boolean,
-    Observable(Box<Kind>),
-    State,
-    Word,
-}
-
 impl Expression {
-    pub fn kind(&self) -> Kind {
+    pub fn kind(&self) -> Rc<Kind> {
         match self {
-            Self::Abstraction(k, e) => Kind::Abstraction(k.kind().into(), e.kind().into()),
+            Self::Abstraction(from, to) => {
+                let Argument(from) = from.as_ref();
+                Kind::Abstraction(from.clone(), to.kind()).into()
+            }
 
-            Self::Application(f, _) => match f.kind() {
-                Kind::Abstraction(_, k) => k.as_ref().clone(),
+            Self::Application(f, _) => match f.kind().as_ref() {
+                Kind::Abstraction(_, k) => k.clone(),
                 _ => unreachable!(),
             },
 
-            Self::Argument(k) => k.clone(),
-
-            Self::Boolean(_) => Kind::Boolean,
+            Self::Boolean(_) => Kind::Boolean.into(),
 
             Self::Class(c) => match c {
-                Class::Comparable(_) => Kind::Boolean,
-                Class::Equatable(_) => Kind::Boolean,
+                Class::Comparable(_) => Kind::Boolean.into(),
+                Class::Equatable(_) => Kind::Boolean.into(),
                 Class::Negatable(Negatable::Negate(e)) => e.kind(),
                 Class::Numerable(n) => n.kind(),
             },
 
-            Self::Observable(o) => Kind::Observable(Box::new(match o {
-                Observable::IsHolder => Kind::Boolean,
-                Observable::IsCounterparty => Kind::Boolean,
+            Self::Observable(o) => Kind::Observable(match o {
+                Observable::IsHolder => Kind::Boolean.into(),
+                Observable::IsCounterparty => Kind::Boolean.into(),
                 Observable::Konst(e) => e.kind(),
-            })),
+            })
+            .into(),
 
-            Self::State(_) => Kind::State,
+            Self::State(_) => Kind::State.into(),
 
-            Self::Word(_) => Kind::Word,
+            Self::Variable(v) => v.borrow().kind(),
+
+            Self::Word(_) => Kind::Word.into(),
         }
     }
 }
@@ -74,12 +93,6 @@ impl From<Class> for Expression {
     }
 }
 
-impl From<Kind> for Expression {
-    fn from(k: Kind) -> Self {
-        Self::Argument(k)
-    }
-}
-
 impl From<Observable> for Expression {
     fn from(o: Observable) -> Self {
         Self::Observable(o)
@@ -92,13 +105,28 @@ impl From<State> for Expression {
     }
 }
 
+impl From<Rc<RefCell<Variable>>> for Expression {
+    fn from(v: Rc<RefCell<Variable>>) -> Self {
+        Self::Variable(v)
+    }
+}
+
 impl From<u64> for Expression {
     fn from(w: u64) -> Self {
         Self::Word(w)
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
+pub struct Argument(pub Rc<Kind>);
+
+impl From<Rc<Kind>> for Argument {
+    fn from(k: Rc<Kind>) -> Self {
+        Argument(k)
+    }
+}
+
+#[derive(Debug)]
 pub enum Observable {
     IsHolder,
     IsCounterparty,
@@ -111,6 +139,44 @@ impl From<Expression> for Observable {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum Variable {
+    Argument(Rc<Argument>),
+    Definition(Weak<Definition>),
+    Undefined(Rc<Kind>),
+}
+
+impl Variable {
+    pub fn kind(&self) -> Rc<Kind> {
+        match self {
+            Self::Argument(a) => {
+                let Argument(a) = a.as_ref();
+                a.clone()
+            }
+            Self::Definition(d) => d.upgrade().unwrap().kind.clone(),
+            Self::Undefined(k) => k.clone(),
+        }
+    }
+}
+
+impl From<Rc<Argument>> for Variable {
+    fn from(a: Rc<Argument>) -> Self {
+        Self::Argument(a)
+    }
+}
+
+impl From<Rc<Kind>> for Variable {
+    fn from(k: Rc<Kind>) -> Self {
+        Self::Undefined(k)
+    }
+}
+
+impl From<&Rc<Definition>> for Variable {
+    fn from(d: &Rc<Definition>) -> Self {
+        Self::Definition(Rc::downgrade(d))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,10 +184,11 @@ mod tests {
     #[test]
     fn kind_of_application() {
         // one :: Word -> Word -> Boolean
+        // one x y = true
         let one = Expression::Abstraction(
-            Expression::Argument(Kind::Word).into(),
+            Argument(Kind::Word.into()).into(),
             Expression::Abstraction(
-                Expression::Argument(Kind::Word).into(),
+                Argument(Kind::Word.into()).into(),
                 Expression::Boolean(true).into(),
             )
             .into(),
@@ -132,7 +199,7 @@ mod tests {
 
         // two :: Word -> Boolean
         assert_eq!(
-            two.kind(),
+            *two.kind(),
             Kind::Abstraction(Kind::Word.into(), Kind::Boolean.into())
         );
 
@@ -140,6 +207,6 @@ mod tests {
         let three = Expression::Application(two.into(), Expression::Word(29).into());
 
         // three :: Boolean
-        assert_eq!(three.kind(), Kind::Boolean);
+        assert_eq!(*three.kind(), Kind::Boolean);
     }
 }

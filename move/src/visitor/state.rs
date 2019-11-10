@@ -11,7 +11,7 @@ use crate::jog::{
     module,
     variable::Variable,
 };
-use sprint_parser::ast::state as ast;
+use sprint_parser::ast;
 use std::{collections::HashMap, rc::Rc};
 
 const TERMINAL_ID: usize = 0;
@@ -19,11 +19,11 @@ const TERMINAL_ID: usize = 0;
 #[derive(Default)]
 pub struct State<'a> {
     contract: module::Contract<'a>,
-    ids: HashMap<*const ast::State, usize>,
+    ids: HashMap<*const ast::state::State, usize>,
 }
 
 impl<'a> State<'a> {
-    pub fn visit(&mut self, state: &ast::State) -> usize {
+    pub fn visit(&mut self, state: &ast::state::State) -> usize {
         let key = state as *const _;
 
         if let Some(&state_id) = self.ids.get(&key) {
@@ -37,8 +37,8 @@ impl<'a> State<'a> {
 
         for transition in state.transitions() {
             let next_id = match transition.next() {
-                Some(next) => match next.as_ref() {
-                    sprint_parser::ast::Expression::State(s) => self.visit(&s),
+                Some(next) => match next {
+                    ast::Expression::State(s) => self.visit(&s),
                     _ => unreachable!(),
                 },
                 None => TERMINAL_ID,
@@ -55,15 +55,21 @@ impl<'a> State<'a> {
             let mut post_actions = Vec::new();
             for effect in transition.effects() {
                 match effect {
-                    ast::Effect::Flip => {
+                    ast::state::Effect::Flip => {
                         method.add_action(Flip::default());
                     }
-                    ast::Effect::Scale(scalar) => {
+                    ast::state::Effect::Scale(scalar) => {
                         let mut visitor = Expression::default();
                         visitor.visit(scalar);
                         method.add_action(Scale::new(visitor.expression()));
                     }
-                    ast::Effect::Spawn(root_state) => {
+                    ast::state::Effect::Spawn(root_state) => {
+                        // TODO: actually visit the state (I guess)
+                        let root_state = match root_state {
+                            ast::Expression::State(state) => state,
+                            _ => unreachable!(),
+                        };
+
                         let root_id = self.visit(root_state);
                         let context = Rc::new(Variable {
                             // TODO: Make this random name gen to allow multiple spawns
@@ -75,7 +81,9 @@ impl<'a> State<'a> {
                         method.add_action(Spawn::new(context.clone(), root_id));
                         post_actions.push(PushContext::new(context));
                     }
-                    ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
+                    ast::state::Effect::Withdraw => {
+                        method.add_action(Withdraw::new(Address::Holder))
+                    }
                 }
             }
 
