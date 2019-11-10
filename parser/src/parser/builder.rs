@@ -81,7 +81,7 @@ pub fn application<'a>(
         // Applications to primitives are handled here. Primitives cannot be
         // implemented as abstractions in the AST as some require polymorphic
         // kinds which is not currently supported.
-        Some(primitive) => primitive.build(arguments),
+        Some(primitive) => primitive(arguments),
         _ => {
             let kind = arguments
                 .iter()
