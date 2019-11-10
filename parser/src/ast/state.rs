@@ -34,7 +34,7 @@ impl<'a> Transition<'a> {
         self
     }
 
-    pub fn effects(&self) -> Vec<&Effect> {
+    pub fn effects(&self) -> Vec<&Effect<'a>> {
         self.effects.iter().rev().collect()
     }
 
