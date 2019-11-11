@@ -86,6 +86,10 @@ module Contract {
         // Update the current state for the given context
         *(&mut move(context_ref).state) = {{ transition.to_state() }};
 
+        {%- for action in transition.post_execution_actions() %}
+        {{ action }}
+        {%- endfor %}
+
         return;
     }
     {% endfor %}
