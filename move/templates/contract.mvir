@@ -7,6 +7,7 @@ module Contract {
         coin_store: LibraCoin.T,
         holder: address,
         counterparty: address,
+        contexts: Vector.T<Self.Context>,
         {%- for property in self.properties() %}
         {{ property.name }}: {{ property.type_name }},
         {%- endfor %}
@@ -26,6 +27,7 @@ module Contract {
             coin_store: LibraCoin.zero(),
             holder: move(holder),
             counterparty: move(counterparty),
+            contexts: Vector.empty<Self.Context>(),
             {%- for property in self.properties() %}
             {{ property.name }}: {{ property.default.as_ref().unwrap() }},
             {%- endfor %}
@@ -35,16 +37,11 @@ module Contract {
     }
 
     public initialize(contract_ref: &mut Self.T) {
-        let state_ref: &mut u64;
-
-        state_ref = &mut (&mut copy(contract_ref).{{ initial_context }}).state;
-
-        assert(*copy(state_ref) == 0, 1);
-
-        // TODO: make this do what is needed to initialize the contract, for
-        // example deposit funds in escrow.
-
-        *move(state_ref) = 1;
+        Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
+            state: 1,
+            flipped: false,
+            scale: 1,
+        });
 
         return;
     }
@@ -56,26 +53,16 @@ module Contract {
     }
 
     {% for transition in transition_methods %}
-    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(contract_ref: &mut Self.T, context_id: u64) {
+    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(contract_ref: &mut Self.T, context_index: u64) {
+        let contexts: &mut Vector.T<Self.Context>;
         let context_ref: &mut Self.Context;
-        let context_match: bool;
         {% for definition in transition.definitions() %}
         let {{ definition.name }}: {{ definition.type_name }};
         {% endfor %}
 
         // Get the specified context.
-        // TODO: Once arrays are implemented replace all of this with an array of contexts.
-        context_match = false;
-        context_ref = &mut copy(contract_ref).{{ initial_context }};
-        {% for (context_id, context) in self.contexts() %}
-        {% if !transition.excluded_contexts().contains(context_id) %}
-        if (copy(context_id) == {{ context_id }}) {
-            context_ref = &mut copy(contract_ref).{{ context.name }};
-            context_match = true;
-        }
-        {% endif %}
-        {% endfor %}
-        assert((copy(context_match)) || (copy(context_id) == 0), 404);
+        contexts = &mut copy(contract_ref).contexts;
+        context_ref = Vector.borrow_mut<Self.Context>(copy(contexts), copy(context_index));
 
         // Check the current state to make sure we can execute this transition.
         assert(*(&mut copy(context_ref).state) == {{ transition.origin_state() }}, 1);

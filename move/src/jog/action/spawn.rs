@@ -6,29 +6,19 @@ use std::{
 
 pub struct Spawn {
     context: Rc<Variable>,
-    context_ref: Rc<Variable>,
     root_state: usize,
 }
 
 impl Spawn {
-    pub fn new(context_id: usize, root_state: usize) -> Self {
+    pub fn new(root_state: usize) -> Self {
         Spawn {
             context: Rc::new(Variable {
-                name: format!("context_{}", context_id).into(),
+                name: "spawned_context".into(),
                 type_name: "Self.Context",
-                default: Some("Context { state: 0, flipped: false, scale: 1 }".into()),
-            }),
-            context_ref: Rc::new(Variable {
-                name: format!("context_{}_ref", context_id).into(),
-                type_name: "&mut Self.Context",
-                default: Some(format!("&mut copy(contract_ref).context_{}", context_id).into()),
+                default: None,
             }),
             root_state,
         }
-    }
-
-    pub fn spawned_context(&self) -> Rc<Variable> {
-        self.context.clone()
     }
 }
 
@@ -38,11 +28,11 @@ impl Action for Spawn {
     }
 
     fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![self.context.clone()]
+        vec![]
     }
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
-        vec![self.context_ref.clone()]
+        vec![self.context.clone()]
     }
 }
 
@@ -50,19 +40,18 @@ impl Display for Spawn {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
-            "*(&mut copy({new_context_ref}).state) = {root_state};",
-            new_context_ref = self.context_ref.name,
-            root_state = self.root_state,
-        )?;
-        writeln!(
-            f,
-            "*(&mut copy({new_context_ref}).flipped) = *(&copy(context_ref).flipped);",
-            new_context_ref = self.context_ref.name
+            "{} = Context {{
+                state: {},
+                flipped: *(&copy(context_ref).flipped),
+                scale: *(&copy(context_ref).scale)
+            }};",
+            self.context.name,
+            self.root_state,
         )?;
         write!(
             f,
-            "*(&mut copy({new_context_ref}).scale) = *(&copy(context_ref).scale);",
-            new_context_ref = self.context_ref.name
+            "Vector.push_back<Self.Context>(copy(contexts), move({}));",
+            self.context.name
         )
     }
 }

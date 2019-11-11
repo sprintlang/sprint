@@ -20,10 +20,6 @@ pub struct State<'a> {
 
     // Used for state id generation
     ids: HashMap<*const ast::State<'a>, usize>,
-    last_generated_context_id: usize,
-
-    // Tracking of the visiting state
-    current_context_id: usize,
 }
 
 impl<'a> State<'a> {
@@ -64,18 +60,8 @@ impl<'a> State<'a> {
                         method.add_action(Scale::new(visitor.expression()));
                     }
                     ast::Effect::Spawn(root_state) => {
-                        let context_save = self.current_context_id;
-                        self.current_context_id = self.next_context_id();
-
                         let root_id = self.visit(root_state);
-                        let spawn = Spawn::new(self.current_context_id, root_id);
-                        let spawned_context = spawn.spawned_context();
-                        method.add_action(spawn);
-                        method.exclude_context(self.current_context_id);
-                        self.contract
-                            .add_context(self.current_context_id, spawned_context);
-
-                        self.current_context_id = context_save;
+                        method.add_action(Spawn::new(root_id));
                     }
                     ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }
@@ -85,12 +71,6 @@ impl<'a> State<'a> {
         }
 
         id
-    }
-
-    pub fn next_context_id(&mut self) -> usize {
-        self.last_generated_context_id += 1;
-
-        self.last_generated_context_id
     }
 
     pub fn contract(self) -> module::Contract<'a> {

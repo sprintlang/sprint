@@ -1,6 +1,5 @@
 use super::{action::Action, expression::Expression, variable::Variable};
 use std::{
-    collections::HashSet,
     fmt::{self, Display, Formatter},
     rc::Rc,
 };
@@ -11,7 +10,6 @@ pub struct Transition<'a> {
     actions: Vec<Box<dyn Action + 'a>>,
     origin_state: usize,
     to_state: usize,
-    excluded_contexts: HashSet<usize>,
 }
 
 impl<'a> Transition<'a> {
@@ -21,7 +19,6 @@ impl<'a> Transition<'a> {
             actions: Vec::new(),
             origin_state,
             to_state,
-            excluded_contexts: HashSet::new(),
         }
     }
 
@@ -69,14 +66,6 @@ impl<'a> Transition<'a> {
 
     pub fn add_action(&mut self, action: impl Action + 'a) {
         self.actions.push(Box::new(action));
-    }
-
-    pub fn exclude_context(&mut self, context_id: usize) {
-        self.excluded_contexts.insert(context_id);
-    }
-
-    pub fn excluded_contexts(&self) -> &HashSet<usize> {
-        &self.excluded_contexts
     }
 }
 
