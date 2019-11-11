@@ -1,0 +1,35 @@
+module ContractFolder {
+  import {{holder}}.Contract;
+  import 0x0.Vector;
+
+  resource T {
+    contracts: Vector.T<Contract.T>,
+  }
+
+  public create_store() {
+    let store: Self.T;
+
+    store = T {
+      contracts: Vector.empty<Contract.T>(),
+    };
+
+    move_to_sender<T>(move(store));
+
+    return;
+  }
+
+  public store(contract: Contract.T, holder: address) acquires T {
+    let contract_holder: Self.T;
+    let contracts: &mut Vector.T<Contract.T>;
+
+    contracts = &mut borrow_global_mut<T>(move(holder)).contracts;
+
+    Vector.push_back<Contract.T>(move(contracts), move(contract));
+
+    return;
+  }
+
+  public get(holder: address): Contract.T acquires T {
+    return Vector.pop_back<Contract.T>(&mut borrow_global_mut<T>(move(holder)).contracts);
+  }
+}
