@@ -45,7 +45,7 @@ impl<'a> State<'a> {
                 None => TERMINAL_ID,
             };
 
-            let mut method = Transition::new(id, next_id, self.current_context_id);
+            let mut method = Transition::new(id, next_id);
 
             for condition in transition.conditions() {
                 let mut visitor = Expression::default();
@@ -68,7 +68,12 @@ impl<'a> State<'a> {
                         self.current_context_id = self.next_context_id();
 
                         let root_id = self.visit(root_state);
-                        method.add_action(Spawn::new(self.current_context_id, root_id));
+                        let spawn = Spawn::new(self.current_context_id, root_id);
+                        let spawned_context = spawn.spawned_context();
+                        method.add_action(spawn);
+                        method.exclude_context(self.current_context_id);
+                        self.contract
+                            .add_context(self.current_context_id, spawned_context);
 
                         self.current_context_id = context_save;
                     }

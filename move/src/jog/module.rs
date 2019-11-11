@@ -1,7 +1,6 @@
 use super::{method::Transition, variable::Variable};
-use crate::jog::generate_context_name;
 use askama::Template;
-use std::{collections::HashSet, rc::Rc};
+use std::{collections::HashMap, collections::HashSet, rc::Rc};
 
 const DEPENDENCIES: [&str; 2] = ["0x0.LibraCoin", "0x0.LibraAccount"];
 
@@ -10,24 +9,28 @@ const DEPENDENCIES: [&str; 2] = ["0x0.LibraCoin", "0x0.LibraAccount"];
 pub struct Contract<'a> {
     transition_methods: Vec<Transition<'a>>,
     properties: HashSet<Rc<Variable>>,
-    initial_context: String,
+    contexts: HashMap<usize, Rc<Variable>>,
+    initial_context: &'static str,
 }
 
 impl<'a> Default for Contract<'a> {
     fn default() -> Contract<'a> {
         let mut properties = HashSet::new();
+        let initial_context = "context_0";
 
-        // Bootstrap the initial context
-        let initial_context = generate_context_name(0);
-        properties.insert(Rc::new(Variable {
-            name: initial_context.clone().into(),
+        let initial_context_var = Rc::new(Variable {
+            name: initial_context.into(),
             type_name: "Self.Context",
             default: Some("Context { state: 0, flipped: false, scale: 1 }".into()),
-        }));
+        });
+
+        // Bootstrap the initial context
+        properties.insert(initial_context_var.clone());
 
         Contract {
             transition_methods: vec![],
             properties,
+            contexts: HashMap::new(),
             initial_context,
         }
     }
@@ -60,6 +63,14 @@ impl<'a> Contract<'a> {
         }
 
         properties
+    }
+
+    pub fn contexts(&self) -> &HashMap<usize, Rc<Variable>> {
+        &self.contexts
+    }
+
+    pub fn add_context(&mut self, context_id: usize, context: Rc<Variable>) {
+        self.contexts.insert(context_id, context);
     }
 
     pub fn add_method(&mut self, method: Transition<'a>) {

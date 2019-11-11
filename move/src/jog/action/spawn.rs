@@ -1,4 +1,4 @@
-use crate::jog::{action::Action, generate_context_name, variable::Variable};
+use crate::jog::{action::Action, variable::Variable};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
@@ -12,21 +12,23 @@ pub struct Spawn {
 
 impl Spawn {
     pub fn new(context_id: usize, root_state: usize) -> Self {
-        let context_name = generate_context_name(context_id);
-
         Spawn {
             context: Rc::new(Variable {
-                name: context_name.clone().into(),
+                name: format!("context_{}", context_id).into(),
                 type_name: "Self.Context",
                 default: Some("Context { state: 0, flipped: false, scale: 1 }".into()),
             }),
             context_ref: Rc::new(Variable {
-                name: format!("{}_ref", context_name.clone()).into(),
+                name: format!("context_{}_ref", context_id).into(),
                 type_name: "&mut Self.Context",
-                default: Some(format!("&mut copy(contract_ref).{}", context_name).into()),
+                default: Some(format!("&mut copy(contract_ref).context_{}", context_id).into()),
             }),
             root_state,
         }
+    }
+
+    pub fn spawned_context(&self) -> Rc<Variable> {
+        self.context.clone()
     }
 }
 

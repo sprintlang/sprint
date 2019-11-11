@@ -88,7 +88,7 @@ main() {
 
   contract = ContractStore.get({{alice}});
 
-  Contract.transition_1_0(&mut contract);
+  Contract.transition_1_0(&mut contract, 0);
 
   ContractStore.store(move(contract), {{alice}});
 

@@ -1,5 +1,6 @@
-use super::{action::Action, expression::Expression, generate_context_name, variable::Variable};
+use super::{action::Action, expression::Expression, variable::Variable};
 use std::{
+    collections::HashSet,
     fmt::{self, Display, Formatter},
     rc::Rc,
 };
@@ -10,17 +11,17 @@ pub struct Transition<'a> {
     actions: Vec<Box<dyn Action + 'a>>,
     origin_state: usize,
     to_state: usize,
-    context_id: usize,
+    excluded_contexts: HashSet<usize>,
 }
 
 impl<'a> Transition<'a> {
-    pub fn new(origin_state: usize, to_state: usize, context_id: usize) -> Self {
+    pub fn new(origin_state: usize, to_state: usize) -> Self {
         Transition {
             conditions: Vec::new(),
             actions: Vec::new(),
             origin_state,
             to_state,
-            context_id,
+            excluded_contexts: HashSet::new(),
         }
     }
 
@@ -70,8 +71,12 @@ impl<'a> Transition<'a> {
         self.actions.push(Box::new(action));
     }
 
-    pub fn context(&self) -> String {
-        generate_context_name(self.context_id)
+    pub fn exclude_context(&mut self, context_id: usize) {
+        self.excluded_contexts.insert(context_id);
+    }
+
+    pub fn excluded_contexts(&self) -> &HashSet<usize> {
+        &self.excluded_contexts
     }
 }
 

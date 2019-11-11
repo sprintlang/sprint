@@ -56,13 +56,26 @@ module Contract {
     }
 
     {% for transition in transition_methods %}
-    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(contract_ref: &mut Self.T) {
+    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(contract_ref: &mut Self.T, context_id: u64) {
         let context_ref: &mut Self.Context;
+        let context_match: bool;
         {% for definition in transition.definitions() %}
         let {{ definition.name }}: {{ definition.type_name }};
         {% endfor %}
 
-        context_ref = &mut copy(contract_ref).{{ transition.context() }};
+        // Get the specified context.
+        // TODO: Once arrays are implemented replace all of this with an array of contexts.
+        context_match = false;
+        context_ref = &mut copy(contract_ref).{{ initial_context }};
+        {% for (context_id, context) in self.contexts() %}
+        {% if !transition.excluded_contexts().contains(context_id) %}
+        if (copy(context_id) == {{ context_id }}) {
+            context_ref = &mut copy(contract_ref).{{ context.name }};
+            context_match = true;
+        }
+        {% endif %}
+        {% endfor %}
+        assert((copy(context_match)) || (copy(context_id) == 0), 404);
 
         // Check the current state to make sure we can execute this transition.
         assert(*(&mut copy(context_ref).state) == {{ transition.origin_state() }}, 1);
@@ -83,6 +96,7 @@ module Contract {
         {{ action }}
         {%- endfor %}
 
+        // Update the current state for the given context
         *(&mut move(context_ref).state) = {{ transition.to_state() }};
 
         return;
