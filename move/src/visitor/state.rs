@@ -4,7 +4,7 @@ use crate::jog::{
         flip::Flip,
         libra::{Address, Withdraw},
         scale::Scale,
-        spawn::{Spawn, SpawnSetup},
+        spawn::Spawn,
     },
     method::{Condition, Transition},
     module,
@@ -61,8 +61,10 @@ impl<'a> State<'a> {
                     }
                     ast::Effect::Spawn(root_state) => {
                         let root_id = self.visit(root_state);
-                        method.add_action(SpawnSetup::default());
-                        method.add_post_execution_action(Spawn::new(root_id));
+                        let spawn = Spawn::new(root_id);
+                        let context = spawn.spawned_context();
+                        method.add_action(spawn);
+                        method.add_context_to_push(context);
                     }
                     ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }

@@ -86,8 +86,8 @@ module Contract {
         // Update the current state for the given context
         *(&mut move(context_ref).state) = {{ transition.to_state() }};
 
-        {%- for action in transition.post_execution_actions() %}
-        {{ action }}
+        {%- for context in transition.contexts_to_push() %}
+        Vector.push_back<Self.Context>(copy(contexts), move({{ context.name }}));
         {%- endfor %}
 
         return;

@@ -8,7 +8,7 @@ use std::{
 pub struct Transition<'a> {
     conditions: Vec<Rc<Condition>>,
     actions: Vec<Box<dyn Action + 'a>>,
-    post_execution_actions: Vec<Box<dyn Action + 'a>>,
+    contexts_to_push: Vec<Rc<Variable>>,
     origin_state: usize,
     to_state: usize,
 }
@@ -18,66 +18,32 @@ impl<'a> Transition<'a> {
         Transition {
             conditions: Vec::new(),
             actions: Vec::new(),
-            post_execution_actions: Vec::new(),
+            contexts_to_push: Vec::new(),
             origin_state,
             to_state,
         }
     }
 
     pub fn dependencies(&self) -> Vec<&str> {
-        let mut dependencies: Vec<&str> = self
-            .actions
+        self.actions
             .iter()
             .flat_map(|action| action.dependencies())
             .copied()
-            .collect();
-
-        let mut post_action_dependencies: Vec<&str> = self
-            .post_execution_actions
-            .iter()
-            .flat_map(|action| action.dependencies())
-            .copied()
-            .collect();
-
-        dependencies.append(&mut post_action_dependencies);
-
-        dependencies
+            .collect()
     }
 
     pub fn properties(&self) -> Vec<Rc<Variable>> {
-        let mut properties: Vec<Rc<Variable>> = self
-            .actions
+        self.actions
             .iter()
             .flat_map(|action| action.properties())
-            .collect();
-
-        let mut post_action_properties: Vec<Rc<Variable>> = self
-            .post_execution_actions
-            .iter()
-            .flat_map(|action| action.properties())
-            .collect();
-
-        properties.append(&mut post_action_properties);
-
-        properties
+            .collect()
     }
 
     pub fn definitions(&self) -> Vec<Rc<Variable>> {
-        let mut definitions: Vec<Rc<Variable>> = self
-            .actions
+        self.actions
             .iter()
             .flat_map(|action| action.definitions())
-            .collect();
-
-        let mut post_action_definitions: Vec<Rc<Variable>> = self
-            .post_execution_actions
-            .iter()
-            .flat_map(|action| action.definitions())
-            .collect();
-
-        definitions.append(&mut post_action_definitions);
-
-        definitions
+            .collect()
     }
 
     pub fn conditions(&self) -> &[Rc<Condition>] {
@@ -100,19 +66,16 @@ impl<'a> Transition<'a> {
         self.actions.iter().map(AsRef::as_ref).collect()
     }
 
-    pub fn post_execution_actions(&self) -> Vec<&dyn Action> {
-        self.post_execution_actions
-            .iter()
-            .map(AsRef::as_ref)
-            .collect()
-    }
-
     pub fn add_action(&mut self, action: impl Action + 'a) {
         self.actions.push(Box::new(action));
     }
 
-    pub fn add_post_execution_action(&mut self, action: impl Action + 'a) {
-        self.post_execution_actions.push(Box::new(action));
+    pub fn contexts_to_push(&self) -> &Vec<Rc<Variable>> {
+        &self.contexts_to_push
+    }
+
+    pub fn add_context_to_push(&mut self, context: Rc<Variable>) {
+        self.contexts_to_push.push(context);
     }
 }
 
