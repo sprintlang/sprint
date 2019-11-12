@@ -74,7 +74,7 @@ impl<'a> State<'a> {
                         method.add_action(Spawn::new(context.clone(), root_id));
                         post_actions.push(PushContext::new(context));
                     }
-                    ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
+                    ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Party)),
                 }
             }
 

@@ -30,7 +30,7 @@ impl<'a> Expression {
     pub fn visit_observable(&mut self, observable: &ast::Observable) {
         match observable {
             ast::Observable::IsHolder => {
-                self.expression = format!("get_txn_address() == {}", Address::Holder).into()
+                self.expression = format!("get_txn_address() == {}", Address::Party).into()
             }
             ast::Observable::IsCounterparty => {
                 self.expression = format!("get_txn_address() == {}", Address::Counterparty).into()

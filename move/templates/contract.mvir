@@ -4,7 +4,7 @@ module Contract {
     {%- endfor %}
 
     resource T {
-        coin_store: LibraCoin.T,
+        coin_stores: Vector.T<LibraCoin.T>,
         contexts: Vector.T<Self.Context>,
         {%- for property in self.properties() %}
         {{ property.name }}: {{ property.type_name }},
@@ -13,30 +13,41 @@ module Contract {
 
     resource Context {
         state: u64,
-        holder: address,
+        coin_store_index: u64,
+        party: address,
         counterparty: address,
         scale: u64,
     }
 
-    // Create a contract with a holder and counterparty.
-    public create(): Self.T {
+    // Create a contract with a party and counterparty.
+    public create() {
         let contract: Self.T;
 
         contract = T {
-            coin_store: LibraCoin.zero(),
+            coin_stores: Vector.empty<LibraCoin.T>(),
             contexts: Vector.empty<Self.Context>(),
             {%- for property in self.properties() %}
             {{ property.name }}: {{ property.default.as_ref().unwrap() }},
             {%- endfor %}
         };
 
-        return move(contract);
+        move_to_sender<T>(move(contract));
+
+        return;
     }
 
-    public initialize(contract_ref: &mut Self.T, holder: address, counterparty: address) {
+    public initialize(owner: address, party: address, counterparty: address) acquires T {
+        let contract_ref: &mut Self.T;
+        let coin_store_index: u64;
+
+        contract_ref = borrow_global_mut<T>(move(owner));
+        coin_store_index = Vector.length<Self.Context>(&copy(contract_ref).contexts);
+        Vector.push_back<LibraCoin.T>(&mut copy(contract_ref).coin_stores, LibraCoin.zero());
+
         Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
             state: 1,
-            holder: move(holder),
+            coin_store_index: move(coin_store_index),
+            party: move(party),
             counterparty: move(counterparty),
             scale: 1,
         });
@@ -44,20 +55,27 @@ module Contract {
         return;
     }
 
-    public deposit(contract_ref: &mut Self.T, coin: LibraCoin.T) {
-        LibraCoin.deposit(&mut move(contract_ref).coin_store, move(coin));
+    public deposit(owner: address, coin: LibraCoin.T, coin_store_index: u64) acquires T {
+        LibraCoin.deposit(
+            Vector.borrow_mut<LibraCoin.T>(
+                &mut borrow_global_mut<T>(move(owner)).coin_stores,
+                move(coin_store_index)
+            ),
+            move(coin));
 
         return;
     }
 
     {% for transition in transition_methods %}
-    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(contract_ref: &mut Self.T, context_index: u64) {
+    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(owner: address, context_index: u64) acquires T {
+        let contract_ref: &mut Self.T;
         let contexts: &mut Vector.T<Self.Context>;
         let context_ref: &mut Self.Context;
         {% for definition in transition.definitions() %}
         let {{ definition.name }}: {{ definition.type_name }};
         {% endfor %}
 
+        contract_ref = borrow_global_mut<T>(move(owner));
         // Get the specified context.
         contexts = &mut copy(contract_ref).contexts;
         context_ref = Vector.borrow_mut<Self.Context>(copy(contexts), copy(context_index));

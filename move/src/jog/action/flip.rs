@@ -29,8 +29,8 @@ impl Action for Flip {
 
 impl Display for Flip {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{} = {};", TEMP_FLIP_VAR, Address::Holder)?;
-        write!(f, "{} = {};", Address::Holder, Address::Counterparty,)?;
+        write!(f, "{} = {};", TEMP_FLIP_VAR, Address::Party)?;
+        write!(f, "{} = {};", Address::Party, Address::Counterparty,)?;
         write!(f, "{} = {};", Address::Counterparty, TEMP_FLIP_VAR)
     }
 }
