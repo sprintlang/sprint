@@ -20,7 +20,7 @@ impl Action for Flip {
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
         vec![Rc::new(Variable {
-            name: TEMP_FLIP_VAR.into(),
+            name: TEMP_FLIP_VAR,
             type_name: "address",
             default: None,
         })]

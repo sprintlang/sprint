@@ -15,7 +15,7 @@ impl Spawn {
             context: Rc::new(Variable {
                 // TODO: Make this random name gen to allow multiple spawns
                 // in the same transition method
-                name: "spawned_context".into(),
+                name: "spawned_context",
                 type_name: "Self.Context",
                 default: None,
             }),
