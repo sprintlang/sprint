@@ -83,15 +83,14 @@ impl Display for Withdraw {
 
 pub enum Address {
     Holder,
-    #[allow(dead_code)]
     Counterparty,
 }
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Address::Holder => write!(f, "*(&copy(contract_ref).holder)"),
-            Address::Counterparty => write!(f, "*(&copy(contract_ref).counterparty)"),
+            Address::Holder => write!(f, "*(&copy(context_ref).holder)"),
+            Address::Counterparty => write!(f, "*(&copy(context_ref).counterparty)"),
         }
     }
 }

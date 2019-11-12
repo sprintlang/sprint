@@ -10,21 +10,11 @@ pub struct Spawn {
 }
 
 impl Spawn {
-    pub fn new(root_state: usize) -> Self {
+    pub fn new(context: Rc<Variable>, root_state: usize) -> Self {
         Spawn {
-            context: Rc::new(Variable {
-                // TODO: Make this random name gen to allow multiple spawns
-                // in the same transition method
-                name: "spawned_context",
-                type_name: "Self.Context",
-                default: None,
-            }),
+            context,
             root_state,
         }
-    }
-
-    pub fn spawned_context(&self) -> Rc<Variable> {
-        self.context.clone()
     }
 }
 
@@ -48,10 +38,45 @@ impl Display for Spawn {
             f,
             "{} = Context {{
                 state: {},
-                flipped: *(&copy(context_ref).flipped),
+                holder: *(&copy(context_ref).holder),
+                counterparty: *(&copy(context_ref).counterparty),
                 scale: *(&copy(context_ref).scale),
             }};",
             self.context.name, self.root_state,
+        )
+    }
+}
+
+pub struct PushContext {
+    context: Rc<Variable>,
+}
+
+impl PushContext {
+    pub fn new(context: Rc<Variable>) -> Self {
+        PushContext { context }
+    }
+}
+
+impl Action for PushContext {
+    fn dependencies(&self) -> &'static [&'static str] {
+        &[]
+    }
+
+    fn properties(&self) -> Vec<Rc<Variable>> {
+        vec![]
+    }
+
+    fn definitions(&self) -> Vec<Rc<Variable>> {
+        vec![]
+    }
+}
+
+impl Display for PushContext {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        writeln!(
+            f,
+            "Vector.push_back<Self.Context>(copy(contexts), move({}));",
+            self.context.name
         )
     }
 }

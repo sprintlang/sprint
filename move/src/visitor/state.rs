@@ -4,13 +4,15 @@ use crate::jog::{
         flip::Flip,
         libra::{Address, Withdraw},
         scale::Scale,
-        spawn::Spawn,
+        spawn::{PushContext, Spawn},
+        update_state::UpdateState,
     },
     method::{Condition, Transition},
     module,
+    variable::Variable,
 };
 use sprint_parser::ast::state as ast;
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 const TERMINAL_ID: usize = 0;
 
@@ -49,6 +51,7 @@ impl<'a> State<'a> {
                 method.add_condition(Condition::new(visitor.expression(), 0).into());
             }
 
+            let mut post_actions = Vec::new();
             for effect in transition.effects() {
                 match effect {
                     ast::Effect::Flip => {
@@ -61,13 +64,23 @@ impl<'a> State<'a> {
                     }
                     ast::Effect::Spawn(root_state) => {
                         let root_id = self.visit(root_state);
-                        let spawn = Spawn::new(root_id);
-                        let context = spawn.spawned_context();
-                        method.add_action(spawn);
-                        method.add_context_to_push(context);
+                        let context = Rc::new(Variable {
+                            // TODO: Make this random name gen to allow multiple spawns
+                            // in the same transition method
+                            name: "spawned_context",
+                            type_name: "Self.Context",
+                            default: None,
+                        });
+                        method.add_action(Spawn::new(context.clone(), root_id));
+                        post_actions.push(PushContext::new(context));
                     }
                     ast::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
                 }
+            }
+
+            method.add_action(UpdateState::new(method.to_state()));
+            for action in post_actions {
+                method.add_action(action);
             }
 
             self.contract.add_method(method);

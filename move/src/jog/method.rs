@@ -8,7 +8,6 @@ use std::{
 pub struct Transition<'a> {
     conditions: Vec<Rc<Condition>>,
     actions: Vec<Box<dyn Action + 'a>>,
-    contexts_to_push: Vec<Rc<Variable>>,
     origin_state: usize,
     to_state: usize,
 }
@@ -18,7 +17,6 @@ impl<'a> Transition<'a> {
         Transition {
             conditions: Vec::new(),
             actions: Vec::new(),
-            contexts_to_push: Vec::new(),
             origin_state,
             to_state,
         }
@@ -68,14 +66,6 @@ impl<'a> Transition<'a> {
 
     pub fn add_action(&mut self, action: impl Action + 'a) {
         self.actions.push(Box::new(action));
-    }
-
-    pub fn contexts_to_push(&self) -> &Vec<Rc<Variable>> {
-        &self.contexts_to_push
-    }
-
-    pub fn add_context_to_push(&mut self, context: Rc<Variable>) {
-        self.contexts_to_push.push(context);
     }
 }
 

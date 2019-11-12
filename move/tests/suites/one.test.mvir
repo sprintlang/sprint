@@ -46,7 +46,7 @@ import {{alice}}.ContractStore;
 main() {
   let contract: Contract.T;
 
-  contract = Contract.create({{bob}}, {{chris}});
+  contract = Contract.create();
   ContractStore.create_store();
   ContractStore.store(move(contract), {{alice}});
 
@@ -66,7 +66,7 @@ main() {
 
   contract = ContractStore.get({{alice}});
 
-  Contract.initialize(&mut contract);
+  Contract.initialize(&mut contract, {{bob}}, {{chris}});
   // TODO: REMOVE THIS LINE. This should happen in initialization in the future.
   Contract.deposit(&mut contract, LibraAccount.withdraw_from_sender(1));
 

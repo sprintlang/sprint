@@ -5,8 +5,6 @@ module Contract {
 
     resource T {
         coin_store: LibraCoin.T,
-        holder: address,
-        counterparty: address,
         contexts: Vector.T<Self.Context>,
         {%- for property in self.properties() %}
         {{ property.name }}: {{ property.type_name }},
@@ -15,18 +13,17 @@ module Contract {
 
     resource Context {
         state: u64,
-        flipped: bool,
+        holder: address,
+        counterparty: address,
         scale: u64,
     }
 
     // Create a contract with a holder and counterparty.
-    public create(holder: address, counterparty: address): Self.T {
+    public create(): Self.T {
         let contract: Self.T;
 
         contract = T {
             coin_store: LibraCoin.zero(),
-            holder: move(holder),
-            counterparty: move(counterparty),
             contexts: Vector.empty<Self.Context>(),
             {%- for property in self.properties() %}
             {{ property.name }}: {{ property.default.as_ref().unwrap() }},
@@ -36,10 +33,11 @@ module Contract {
         return move(contract);
     }
 
-    public initialize(contract_ref: &mut Self.T) {
+    public initialize(contract_ref: &mut Self.T, holder: address, counterparty: address) {
         Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
             state: 1,
-            flipped: false,
+            holder: move(holder),
+            counterparty: move(counterparty),
             scale: 1,
         });
 
@@ -81,13 +79,6 @@ module Contract {
 
         {%- for action in transition.actions() %}
         {{ action }}
-        {%- endfor %}
-
-        // Update the current state for the given context
-        *(&mut move(context_ref).state) = {{ transition.to_state() }};
-
-        {%- for context in transition.contexts_to_push() %}
-        Vector.push_back<Self.Context>(copy(contexts), move({{ context.name }}));
         {%- endfor %}
 
         return;

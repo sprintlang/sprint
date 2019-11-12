@@ -36,7 +36,7 @@ import {{alice}}.ContractStore;
 main() {
   let contract: Contract.T;
 
-  contract = Contract.create({{bob}}, {{chris}});
+  contract = Contract.create();
   ContractStore.store(move(contract));
 
   return;

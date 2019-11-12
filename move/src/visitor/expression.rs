@@ -1,4 +1,4 @@
-use crate::jog::expression;
+use crate::jog::{action::libra::Address, expression};
 use sprint_parser::ast;
 
 #[derive(Default)]
@@ -30,10 +30,10 @@ impl<'a> Expression {
     pub fn visit_observable(&mut self, observable: &ast::Observable) {
         match observable {
             ast::Observable::IsHolder => {
-                self.expression = "get_txn_address() == *(&copy(contract_ref).holder)".into()
+                self.expression = format!("get_txn_address() == {}", Address::Holder).into()
             }
             ast::Observable::IsCounterparty => {
-                self.expression = "get_txn_address() == *(&copy(contract_ref).counterparty)".into()
+                self.expression = format!("get_txn_address() == {}", Address::Counterparty).into()
             }
             ast::Observable::Konst(e) => self.visit(e),
         };
