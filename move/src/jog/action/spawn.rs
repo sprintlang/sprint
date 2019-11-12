@@ -1,4 +1,7 @@
-use crate::jog::{action::Action, variable::Variable};
+use crate::jog::{
+    action::{libra::Address, Action},
+    variable::Variable,
+};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
@@ -38,11 +41,14 @@ impl Display for Spawn {
             f,
             "{} = Context {{
                 state: {},
-                holder: *(&copy(context_ref).holder),
-                counterparty: *(&copy(context_ref).counterparty),
+                holder: {},
+                counterparty: {},
                 scale: *(&copy(context_ref).scale),
             }};",
-            self.context.name, self.root_state,
+            self.context.name,
+            self.root_state,
+            Address::Holder,
+            Address::Counterparty,
         )
     }
 }

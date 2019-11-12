@@ -1,4 +1,4 @@
-use super::{super::variable::Variable, Action};
+use super::{super::variable::Variable, libra::Address, Action};
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
@@ -29,11 +29,8 @@ impl Action for Flip {
 
 impl Display for Flip {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{} = *(copy(context_ref).holder);", TEMP_FLIP_VAR)?;
-        write!(
-            f,
-            "*(copy(context_ref).holder) = *(copy(context_ref).counterparty);"
-        )?;
-        write!(f, "*(copy(context_ref).holder) = {};", TEMP_FLIP_VAR)
+        write!(f, "{} = {};", TEMP_FLIP_VAR, Address::Holder)?;
+        write!(f, "{} = {};", Address::Holder, Address::Counterparty,)?;
+        write!(f, "{} = {};", Address::Counterparty, TEMP_FLIP_VAR)
     }
 }
