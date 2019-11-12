@@ -1,13 +1,23 @@
 import 0x0.LibraAccount;
-import {{holder}}.Contract;
+import {{holder}}.{{contract_type}};
+import {{holder}}.{{contract_type}}Folder;
 
-// Note: to date, accounts can only have one contract, stored
-// as the Contract module in the holder's account.
+// Template requires inputs:
+// holder:        Libra account holding contract
+// contract_type: Resource type of contract being advanced
+// contract_tag:  Identifies contract within ContractFolder of holder
+// from_state:    Current state of that contract
+// to_state:      State to advance to
 
 main() {
     let holder: address;
+    let tag: u64;
+    let contract: {{contract_type}}.T;
 
     holder = {{holder}};
-    {{to_state}}(move_from<Contract>(move(holder)));
+    tag = {{contract_tag}};
+    contract = ContractFolder.get({{move(holder), move(tag)}});
+    Contract.transition_{{from_state}}_{{to_state}}(&mut contract);
+
     return;
 }
