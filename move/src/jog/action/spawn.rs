@@ -73,7 +73,7 @@ impl Action for PushContext {
     }
 
     fn definitions(&self) -> Vec<Rc<Variable>> {
-        vec![]
+        vec![self.context.clone()]
     }
 }
 

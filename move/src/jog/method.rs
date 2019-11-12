@@ -1,5 +1,6 @@
 use super::{action::Action, expression::Expression, variable::Variable};
 use std::{
+    collections::HashSet,
     fmt::{self, Display, Formatter},
     rc::Rc,
 };
@@ -37,7 +38,7 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
-    pub fn definitions(&self) -> Vec<Rc<Variable>> {
+    pub fn definitions(&self) -> HashSet<Rc<Variable>> {
         self.actions
             .iter()
             .flat_map(|action| action.definitions())
