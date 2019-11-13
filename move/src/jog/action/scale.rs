@@ -7,17 +7,17 @@ use std::{
     rc::Rc,
 };
 
-pub struct Scale {
-    scalar: Expression,
+pub struct Scale<'a> {
+    scalar: Expression<'a>,
 }
 
-impl Scale {
-    pub fn new(scalar: Expression) -> Self {
+impl<'a> Scale<'a> {
+    pub fn new(scalar: Expression<'a>) -> Self {
         Scale { scalar }
     }
 }
 
-impl Action for Scale {
+impl Action for Scale<'_> {
     fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
@@ -31,7 +31,7 @@ impl Action for Scale {
     }
 }
 
-impl Display for Scale {
+impl Display for Scale<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,

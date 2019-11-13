@@ -7,7 +7,7 @@ use std::{
 
 #[derive(Default)]
 pub struct Transition<'a> {
-    conditions: Vec<Rc<Condition>>,
+    conditions: Vec<Rc<Condition<'a>>>,
     actions: Vec<Box<dyn Action + 'a>>,
     origin_state: usize,
     to_state: usize,
@@ -45,11 +45,11 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
-    pub fn conditions(&self) -> &[Rc<Condition>] {
+    pub fn conditions(&self) -> &[Rc<Condition<'_>>] {
         self.conditions.as_slice()
     }
 
-    pub fn add_condition(&mut self, condition: Rc<Condition>) {
+    pub fn add_condition(&mut self, condition: Rc<Condition<'a>>) {
         self.conditions.push(condition);
     }
 
@@ -70,13 +70,13 @@ impl<'a> Transition<'a> {
     }
 }
 
-pub struct Condition {
-    condition: Expression,
+pub struct Condition<'a> {
+    condition: Expression<'a>,
     error_code: u64,
 }
 
-impl Condition {
-    pub fn new(condition: Expression, error_code: u64) -> Self {
+impl<'a> Condition<'a> {
+    pub fn new(condition: Expression<'a>, error_code: u64) -> Self {
         Condition {
             condition,
             error_code,
@@ -84,7 +84,7 @@ impl Condition {
     }
 }
 
-impl Display for Condition {
+impl Display for Condition<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "assert({}, {});", self.condition, self.error_code)
     }

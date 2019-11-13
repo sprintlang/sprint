@@ -97,8 +97,10 @@ impl<'a> State<'a> {
 
         id
     }
+}
 
-    pub fn contract(self) -> module::Contract<'a> {
+impl<'a> Into<module::Contract<'a>> for State<'a> {
+    fn into(self) -> module::Contract<'a> {
         self.contract
     }
 }
