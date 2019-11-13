@@ -41,7 +41,7 @@ impl Display for Spawn {
             f,
             "{} = Context {{
                 state: {},
-                coin_store_index: 0,
+                coinstore_index: *(&copy(context_ref).coinstore_index),
                 party: {},
                 counterparty: {},
                 scale: *(&copy(context_ref).scale),

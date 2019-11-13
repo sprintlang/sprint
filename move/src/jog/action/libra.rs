@@ -38,8 +38,8 @@ impl Display for Deposit {
             f,
             "LibraCoin.deposit(
                 Vector.borrow_mut<LibraCoin.T>(
-                    &mut copy(contract_ref).coin_stores,
-                    *(&copy(context_ref).coin_store_index),
+                    &mut copy(contract_ref).coinstores,
+                    *(&copy(context_ref).coinstore_index),
                 ), LibraAccount.withdraw_from_sender({}));",
             self.amount
         )
@@ -78,8 +78,8 @@ impl Display for Withdraw {
                 {},
                 LibraCoin.withdraw(
                     Vector.borrow_mut<LibraCoin.T>(
-                        &mut copy(contract_ref).coin_stores,
-                        *(&copy(context_ref).coin_store_index),
+                        &mut copy(contract_ref).coinstores,
+                        *(&copy(context_ref).coinstore_index),
                     ),
                     *(&mut copy(context_ref).scale)
                 )

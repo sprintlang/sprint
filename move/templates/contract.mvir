@@ -4,7 +4,7 @@ module Contract {
     {%- endfor %}
 
     resource T {
-        coin_stores: Vector.T<LibraCoin.T>,
+        coinstores: Vector.T<LibraCoin.T>,
         contexts: Vector.T<Self.Context>,
         {%- for property in self.properties() %}
         {{ property.name }}: {{ property.type_name }},
@@ -13,7 +13,7 @@ module Contract {
 
     resource Context {
         state: u64,
-        coin_store_index: u64,
+        coinstore_index: u64,
         party: address,
         counterparty: address,
         scale: u64,
@@ -24,7 +24,7 @@ module Contract {
         let contract: Self.T;
 
         contract = T {
-            coin_stores: Vector.empty<LibraCoin.T>(),
+            coinstores: Vector.empty<LibraCoin.T>(),
             contexts: Vector.empty<Self.Context>(),
             {%- for property in self.properties() %}
             {{ property.name }}: {{ property.default.as_ref().unwrap() }},
@@ -38,15 +38,15 @@ module Contract {
 
     public initialize(owner: address, party: address, counterparty: address) acquires T {
         let contract_ref: &mut Self.T;
-        let coin_store_index: u64;
+        let coinstore_index: u64;
 
         contract_ref = borrow_global_mut<T>(move(owner));
-        coin_store_index = Vector.length<Self.Context>(&copy(contract_ref).contexts);
-        Vector.push_back<LibraCoin.T>(&mut copy(contract_ref).coin_stores, LibraCoin.zero());
+        coinstore_index = Vector.length<Self.Context>(&copy(contract_ref).contexts);
+        Vector.push_back<LibraCoin.T>(&mut copy(contract_ref).coinstores, LibraCoin.zero());
 
         Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
             state: 1,
-            coin_store_index: move(coin_store_index),
+            coinstore_index: move(coinstore_index),
             party: move(party),
             counterparty: move(counterparty),
             scale: 1,
@@ -55,11 +55,11 @@ module Contract {
         return;
     }
 
-    public deposit(owner: address, coin: LibraCoin.T, coin_store_index: u64) acquires T {
+    public deposit(owner: address, coin: LibraCoin.T, coinstore_index: u64) acquires T {
         LibraCoin.deposit(
             Vector.borrow_mut<LibraCoin.T>(
-                &mut borrow_global_mut<T>(move(owner)).coin_stores,
-                move(coin_store_index)
+                &mut borrow_global_mut<T>(move(owner)).coinstores,
+                move(coinstore_index)
             ),
             move(coin));
 
