@@ -12,7 +12,7 @@ import {{owner}}.{{contract_type}};
 
 main() {
     let owner: address;
-    let tag: u64;
+    let id: u64;
     let contract: {{contract_type}}.T;
 
     owner = {{owner}};
