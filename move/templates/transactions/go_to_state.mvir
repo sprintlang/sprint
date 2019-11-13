@@ -1,23 +1,23 @@
 import 0x0.LibraAccount;
-import {{holder}}.{{contract_type}};
-import {{holder}}.{{contract_type}}Folder;
+import {{owner}}.{{contract_type}};
+import {{owner}}.{{contract_type}};
 
 // Template requires inputs:
-// holder:        Libra account holding contract
+
+// owner:         Libra account storing the contract resource
 // contract_type: Resource type of contract being advanced
-// contract_tag:  Identifies contract within ContractFolder of holder
+// context_id:    Identifies context in holder's vector of contexts
 // from_state:    Current state of that contract
 // to_state:      State to advance to
 
 main() {
-    let holder: address;
+    let owner: address;
     let tag: u64;
     let contract: {{contract_type}}.T;
 
-    holder = {{holder}};
-    tag = {{contract_tag}};
-    contract = ContractFolder.get({{move(holder), move(tag)}});
-    Contract.transition_{{from_state}}_{{to_state}}(&mut contract);
+    owner = {{owner}};
+    id = {{context_id}};
+    {{contract_type}}.transition_{{from_state}}_{{to_state}}(move(owner), move(id));
 
     return;
 }
