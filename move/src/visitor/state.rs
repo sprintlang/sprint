@@ -1,4 +1,4 @@
-use super::Expression;
+use super::{super::numbers::Numbers, Expression};
 use crate::jog::{
     action::{
         flip::Flip,
@@ -20,6 +20,7 @@ const TERMINAL_ID: usize = 0;
 pub struct State<'a> {
     contract: module::Contract<'a>,
     ids: HashMap<*const ast::state::State, usize>,
+    numbers: Numbers,
 }
 
 impl<'a> State<'a> {
@@ -32,7 +33,7 @@ impl<'a> State<'a> {
         }
 
         // Zero is reserved for the terminal state.
-        let id = self.ids.len() + 1;
+        let id = self.numbers.next();
         self.ids.insert(key, id);
 
         for transition in state.transitions() {

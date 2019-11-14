@@ -1,34 +1,22 @@
-use super::expression::Expression;
+use super::{super::numbers::Numbers, expression::Expression};
 use sprint_parser::ast;
 use std::{
     collections::HashMap,
     fmt::{self, Display, Formatter},
-    iter::{self, repeat},
     rc::Rc,
 };
 
-type Numbers = iter::Map<iter::Enumerate<iter::Repeat<()>>, fn((usize, ())) -> usize>;
-
+#[derive(Default)]
 pub struct Abstraction<'a> {
     arguments: HashMap<*const ast::Argument, Argument>,
     expression: Box<Expression<'a>>,
     numbers: Numbers,
 }
 
-impl Default for Abstraction<'_> {
-    fn default() -> Self {
-        Abstraction {
-            arguments: HashMap::default(),
-            expression: Expression::default().into(),
-            numbers: repeat(()).enumerate().map(|(i, _)| i),
-        }
-    }
-}
-
 impl<'a> Abstraction<'a> {
     pub fn add_argument(&mut self, argument: Rc<ast::Argument>) {
         let argument = argument.as_ref() as *const _;
-        let i = self.numbers.next().unwrap();
+        let i = self.numbers.next();
 
         self.arguments.insert(argument, i.into());
     }
