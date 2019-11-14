@@ -10,6 +10,10 @@ pub struct Expression<'a> {
 
 impl<'a> Expression<'a> {
     pub fn visit(&mut self, expression: &ast::Expression) {
+        self.expression = self.visit_expression(expression);
+    }
+
+    pub fn visit_expression(&self, expression: &ast::Expression) -> expression::Expression<'a> {
         match expression {
             ast::Expression::Abstraction(a, e) => self.visit_abstraction(a.clone(), e),
             ast::Expression::Application(_, _) => unimplemented!(),
@@ -17,18 +21,16 @@ impl<'a> Expression<'a> {
             ast::Expression::Class(c) => self.visit_class(c),
             ast::Expression::Observable(o) => self.visit_observable(o),
             ast::Expression::State(s) => self.visit_state(s),
-            ast::Expression::Variable(_) => unreachable!(),
-            ast::Expression::Word(w) => {
-                self.expression = expression::Expression::Expression(w.to_string().into())
-            }
-        };
+            ast::Expression::Variable(v) => self.visit_variable(v.clone()),
+            ast::Expression::Word(w) => expression::Expression::Expression(w.to_string().into()),
+        }
     }
 
     pub fn visit_abstraction(
-        &mut self,
+        &self,
         argument: Rc<ast::Argument>,
         mut expression: &ast::Expression,
-    ) {
+    ) -> expression::Expression<'a> {
         let mut abstraction = Abstraction::default();
 
         abstraction.add_argument(argument);
@@ -38,41 +40,51 @@ impl<'a> Expression<'a> {
             expression = e.as_ref();
         }
 
-        // TODO: visit expression with abstraction arguments rewritten
+        abstraction.set_expression(self.visit_expression(expression));
 
-        self.expression = expression::Expression::Abstraction(abstraction);
+        expression::Expression::Abstraction(abstraction)
     }
 
-    pub fn visit_class(&mut self, class: &ast::Class) {
+    pub fn visit_class(&self, class: &ast::Class) -> expression::Expression<'a> {
         match class {
             ast::Class::Comparable(_) => unimplemented!(),
             ast::Class::Equatable(_) => unimplemented!(),
             ast::Class::Negatable(_) => unimplemented!(),
             ast::Class::Numerable(_) => unimplemented!(),
-        };
+        }
     }
 
-    pub fn visit_observable(&mut self, observable: &ast::Observable) {
+    pub fn visit_observable(&self, observable: &ast::Observable) -> expression::Expression<'a> {
         match observable {
-            ast::Observable::IsHolder => {
-                self.expression = expression::Expression::Expression(
-                    format!("get_txn_address() == {}", Address::Holder).into(),
-                )
-            }
-            ast::Observable::IsCounterparty => {
-                self.expression = expression::Expression::Expression(
-                    format!("get_txn_address() == {}", Address::Counterparty).into(),
-                )
-            }
-            ast::Observable::Konst(e) => self.visit(e),
-        };
+            ast::Observable::IsHolder => expression::Expression::Expression(
+                format!("get_txn_address() == {}", Address::Holder).into(),
+            ),
+            ast::Observable::IsCounterparty => expression::Expression::Expression(
+                format!("get_txn_address() == {}", Address::Counterparty).into(),
+            ),
+            ast::Observable::Konst(e) => self.visit_expression(e),
+        }
     }
 
-    pub fn visit_state(&mut self, state: &ast::state::State) {
+    pub fn visit_state(&self, state: &ast::state::State) -> expression::Expression<'a> {
         let mut contract = State::default();
         contract.visit(state);
 
-        self.expression = expression::Expression::Contract(contract.into());
+        expression::Expression::Contract(contract.into())
+    }
+
+    pub fn visit_variable(&self, variable: ast::Reference) -> expression::Expression<'a> {
+        let argument = match &*variable.borrow() {
+            ast::Variable::Argument(a) => a.clone(),
+            _ => unreachable!(),
+        };
+        let abstraction = match &self.expression {
+            expression::Expression::Abstraction(a) => a,
+            _ => unreachable!(),
+        };
+        let argument = abstraction.get_argument(argument).unwrap();
+
+        expression::Expression::Expression(format!("{}", argument).into())
     }
 
     pub fn expression(self) -> expression::Expression<'a> {

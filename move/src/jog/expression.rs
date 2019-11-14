@@ -5,7 +5,7 @@ use std::{
 };
 
 pub enum Expression<'a> {
-    Abstraction(Abstraction),
+    Abstraction(Abstraction<'a>),
     Contract(Contract<'a>),
     Expression(Cow<'static, str>),
 }
