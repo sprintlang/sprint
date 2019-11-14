@@ -1,11 +1,12 @@
 import 0x0.LibraAccount;
-import {{owner}}.{{contract_type}};
+import {{author}}.{{contract_type}};
 
 // Template requires inputs:
 
+// author:        Libra account that has deployed the contract module
 // owner:         Libra account storing the contract resource
 // contract_type: Resource type of contract being advanced
-// context_id:    Identifies context in holder's vector of contexts
+// context_id:    Identifies context in owner's vector of contexts
 // from_state:    Current state of that contract
 // to_state:      State to advance to
 
