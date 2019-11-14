@@ -11,13 +11,7 @@ import {{author}}.{{contract_type}};
 // to_state:      State to advance to
 
 main() {
-    let owner: address;
-    let id: u64;
-    let contract: {{contract_type}}.T;
-
-    owner = {{owner}};
-    id = {{context_id}};
-    {{contract_type}}.transition_{{from_state}}_{{to_state}}(move(owner), move(id));
+    {{contract_type}}.transition_{{from_state}}_{{to_state}}({{owner}}, {{context_id}});
 
     return;
 }
