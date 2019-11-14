@@ -4,30 +4,31 @@ use std::{
     collections::HashMap,
     fmt::{self, Display, Formatter},
     rc::Rc,
+    cell::RefCell,
 };
 
 #[derive(Default)]
 pub struct Abstraction<'a> {
-    arguments: HashMap<*const ast::Argument, Argument>,
-    expression: Box<Expression<'a>>,
+    arguments: RefCell<HashMap<*const ast::Argument, Argument>>,
+    expression: Box<RefCell<Expression<'a>>>,
     numbers: Numbers,
 }
 
 impl<'a> Abstraction<'a> {
-    pub fn add_argument(&mut self, argument: Rc<ast::Argument>) {
+    pub fn add_argument(&self, argument: Rc<ast::Argument>) {
         let argument = argument.as_ref() as *const _;
         let i = self.numbers.next();
 
-        self.arguments.insert(argument, i.into());
+        self.arguments.borrow_mut().insert(argument, i.into());
     }
 
     pub fn get_argument(&self, argument: Rc<ast::Argument>) -> Option<Argument> {
         let argument = argument.as_ref() as *const _;
-        self.arguments.get(&argument).map(Clone::clone)
+        self.arguments.borrow().get(&argument).map(Clone::clone)
     }
 
-    pub fn set_expression(&mut self, expression: Expression<'a>) {
-        self.expression = expression.into();
+    pub fn set_expression(&self, expression: Expression<'a>) {
+        *(self.expression.borrow_mut()) = expression;
     }
 }
 

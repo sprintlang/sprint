@@ -45,7 +45,7 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
-    pub fn conditions(&self) -> &[Rc<Condition<'_>>] {
+    pub fn conditions(&self) -> &[Rc<Condition<'a>>] {
         self.conditions.as_slice()
     }
 
