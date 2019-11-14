@@ -1,10 +1,10 @@
 use super::{super::numbers::Numbers, expression::Expression};
 use sprint_parser::ast;
 use std::{
+    cell::RefCell,
     collections::HashMap,
     fmt::{self, Display, Formatter},
     rc::Rc,
-    cell::RefCell,
 };
 
 #[derive(Default)]

@@ -1,4 +1,7 @@
-use std::{cell::RefCell, iter::{repeat, Enumerate, Map, Repeat, Skip}};
+use std::{
+    cell::RefCell,
+    iter::{repeat, Enumerate, Map, Repeat, Skip},
+};
 
 static DEFAULT_START: usize = 1;
 
@@ -13,7 +16,9 @@ impl Default for Numbers {
 
 impl Numbers {
     pub fn new(start: usize) -> Self {
-        Self(RefCell::new(repeat(()).enumerate().skip(start).map(|(i, _)| i)))
+        Self(RefCell::new(
+            repeat(()).enumerate().skip(start).map(|(i, _)| i),
+        ))
     }
 
     pub fn next(&self) -> usize {

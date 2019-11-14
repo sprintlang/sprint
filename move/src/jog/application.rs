@@ -6,7 +6,7 @@ pub struct Application<'a> {
 }
 
 impl<'a> Application<'a> {
-    fn add_argument(&mut self, expression: Expression<'a>) {
+    pub fn add_argument(&mut self, expression: Expression<'a>) {
         self.arguments.push(expression);
     }
 }

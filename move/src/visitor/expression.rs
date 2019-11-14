@@ -1,6 +1,9 @@
 use super::State;
-use crate::jog::{abstraction::Abstraction, application::Application, action::libra::Address, expression};
+use crate::jog::{
+    abstraction::Abstraction, action::libra::Address, application::Application, expression,
+};
 use sprint_parser::ast;
+use std::collections::VecDeque;
 use std::rc::Rc;
 
 #[derive(Default)]
@@ -15,7 +18,7 @@ impl<'a> Expression<'a> {
                 let abstraction = Abstraction::default();
                 self.expression = expression::Expression::Abstraction(abstraction);
                 self.visit_abstraction(a.clone(), e);
-            },
+            }
             _ => self.expression = self.visit_expression(expression),
         };
         self.expression = self.visit_expression(expression);
@@ -54,11 +57,23 @@ impl<'a> Expression<'a> {
         }
     }
 
-    pub fn visit_application(&self, mut abstraction: &ast::Expression, argument: &ast::Expression) -> expression::Expression<'a> {
-        let application = Application::default();
+    pub fn visit_application(
+        &self,
+        mut abstraction: &ast::Expression,
+        argument: &ast::Expression,
+    ) -> expression::Expression<'a> {
+        let mut application = Application::default();
 
+        let mut arguments = VecDeque::new();
+
+        arguments.push_front(self.visit_expression(argument));
         while let ast::Expression::Application(f, a) = abstraction {
+            arguments.push_front(self.visit_expression(argument));
+            abstraction = f;
+        }
 
+        for argument in arguments {
+            application.add_argument(argument);
         }
 
         let abstraction = match abstraction {
@@ -111,7 +126,7 @@ impl<'a> Expression<'a> {
                 let argument = abstraction.get_argument(argument.clone()).unwrap();
 
                 expression::Expression::Expression(format!("{}", argument).into())
-            },
+            }
             ast::Variable::Definition(_) => unimplemented!(),
             _ => unreachable!(),
         }
