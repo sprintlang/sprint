@@ -1,6 +1,7 @@
 use super::State;
-use crate::jog::{action::libra::Address, expression};
+use crate::jog::{abstraction::Abstraction, action::libra::Address, expression};
 use sprint_parser::ast;
+use std::rc::Rc;
 
 #[derive(Default)]
 pub struct Expression<'a> {
@@ -10,7 +11,7 @@ pub struct Expression<'a> {
 impl<'a> Expression<'a> {
     pub fn visit(&mut self, expression: &ast::Expression) {
         match expression {
-            ast::Expression::Abstraction(_, _) => unimplemented!(),
+            ast::Expression::Abstraction(a, e) => self.visit_abstraction(a.clone(), e),
             ast::Expression::Application(_, _) => unimplemented!(),
             ast::Expression::Boolean(_) => unimplemented!(),
             ast::Expression::Class(c) => self.visit_class(c),
@@ -21,6 +22,25 @@ impl<'a> Expression<'a> {
                 self.expression = expression::Expression::Expression(w.to_string().into())
             }
         };
+    }
+
+    pub fn visit_abstraction(
+        &mut self,
+        argument: Rc<ast::Argument>,
+        mut expression: &ast::Expression,
+    ) {
+        let mut abstraction = Abstraction::default();
+
+        abstraction.add_argument(argument);
+
+        while let ast::Expression::Abstraction(a, e) = expression {
+            abstraction.add_argument(a.clone());
+            expression = e.as_ref();
+        }
+
+        // TODO: visit expression with abstraction arguments rewritten
+
+        self.expression = expression::Expression::Abstraction(abstraction);
     }
 
     pub fn visit_class(&mut self, class: &ast::Class) {
