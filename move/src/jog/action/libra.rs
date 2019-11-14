@@ -7,7 +7,6 @@ use std::{
 const DEPENDENCIES: &[&str] = &["0x0.LibraAccount", "0x0.LibraCoin"];
 const COIN_STORE: &str = "coin_store";
 
-#[allow(dead_code)]
 pub struct Deposit {
     amount: u64,
 }

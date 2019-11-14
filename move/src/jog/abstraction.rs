@@ -33,7 +33,6 @@ impl<'a> Abstraction<'a> {
         self.arguments.insert(argument, i.into());
     }
 
-    #[allow(dead_code)]
     pub fn get_argument(&self, argument: Rc<ast::Argument>) -> Option<Argument> {
         let argument = argument.as_ref() as *const _;
         self.arguments.get(&argument).map(Clone::clone)
