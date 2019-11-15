@@ -19,7 +19,7 @@ impl Default for Expression<'_> {
 impl Display for Expression<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Application(_) => unimplemented!(),
+            Self::Application(a) => write!(f, "{}", a),
             Self::Contract(c) => write!(f, "{}", c),
             Self::Expression(e) => write!(f, "{}", e),
         }
