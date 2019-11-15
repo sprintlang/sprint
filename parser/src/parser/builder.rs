@@ -2,7 +2,7 @@ use super::{context::Context, primitive::PRIMITIVES, unify::Unify, Result};
 use crate::ast::{Argument, Definition, Expression, Kind, Variable};
 use std::{cell::RefCell, rc::Rc};
 
-pub fn program<'a>(definitions: Vec<Context<'a, Expression>>) -> Result<Context<'a, ()>> {
+pub fn program<'a>(definitions: Vec<Context<'a, Expression>>) -> Result<'a, Context<'a, ()>> {
     let mut context = Context::from(());
 
     context = definitions
@@ -40,25 +40,25 @@ pub fn signature(identifier: &str, kind: Kind) -> Result<Context<Expression>> {
 pub fn definition<'a>(
     identifier: &'a str,
     arguments: Vec<&'a str>,
-    mut expression: Context<'a, Expression>,
-) -> Result<'a, Context<'a, Expression>> {
+    mut expression: Context<'a, Expression<'a>>,
+) -> Result<'a, Context<'a, Expression<'a>>> {
     for argument in arguments.iter().rev() {
         let variable = expression.variables.remove(argument);
 
         let argument = match variable {
             Some(variable) => {
-                let argument = Rc::new(Argument(variable.borrow().kind()));
+                let argument = Rc::new(Argument::new(argument, variable.borrow().kind()));
                 *variable.borrow_mut() = Variable::Argument(argument.clone());
                 argument
             }
-            None => Rc::new(Argument(Kind::default().into())),
+            None => Rc::new(Argument::new(argument, Kind::default().into())),
         };
 
         expression = expression.map(|e| Expression::Abstraction(argument, e.into()));
     }
 
     let (expression, definition) = expression.clear();
-    let definition = Rc::new(Definition::from(definition));
+    let definition = Rc::new(Definition::new(identifier, definition));
 
     let reference = Rc::new(RefCell::new(Variable::from(&definition)));
 
@@ -73,8 +73,8 @@ pub fn definition<'a>(
 
 pub fn application<'a>(
     identifier: &'a str,
-    arguments: Vec<Context<'a, Expression>>,
-) -> Result<'a, Context<'a, Expression>> {
+    arguments: Vec<Context<'a, Expression<'a>>>,
+) -> Result<'a, Context<'a, Expression<'a>>> {
     let (contexts, arguments): (Vec<_>, Vec<_>) = arguments.into_iter().map(Context::clear).unzip();
 
     let mut context = match PRIMITIVES.get(identifier) {

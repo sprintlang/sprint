@@ -4,8 +4,8 @@ use std::{collections::HashMap, rc::Rc};
 #[derive(Debug)]
 pub struct Context<'a, T> {
     inner: T,
-    pub definitions: HashMap<&'a str, Rc<Definition>>,
-    pub variables: HashMap<&'a str, Reference>,
+    pub definitions: HashMap<&'a str, Rc<Definition<'a>>>,
+    pub variables: HashMap<&'a str, Reference<'a>>,
 }
 
 impl<T> From<T> for Context<'_, T> {

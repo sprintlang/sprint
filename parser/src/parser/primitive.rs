@@ -7,7 +7,7 @@ use crate::ast::{
 };
 use phf::phf_map;
 
-type Primitive = fn(Vec<Expression>) -> Context<'static, Expression>;
+type Primitive = fn(Vec<Expression>) -> Context<Expression>;
 
 pub static PRIMITIVES: phf::Map<&'static str, Primitive> = phf_map! {
     "zero" => zero,
@@ -36,12 +36,12 @@ macro_rules! arguments {
     };
 }
 
-pub fn zero(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn zero(arguments: Vec<Expression>) -> Context<Expression> {
     arguments!(arguments);
     Expression::State(State::default()).into()
 }
 
-pub fn one(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn one(arguments: Vec<Expression>) -> Context<Expression> {
     arguments!(arguments);
 
     let mut transition = Transition::default();
@@ -53,7 +53,7 @@ pub fn one(arguments: Vec<Expression>) -> Context<'static, Expression> {
     Expression::State(state).into()
 }
 
-pub fn give(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn give(arguments: Vec<Expression>) -> Context<Expression> {
     let next = arguments!(arguments, Kind::State);
 
     let mut transition = Transition::default();
@@ -65,7 +65,7 @@ pub fn give(arguments: Vec<Expression>) -> Context<'static, Expression> {
     Expression::State(state).into()
 }
 
-pub fn and(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn and(arguments: Vec<Expression>) -> Context<Expression> {
     let (left, right) = arguments!(arguments, Kind::State, Kind::State);
 
     let mut transition = Transition::default();
@@ -77,7 +77,7 @@ pub fn and(arguments: Vec<Expression>) -> Context<'static, Expression> {
     Expression::State(state).into()
 }
 
-pub fn or(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn or(arguments: Vec<Expression>) -> Context<Expression> {
     let (left, right) = arguments!(arguments, Kind::State, Kind::State);
 
     let mut left_transition = Transition::default();
@@ -98,7 +98,7 @@ pub fn or(arguments: Vec<Expression>) -> Context<'static, Expression> {
     Expression::State(state).into()
 }
 
-pub fn scale(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn scale(arguments: Vec<Expression>) -> Context<Expression> {
     let (scalar, next) = arguments!(arguments, Kind::Observable(Kind::Word.into()), Kind::State);
 
     let mut transition = Transition::default();
@@ -110,7 +110,7 @@ pub fn scale(arguments: Vec<Expression>) -> Context<'static, Expression> {
     Expression::State(state).into()
 }
 
-pub fn anytime(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn anytime(arguments: Vec<Expression>) -> Context<Expression> {
     let next = arguments!(arguments, Kind::State);
 
     let mut transition = Transition::default();
@@ -124,12 +124,15 @@ pub fn anytime(arguments: Vec<Expression>) -> Context<'static, Expression> {
     Expression::State(state).into()
 }
 
-pub fn konst(arguments: Vec<Expression>) -> Context<'static, Expression> {
+pub fn konst(arguments: Vec<Expression>) -> Context<Expression> {
     let value = arguments!(arguments, Kind::default());
     Expression::Observable(value.into()).into()
 }
 
-fn argument(arguments: &mut impl Iterator<Item = Expression>, kind: Kind) -> Expression {
+fn argument<'a>(
+    arguments: &mut impl Iterator<Item = Expression<'a>>,
+    kind: Kind,
+) -> Expression<'a> {
     let argument = arguments
         .next()
         .expect("invalid number of arguments in primitive application");

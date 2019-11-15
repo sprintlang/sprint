@@ -21,7 +21,7 @@ impl<'a, T, U> Unify<&Context<'a, U>> for &mut Context<'a, T> {
     }
 }
 
-impl Unify for &mut Variable {
+impl Unify for &mut Variable<'_> {
     fn unify(self, other: Self) -> Option<()> {
         match (&self, &other) {
             (Variable::Undefined(self_k), Variable::Undefined(other_k)) => {

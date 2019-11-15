@@ -14,41 +14,42 @@ use std::{
     rc::{Rc, Weak},
 };
 
-pub type Reference = Rc<RefCell<Variable>>;
+pub type Reference<'a> = Rc<RefCell<Variable<'a>>>;
 
 #[derive(Debug)]
-pub struct Definition {
+pub struct Definition<'a> {
+    pub name: &'a str,
     pub kind: Rc<Kind>,
-    pub expression: Expression,
+    pub expression: Expression<'a>,
 }
 
-impl From<Expression> for Definition {
-    fn from(e: Expression) -> Self {
+impl<'a> Definition<'a> {
+    pub fn new(name: &'a str, expression: Expression<'a>) -> Self {
         Self {
-            kind: e.kind(),
-            expression: e,
+            name,
+            kind: expression.kind(),
+            expression,
         }
     }
 }
 
 #[derive(Debug)]
-pub enum Expression {
-    Abstraction(Rc<Argument>, Box<Self>),
+pub enum Expression<'a> {
+    Abstraction(Rc<Argument<'a>>, Box<Self>),
     Application(Box<Self>, Box<Self>),
     Boolean(bool),
-    Class(Class),
-    Observable(Observable),
-    State(State),
-    Variable(Reference),
+    Class(Class<'a>),
+    Observable(Observable<'a>),
+    State(State<'a>),
+    Variable(Reference<'a>),
     Word(u64),
 }
 
-impl Expression {
+impl Expression<'_> {
     pub fn kind(&self) -> Rc<Kind> {
         match self {
             Self::Abstraction(from, to) => {
-                let Argument(from) = from.as_ref();
-                Kind::Abstraction(from.clone(), to.kind()).into()
+                Kind::Abstraction(from.as_ref().kind.clone(), to.kind()).into()
             }
 
             Self::Application(f, _) => match f.kind().as_ref() {
@@ -81,98 +82,98 @@ impl Expression {
     }
 }
 
-impl From<bool> for Expression {
+impl From<bool> for Expression<'_> {
     fn from(b: bool) -> Self {
         Self::Boolean(b)
     }
 }
 
-impl From<Class> for Expression {
-    fn from(c: Class) -> Self {
+impl<'a> From<Class<'a>> for Expression<'a> {
+    fn from(c: Class<'a>) -> Self {
         Self::Class(c)
     }
 }
 
-impl From<Observable> for Expression {
-    fn from(o: Observable) -> Self {
+impl<'a> From<Observable<'a>> for Expression<'a> {
+    fn from(o: Observable<'a>) -> Self {
         Self::Observable(o)
     }
 }
 
-impl From<State> for Expression {
-    fn from(s: State) -> Self {
+impl<'a> From<State<'a>> for Expression<'a> {
+    fn from(s: State<'a>) -> Self {
         Self::State(s)
     }
 }
 
-impl From<Rc<RefCell<Variable>>> for Expression {
-    fn from(v: Rc<RefCell<Variable>>) -> Self {
+impl<'a> From<Rc<RefCell<Variable<'a>>>> for Expression<'a> {
+    fn from(v: Rc<RefCell<Variable<'a>>>) -> Self {
         Self::Variable(v)
     }
 }
 
-impl From<u64> for Expression {
+impl From<u64> for Expression<'_> {
     fn from(w: u64) -> Self {
         Self::Word(w)
     }
 }
 
 #[derive(Debug)]
-pub struct Argument(pub Rc<Kind>);
+pub struct Argument<'a> {
+    pub name: &'a str,
+    pub kind: Rc<Kind>,
+}
 
-impl From<Rc<Kind>> for Argument {
-    fn from(k: Rc<Kind>) -> Self {
-        Argument(k)
+impl<'a> Argument<'a> {
+    pub fn new(name: &'a str, kind: Rc<Kind>) -> Self {
+        Self { name, kind }
     }
 }
 
 #[derive(Debug)]
-pub enum Observable {
+pub enum Observable<'a> {
     IsHolder,
     IsCounterparty,
-    Konst(Rc<Expression>),
+    Konst(Rc<Expression<'a>>),
 }
 
-impl From<Expression> for Observable {
-    fn from(e: Expression) -> Self {
+impl<'a> From<Expression<'a>> for Observable<'a> {
+    fn from(e: Expression<'a>) -> Self {
         Self::Konst(e.into())
     }
 }
 
 #[derive(Clone, Debug)]
-pub enum Variable {
-    Argument(Rc<Argument>),
-    Definition(Weak<Definition>),
+pub enum Variable<'a> {
+    Argument(Rc<Argument<'a>>),
+    Definition(Weak<Definition<'a>>),
     Undefined(Rc<Kind>),
 }
 
-impl Variable {
+impl Variable<'_> {
     pub fn kind(&self) -> Rc<Kind> {
         match self {
-            Self::Argument(a) => {
-                let Argument(a) = a.as_ref();
-                a.clone()
-            }
+            Self::Argument(a) => a.kind.clone(),
             Self::Definition(d) => d.upgrade().unwrap().kind.clone(),
             Self::Undefined(k) => k.clone(),
         }
     }
 }
 
-impl From<Rc<Argument>> for Variable {
-    fn from(a: Rc<Argument>) -> Self {
+impl<'a> From<Rc<Argument<'a>>> for Variable<'a> {
+    fn from(a: Rc<Argument<'a>>) -> Self {
         Self::Argument(a)
     }
 }
 
-impl From<Rc<Kind>> for Variable {
+impl From<Rc<Kind>> for Variable<'_> {
     fn from(k: Rc<Kind>) -> Self {
         Self::Undefined(k)
     }
 }
 
-impl From<&Rc<Definition>> for Variable {
-    fn from(d: &Rc<Definition>) -> Self {
+impl<'a> From<&Rc<Definition<'a>>> for Variable<'a> {
+    fn from(d: &Rc<Definition<'a>>) -> Self {
         Self::Definition(Rc::downgrade(d))
     }
 }
@@ -186,9 +187,9 @@ mod tests {
         // one :: Word -> Word -> Boolean
         // one x y = true
         let one = Expression::Abstraction(
-            Argument(Kind::Word.into()).into(),
+            Argument::new("x", Kind::Word.into()).into(),
             Expression::Abstraction(
-                Argument(Kind::Word.into()).into(),
+                Argument::new("y", Kind::Word.into()).into(),
                 Expression::Boolean(true).into(),
             )
             .into(),
