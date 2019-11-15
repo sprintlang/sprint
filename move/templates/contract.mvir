@@ -85,6 +85,10 @@ module Contract {
     }
     {% endfor %}
 
+    {% for abstraction in abstractions %}
+    {{abstraction}}
+    {% endfor %}
+
     // TODO: Figure out destroy, requires destroying all contexts as well.
     // Destroy the contract resource.
     // public destroy(contract: Self.T) {}

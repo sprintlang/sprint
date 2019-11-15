@@ -1,5 +1,8 @@
 use super::expression::Expression;
-use std::{collections::vec_deque::VecDeque, fmt::{self, Display, Formatter}};
+use std::{
+    collections::vec_deque::VecDeque,
+    fmt::{self, Display, Formatter},
+};
 
 #[derive(Default)]
 pub struct Application<'a> {

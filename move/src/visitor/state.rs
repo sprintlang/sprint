@@ -1,4 +1,4 @@
-use super::expression;
+use super::{definition::TERMINAL_ID, expression};
 use crate::{
     jog::{
         action::{
@@ -17,24 +17,29 @@ use crate::{
 use sprint_parser::ast;
 use std::{collections::HashMap, rc::Rc};
 
-const TERMINAL_ID: usize = 0;
-
-pub fn visit<'a>(state: &ast::state::State<'a>) -> module::Contract<'a> {
-    let mut s = State::default();
+pub fn visit<'a>(state: &ast::state::State<'a>, numbers: &mut Numbers) -> module::Contract<'a> {
+    let mut s = State::new(numbers);
     s.visit(state);
 
     s.into()
 }
 
-#[derive(Default)]
-struct State<'a> {
+struct State<'a, 'b> {
     contract: module::Contract<'a>,
     ids: HashMap<*const ast::state::State<'a>, usize>,
-    numbers: Numbers,
+    numbers: &'b mut Numbers,
 }
 
-impl<'a> State<'a> {
-    pub fn visit(&mut self, state: &ast::state::State<'a>) -> usize {
+impl<'a, 'b> State<'a, 'b> {
+    fn new(numbers: &'b mut Numbers) -> Self {
+        Self {
+            contract: Default::default(),
+            ids: Default::default(),
+            numbers,
+        }
+    }
+
+    fn visit(&mut self, state: &ast::state::State<'a>) -> usize {
         let key = state as *const _;
 
         if let Some(&state_id) = self.ids.get(&key) {
@@ -43,7 +48,7 @@ impl<'a> State<'a> {
         }
 
         // Zero is reserved for the terminal state.
-        let id = self.numbers.next();
+        let id = self.numbers.next().unwrap();
         self.ids.insert(key, id);
 
         for transition in state.transitions() {
@@ -58,7 +63,9 @@ impl<'a> State<'a> {
             let mut method = Transition::new(id, next_id);
 
             for condition in transition.conditions() {
-                method.add_condition(Condition::new(expression::visit(condition), 0).into());
+                method.add_condition(
+                    Condition::new(expression::visit(condition, self.numbers), 0).into(),
+                );
             }
 
             let mut post_actions = Vec::new();
@@ -66,7 +73,7 @@ impl<'a> State<'a> {
                 match effect {
                     ast::state::Effect::Flip => method.add_action(Flip::default()),
                     ast::state::Effect::Scale(scalar) => {
-                        method.add_action(Scale::new(expression::visit(scalar)))
+                        method.add_action(Scale::new(expression::visit(scalar, self.numbers)))
                     }
                     ast::state::Effect::Spawn(root_state) => {
                         // TODO: actually visit the state (I guess)
@@ -104,8 +111,8 @@ impl<'a> State<'a> {
     }
 }
 
-impl<'a> From<State<'a>> for module::Contract<'a> {
-    fn from(state: State<'a>) -> Self {
+impl<'a> From<State<'a, '_>> for module::Contract<'a> {
+    fn from(state: State<'a, '_>) -> Self {
         state.contract
     }
 }

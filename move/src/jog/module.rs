@@ -1,4 +1,4 @@
-use super::{method::Transition, variable::Variable};
+use super::{abstraction::Abstraction, method::Transition, variable::Variable};
 use askama::Template;
 use std::{collections::HashSet, rc::Rc};
 
@@ -7,6 +7,7 @@ const DEPENDENCIES: [&str; 3] = ["0x0.Vector", "0x0.LibraCoin", "0x0.LibraAccoun
 #[derive(Template, Default)]
 #[template(path = "contract.mvir", escape = "none")]
 pub struct Contract<'a> {
+    pub abstractions: Vec<Abstraction<'a>>,
     transition_methods: Vec<Transition<'a>>,
     properties: HashSet<Rc<Variable>>,
 }
@@ -38,6 +39,10 @@ impl<'a> Contract<'a> {
         }
 
         properties
+    }
+
+    pub fn add_abstraction(&mut self, abstraction: Abstraction<'a>) {
+        self.abstractions.push(abstraction);
     }
 
     pub fn add_method(&mut self, method: Transition<'a>) {

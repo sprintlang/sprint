@@ -1,28 +1,20 @@
-use std::{
-    cell::RefCell,
-    iter::{repeat, Enumerate, Map, Repeat, Skip},
-};
+#[derive(Default)]
+pub struct Numbers(usize);
 
-static DEFAULT_START: usize = 1;
+impl Iterator for Numbers {
+    type Item = usize;
 
-#[allow(clippy::type_complexity)]
-pub struct Numbers(RefCell<Map<Skip<Enumerate<Repeat<()>>>, fn((usize, ())) -> usize>>);
+    fn next(&mut self) -> Option<usize> {
+        let result = Some(self.0);
+        self.0 += 1;
 
-impl Default for Numbers {
-    fn default() -> Self {
-        Self::new(DEFAULT_START)
+        result
     }
 }
 
-impl Numbers {
-    pub fn new(start: usize) -> Self {
-        Self(RefCell::new(
-            repeat(()).enumerate().skip(start).map(|(i, _)| i),
-        ))
-    }
-
-    pub fn next(&self) -> usize {
-        self.0.borrow_mut().next().unwrap()
+impl From<usize> for Numbers {
+    fn from(start: usize) -> Self {
+        Self(start)
     }
 }
 
@@ -32,10 +24,10 @@ mod tests {
 
     #[test]
     fn numbers() {
-        let numbers = Numbers::default();
+        let mut numbers = Numbers::default();
 
-        for i in DEFAULT_START..(DEFAULT_START + 10) {
-            assert_eq!(numbers.next(), i);
+        for i in 0..10 {
+            assert_eq!(numbers.next().unwrap(), i);
         }
     }
 }
