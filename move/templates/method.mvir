@@ -1,0 +1,16 @@
+    {%- if public -%}public {% endif -%}{{ identifier }}(
+        contract_ref: &mut Self.T,
+        {%- for argument in arguments %}
+        {{ argument }},
+        {%- endfor %}
+    ){%- if result.is_some() -%}: u64{%- endif %} {
+        {%- for definition in self.definitions() %}
+        let {{ definition }};
+        {%- endfor %}
+
+        {%- for action in actions %}
+        {{ action }}
+        {%- endfor %}
+
+        return{{ self.result() }};
+    }

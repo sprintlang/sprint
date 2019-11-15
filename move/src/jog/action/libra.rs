@@ -1,11 +1,10 @@
-use super::{super::variable::Variable, Action};
-use std::{
-    fmt::{self, Display, Formatter},
-    rc::Rc,
+use super::{
+    super::{expression::Address, variable::Variable},
+    Action,
 };
+use std::fmt::{self, Display, Formatter};
 
 const DEPENDENCIES: &[&str] = &["0x0.LibraAccount", "0x0.LibraCoin"];
-const COIN_STORE: &str = "coin_store";
 
 pub struct Deposit {
     amount: u64,
@@ -23,15 +22,7 @@ impl Action for Deposit {
         DEPENDENCIES
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![Rc::new(Variable {
-            name: COIN_STORE,
-            type_name: "LibraCoin.T",
-            default: Some("LibraCoin.zero()"),
-        })]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
+    fn definitions(&self) -> Vec<&Variable> {
         vec![]
     }
 }
@@ -40,8 +31,8 @@ impl Display for Deposit {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "LibraCoin.deposit(&mut move(contract_ref).{}, LibraAccount.withdraw_from_sender({}));",
-            COIN_STORE, self.amount
+            "LibraCoin.deposit(&mut move(contract_ref).coin_store, LibraAccount.withdraw_from_sender({}));",
+            self.amount
         )
     }
 }
@@ -61,11 +52,7 @@ impl Action for Withdraw {
         DEPENDENCIES
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
+    fn definitions(&self) -> Vec<&Variable> {
         vec![]
     }
 }
@@ -74,22 +61,8 @@ impl Display for Withdraw {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "LibraAccount.deposit({}, LibraCoin.withdraw(&mut copy(contract_ref).{}, *(&mut copy(context_ref).scale)));",
-            self.payee, COIN_STORE
+            "LibraAccount.deposit({}, LibraCoin.withdraw(&mut copy(contract_ref).coin_store, *(&mut copy(context_ref).scale)));",
+            self.payee
         )
-    }
-}
-
-pub enum Address {
-    Holder,
-    Counterparty,
-}
-
-impl fmt::Display for Address {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Address::Holder => write!(f, "*(&copy(context_ref).holder)"),
-            Address::Counterparty => write!(f, "*(&copy(context_ref).counterparty)"),
-        }
     }
 }

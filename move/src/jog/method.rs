@@ -1,20 +1,34 @@
-use super::{action::Action, variable::Variable};
-use std::{collections::HashSet, rc::Rc};
+use super::{action::Action, expression::Expression, identifier::Identifier, variable::Variable};
+use askama::Template;
+use std::collections::HashSet;
 
-#[derive(Default)]
-pub struct Transition<'a> {
+#[derive(Template)]
+#[template(path = "method.mvir", escape = "none")]
+pub struct Method<'a> {
+    public: bool,
+    identifier: Identifier<'a>,
+    arguments: Vec<Variable<'a>>,
     actions: Vec<Box<dyn Action + 'a>>,
-    origin_state: usize,
-    to_state: usize,
+    result: Option<Expression<'a>>,
 }
 
-impl<'a> Transition<'a> {
-    pub fn new(origin_state: usize, to_state: usize) -> Self {
-        Transition {
+impl<'a> Method<'a> {
+    fn new(public: bool, identifier: Identifier<'a>) -> Self {
+        Method {
+            public,
+            identifier,
+            arguments: Default::default(),
             actions: Default::default(),
-            origin_state,
-            to_state,
+            result: Default::default(),
         }
+    }
+
+    pub fn private(identifier: Identifier<'a>) -> Self {
+        Method::new(false, identifier)
+    }
+
+    pub fn public(identifier: Identifier<'a>) -> Self {
+        Method::new(true, identifier)
     }
 
     pub fn dependencies(&self) -> Vec<&str> {
@@ -25,33 +39,34 @@ impl<'a> Transition<'a> {
             .collect()
     }
 
-    pub fn properties(&self) -> Vec<Rc<Variable>> {
-        self.actions
-            .iter()
-            .flat_map(|action| action.properties())
-            .collect()
-    }
-
-    pub fn definitions(&self) -> HashSet<Rc<Variable>> {
+    pub fn definitions(&self) -> HashSet<&Variable> {
         self.actions
             .iter()
             .flat_map(|action| action.definitions())
             .collect()
     }
 
-    pub fn origin_state(&self) -> usize {
-        self.origin_state
+    pub fn add_argument(&mut self, argument: Variable<'a>) {
+        self.arguments.push(argument);
     }
 
-    pub fn to_state(&self) -> usize {
-        self.to_state
-    }
-
-    pub fn actions(&self) -> Vec<&dyn Action> {
-        self.actions.iter().map(AsRef::as_ref).collect()
+    pub fn set_arguments(&mut self, arguments: Vec<Variable<'a>>) {
+        assert!(self.arguments.is_empty());
+        self.arguments = arguments;
     }
 
     pub fn add_action(&mut self, action: impl Action + 'a) {
         self.actions.push(Box::new(action));
+    }
+
+    pub fn set_result(&mut self, expression: Expression<'a>) {
+        self.result = Some(expression);
+    }
+
+    fn result(&self) -> String {
+        self.result
+            .as_ref()
+            .map(|e| format!(" {}", e))
+            .unwrap_or_default()
     }
 }

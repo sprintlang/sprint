@@ -1,36 +1,34 @@
-use super::state;
-use crate::{
-    jog::{
-        abstraction::Argument, action::libra::Address, application::Application,
-        expression::Expression,
-    },
-    numbers::Numbers,
+use super::{state, Context};
+use crate::jog::{
+    application::Application,
+    expression::{Address, Expression},
+    identifier::Identifier,
 };
 use sprint_parser::ast;
 
-pub fn visit<'a>(expression: &ast::Expression<'a>, numbers: &mut Numbers) -> Expression<'a> {
+pub fn visit<'a>(context: &mut Context<'a>, expression: &ast::Expression<'a>) -> Expression<'a> {
     match expression {
         ast::Expression::Abstraction(_, _) => unreachable!(),
-        ast::Expression::Application(f, a) => visit_application(f, a, numbers),
+        ast::Expression::Application(f, a) => visit_application(context, f, a),
         ast::Expression::Boolean(_) => unimplemented!(),
-        ast::Expression::Class(c) => visit_class(c, numbers),
-        ast::Expression::Observable(o) => visit_observable(o, numbers),
-        ast::Expression::State(s) => visit_state(s, numbers),
-        ast::Expression::Variable(v) => visit_variable(v.clone()),
+        ast::Expression::Class(c) => visit_class(context, c),
+        ast::Expression::Observable(o) => visit_observable(context, o),
+        ast::Expression::State(s) => visit_state(context, s),
+        ast::Expression::Variable(v) => visit_variable(context, &*v.borrow()),
         ast::Expression::Word(w) => Expression::Expression(w.to_string().into()),
     }
 }
 
 fn visit_application<'a>(
+    context: &mut Context<'a>,
     mut abstraction: &ast::Expression<'a>,
     argument: &ast::Expression<'a>,
-    numbers: &mut Numbers,
 ) -> Expression<'a> {
     let mut application = Application::default();
 
-    application.add_argument(visit(argument, numbers));
+    application.add_argument(visit(context, argument));
     while let ast::Expression::Application(f, a) = abstraction {
-        application.add_argument(visit(a, numbers));
+        application.add_argument(visit(context, a));
         abstraction = f;
     }
 
@@ -48,7 +46,7 @@ fn visit_application<'a>(
     Expression::Application(application)
 }
 
-fn visit_class<'a>(class: &ast::Class<'a>, _numbers: &mut Numbers) -> Expression<'a> {
+fn visit_class<'a>(_context: &mut Context, class: &ast::Class<'a>) -> Expression<'a> {
     match class {
         ast::Class::Comparable(_) => unimplemented!(),
         ast::Class::Equatable(_) => unimplemented!(),
@@ -57,7 +55,10 @@ fn visit_class<'a>(class: &ast::Class<'a>, _numbers: &mut Numbers) -> Expression
     }
 }
 
-fn visit_observable<'a>(observable: &ast::Observable<'a>, numbers: &mut Numbers) -> Expression<'a> {
+fn visit_observable<'a>(
+    context: &mut Context<'a>,
+    observable: &ast::Observable<'a>,
+) -> Expression<'a> {
     match observable {
         ast::Observable::IsHolder => {
             Expression::Expression(format!("get_txn_address() == {}", Address::Holder).into())
@@ -65,19 +66,17 @@ fn visit_observable<'a>(observable: &ast::Observable<'a>, numbers: &mut Numbers)
         ast::Observable::IsCounterparty => {
             Expression::Expression(format!("get_txn_address() == {}", Address::Counterparty).into())
         }
-        ast::Observable::Konst(e) => visit(e, numbers),
+        ast::Observable::Konst(e) => visit(context, e),
     }
 }
 
-fn visit_state<'a>(state: &ast::state::State<'a>, numbers: &mut Numbers) -> Expression<'a> {
-    Expression::Contract(state::visit(state, numbers))
+fn visit_state<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> Expression<'a> {
+    Expression::Unsigned(state::visit(context, state))
 }
 
-fn visit_variable(variable: ast::Reference) -> Expression<'_> {
-    match &*variable.borrow() {
-        ast::Variable::Argument(argument) => {
-            Expression::Expression(format!("{}", Argument::from(argument.name)).into())
-        }
+fn visit_variable<'a>(_context: &mut Context, variable: &ast::Variable<'a>) -> Expression<'a> {
+    match variable {
+        ast::Variable::Argument(argument) => Identifier::Prefixed(argument.name).into(),
         _ => unreachable!(),
     }
 }

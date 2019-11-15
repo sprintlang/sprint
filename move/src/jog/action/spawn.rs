@@ -1,41 +1,34 @@
-use crate::jog::{
-    action::{libra::Address, Action},
-    variable::Variable,
+use super::{
+    super::{expression::Address, expression::Expression, variable::Variable},
+    Action,
 };
 use std::{
     fmt::{self, Display, Formatter},
     rc::Rc,
 };
 
-pub struct Spawn {
-    context: Rc<Variable>,
-    root_state: usize,
+pub struct Spawn<'a> {
+    context: Rc<Variable<'a>>,
+    root: Expression<'a>,
 }
 
-impl Spawn {
-    pub fn new(context: Rc<Variable>, root_state: usize) -> Self {
-        Spawn {
-            context,
-            root_state,
-        }
+impl<'a> Spawn<'a> {
+    pub fn new(context: Rc<Variable<'a>>, root: Expression<'a>) -> Self {
+        Spawn { context, root }
     }
 }
 
-impl Action for Spawn {
+impl Action for Spawn<'_> {
     fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
-        vec![self.context.clone()]
+    fn definitions(&self) -> Vec<&Variable> {
+        vec![&self.context]
     }
 }
 
-impl Display for Spawn {
+impl Display for Spawn<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
@@ -45,44 +38,40 @@ impl Display for Spawn {
                 counterparty: {},
                 scale: *(&copy(context_ref).scale),
             }};",
-            self.context.name,
-            self.root_state,
+            self.context.identifier(),
+            self.root,
             Address::Holder,
             Address::Counterparty,
         )
     }
 }
 
-pub struct PushContext {
-    context: Rc<Variable>,
+pub struct PushContext<'a> {
+    context: Rc<Variable<'a>>,
 }
 
-impl PushContext {
-    pub fn new(context: Rc<Variable>) -> Self {
+impl<'a> PushContext<'a> {
+    pub fn new(context: Rc<Variable<'a>>) -> Self {
         PushContext { context }
     }
 }
 
-impl Action for PushContext {
+impl Action for PushContext<'_> {
     fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
-        vec![self.context.clone()]
+    fn definitions(&self) -> Vec<&Variable> {
+        vec![&self.context]
     }
 }
 
-impl Display for PushContext {
+impl Display for PushContext<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
             "Vector.push_back<Self.Context>(copy(contexts), move({}));",
-            self.context.name
+            self.context.identifier()
         )
     }
 }

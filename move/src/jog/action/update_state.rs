@@ -1,8 +1,5 @@
 use crate::jog::{action::Action, variable::Variable};
-use std::{
-    fmt::{self, Display, Formatter},
-    rc::Rc,
-};
+use std::fmt::{self, Display, Formatter};
 
 pub struct UpdateState {
     new_state: usize,
@@ -19,17 +16,13 @@ impl Action for UpdateState {
         &[]
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
+    fn definitions(&self) -> Vec<&Variable> {
         vec![]
     }
 }
 
 impl Display for UpdateState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        writeln!(f, "*(&mut move(context_ref).state) = {};", self.new_state,)
+        writeln!(f, "*(&mut move(context_ref).state) = {};", self.new_state)
     }
 }

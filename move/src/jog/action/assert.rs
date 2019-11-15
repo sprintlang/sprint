@@ -2,10 +2,7 @@ use super::{
     super::{expression::Expression, variable::Variable},
     Action,
 };
-use std::{
-    fmt::{self, Display, Formatter},
-    rc::Rc,
-};
+use std::fmt::{self, Display, Formatter};
 
 #[derive(Default)]
 pub struct Assert<'a> {
@@ -24,11 +21,7 @@ impl Action for Assert<'_> {
         &[]
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
+    fn definitions(&self) -> Vec<&Variable> {
         vec![]
     }
 }
