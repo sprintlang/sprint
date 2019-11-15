@@ -6,7 +6,7 @@ mod primitive;
 mod program;
 mod unify;
 
-use self::{combinator::span, error::Error, program::program};
+use self::{combinator::span, error::CombinedError, program::program};
 use crate::ast::Definitions;
 use nom::{
     combinator::{all_consuming, complete},
@@ -15,13 +15,13 @@ use nom::{
 use nom_locate::LocatedSpan;
 use std::result;
 
-type Span<'a> = LocatedSpan<&'a str>;
+pub type Span<'a> = LocatedSpan<&'a str>;
 
-type Result<'a, T> = result::Result<T, Err<Error<'a>>>;
+type Result<'a, T> = result::Result<T, Err<CombinedError<'a>>>;
 
-type IResult<'a, I, O> = nom::IResult<I, O, Error<'a>>;
+type IResult<'a, I, O> = nom::IResult<I, O, CombinedError<'a>>;
 
-pub fn contract<'a>(input: &'a str) -> result::Result<Definitions<'a>, Error> {
+pub fn contract<'a>(input: &'a str) -> result::Result<Definitions<'a>, CombinedError> {
     match span(all_consuming(complete(program)))(input) {
         Ok((_, context)) => Ok(context.definitions.into_iter().map(|(_, d)| d).collect()),
         Err(nom::Err::Error(error)) | Err(nom::Err::Failure(error)) => Err(error),

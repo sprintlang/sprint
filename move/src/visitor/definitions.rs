@@ -23,12 +23,16 @@ pub fn visit<'a>(definitions: &[ast::Definition<'a>]) -> Contract<'a> {
             let mut expression = &definition.expression;
             let mut arguments = Vec::new();
 
-            while let ast::Expression::Abstraction(a, e) = expression {
+            while let ast::Expression {
+                expression: ast::ExpressionType::Abstraction(a, e),
+                ..
+            } = expression
+            {
                 expression = e;
                 arguments.push(Variable::new(Identifier::Prefixed(a.name), Kind::Unsigned));
             }
 
-            if *expression.kind() == ast::Kind::State {
+            if *expression.expression.kind() == ast::Kind::State {
                 context
                     .function_context
                     .replace(FunctionContext::new(arguments, definition.variable.name));

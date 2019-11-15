@@ -4,7 +4,7 @@ use super::{
     context::Context,
     IResult, Span,
 };
-use crate::ast::{Expression, Kind};
+use crate::ast::{Expression, ExpressionType, Kind};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -73,7 +73,6 @@ pub fn application(input: Span) -> IResult<Span, Context<Expression>> {
 
     let argument = preceded(separator, term);
     let (input, arguments) = many0(argument)(input)?;
-
     Ok((input, builder::application(identifier, arguments)?))
 }
 
@@ -83,19 +82,23 @@ pub fn term(input: Span) -> IResult<Span, Context<Expression>> {
         map_res(identifier, |identifier| {
             builder::application(identifier, Vec::new())
         }),
-        map(tag("True"), |_| Expression::from(true).into()),
-        map(tag("False"), |_| Expression::from(false).into()),
+        map(tag("True"), |span: Span| {
+            Expression::new(ExpressionType::from(true), span).into()
+        }),
+        map(tag("False"), |span: Span| {
+            Expression::new(ExpressionType::from(false), span).into()
+        }),
         map(digit1, |n: Span| {
-            Expression::from(n.fragment.parse::<u64>().unwrap()).into()
+            Expression::new(ExpressionType::from(n.fragment.parse::<u64>().unwrap()), n).into()
         }),
     ))(input)
 }
 
-pub fn identifier(input: Span) -> IResult<Span, &str> {
+pub fn identifier(input: Span) -> IResult<Span, Span> {
     let lowercase1 = take_while1(|c: char| c.is_ascii_lowercase());
     let (input, identifier) = recognize(pair(lowercase1, alphanumeric0))(input)?;
 
-    Ok((input, identifier.fragment))
+    Ok((input, identifier))
 }
 
 fn separator(input: Span) -> IResult<Span, Span> {

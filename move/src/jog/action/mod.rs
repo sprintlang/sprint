@@ -11,7 +11,7 @@ use super::variable::Variable;
 use std::fmt::Display;
 
 pub trait Action: Display {
-    fn dependencies(&self) -> &'static [&'static str];
+  fn dependencies(&self) -> &'static [&'static str];
 
-    fn definitions(&self) -> Vec<&Variable>;
+  fn definitions(&self) -> Vec<&Variable>;
 }

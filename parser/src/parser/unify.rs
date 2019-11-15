@@ -1,17 +1,18 @@
-use super::context::Context;
+use super::{context::Context, error::SprintError};
 use crate::ast::Kind;
 use std::rc::Rc;
 
-pub trait Unify<O = Self> {
-    fn unify(self, other: O) -> Option<()>;
+pub trait Unify<'a, O = Self> {
+    fn unify(self, other: O) -> Result<(), SprintError<'a>>;
 }
 
-impl<'a, T, U> Unify<Context<'a, U>> for &mut Context<'a, T> {
-    fn unify(self, other: Context<'a, U>) -> Option<()> {
+impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
+    fn unify(self, other: Context<'a, U>) -> Result<(), SprintError<'a>> {
         for (name, definition) in other.definitions {
             if self.definitions.insert(name, definition).is_some() {
                 // There is a duplicate definition.
-                return None;
+                // TODO: duplicate definition error.
+                return Err(SprintError::InvalidNumberArgsError);
             }
         }
 
@@ -19,18 +20,18 @@ impl<'a, T, U> Unify<Context<'a, U>> for &mut Context<'a, T> {
             let kind = variable.kind.clone();
 
             if let Some(original) = self.variables.replace(variable) {
-                original.kind.unify(kind);
+                original.kind.unify(kind)?;
             }
         }
 
-        Some(())
+        Ok(())
     }
 }
 
-impl Unify for Rc<Kind> {
-    fn unify(self, other: Self) -> Option<()> {
-        let this = Kind::simplify(self);
-        let other = Kind::simplify(other);
+impl<'a> Unify<'a> for Rc<Kind> {
+    fn unify(self, other: Self) -> Result<(), SprintError<'a>> {
+        let mut this = Kind::simplify(self);
+        let mut other = Kind::simplify(other);
 
         match (this.as_ref(), other.as_ref()) {
             (Kind::Abstraction(this_from, this_to), Kind::Abstraction(other_from, other_to)) => {
@@ -48,9 +49,14 @@ impl Unify for Rc<Kind> {
             }
             (_, Kind::Unresolved(_)) => other.unify(this)?,
             (Kind::Word, Kind::Word) => {}
-            _ => None?,
+            _ => {
+                return Err(SprintError::TypeError(
+                    Rc::make_mut(&mut this).clone(),
+                    Rc::make_mut(&mut other).clone(),
+                ))
+            }
         }
 
-        Some(())
+        Ok(())
     }
 }

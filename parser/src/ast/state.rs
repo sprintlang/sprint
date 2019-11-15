@@ -1,6 +1,6 @@
 use super::Expression;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct State<'a> {
     transitions: Vec<Transition<'a>>,
 }
@@ -16,7 +16,7 @@ impl<'a> State<'a> {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Transition<'a> {
     conditions: Vec<Expression<'a>>,
     effects: Vec<Effect<'a>>,
@@ -52,7 +52,7 @@ impl<'a> Transition<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Effect<'a> {
     Flip,
     Scale(Expression<'a>),

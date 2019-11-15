@@ -12,14 +12,38 @@ pub(super) fn visit<'a>(
     expression: &ast::Expression<'a>,
 ) -> Expression<'a> {
     match expression {
-        ast::Expression::Abstraction(_, r) => visit(context, r),
-        ast::Expression::Application(f, a) => visit_application(context, f, a),
-        ast::Expression::Boolean(_) => unimplemented!(),
-        ast::Expression::Class(c) => visit_class(context, c),
-        ast::Expression::Observable(o) => visit_observable(context, o),
-        ast::Expression::State(s) => visit_state(context, s),
-        ast::Expression::Variable(v) => visit_variable(context, v),
-        ast::Expression::Word(w) => Expression::Expression(w.to_string().into()),
+        ast::Expression {
+            expression: ast::ExpressionType::Abstraction(_, r),
+            ..
+        } => visit(context, r),
+        ast::Expression {
+            expression: ast::ExpressionType::Application(f, a),
+            ..
+        } => visit_application(context, f, a),
+        ast::Expression {
+            expression: ast::ExpressionType::Boolean(_),
+            ..
+        } => unimplemented!(),
+        ast::Expression {
+            expression: ast::ExpressionType::Class(c),
+            ..
+        } => visit_class(context, c),
+        ast::Expression {
+            expression: ast::ExpressionType::Observable(o),
+            ..
+        } => visit_observable(context, o),
+        ast::Expression {
+            expression: ast::ExpressionType::State(s),
+            ..
+        } => visit_state(context, s),
+        ast::Expression {
+            expression: ast::ExpressionType::Variable(v),
+            ..
+        } => visit_variable(context, v),
+        ast::Expression {
+            expression: ast::ExpressionType::Word(w),
+            ..
+        } => Expression::Expression(w.to_string().into()),
     }
 }
 

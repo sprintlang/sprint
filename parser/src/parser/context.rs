@@ -1,7 +1,7 @@
 use crate::ast::{Definition, Variable};
 use std::collections::{HashMap, HashSet};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Context<'a, T> {
     inner: T,
     pub definitions: HashMap<&'a str, Definition<'a>>,

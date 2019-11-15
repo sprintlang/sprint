@@ -1,13 +1,19 @@
 #![allow(unused_parens)]
 
-use super::{context::Context, unify::Unify};
+use super::{
+    context::Context,
+    error::{CombinedError, SprintError},
+    unify::Unify,
+    Result, Span,
+};
 use crate::ast::{
     state::{Effect, State, Transition},
-    {Expression, Kind, Observable},
+    {Expression, ExpressionType, Kind, Observable},
 };
+use nom::{error::ErrorKind, Err};
 use phf::phf_map;
 
-type Primitive = fn(Vec<Expression>) -> Context<Expression>;
+type Primitive = fn(Vec<Expression>) -> Result<'_, Context<Expression>>;
 
 pub static PRIMITIVES: phf::Map<&'static str, Primitive> = phf_map! {
     "zero" => zero,
@@ -36,12 +42,12 @@ macro_rules! arguments {
     };
 }
 
-pub fn zero(arguments: Vec<Expression>) -> Context<Expression> {
+pub fn zero(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     arguments!(arguments);
-    Expression::State(State::default()).into()
+    Ok(Expression::new(ExpressionType::State(State::default()), Span::new("")).into())
 }
 
-pub fn one(arguments: Vec<Expression>) -> Context<Expression> {
+pub fn one(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     arguments!(arguments);
 
     let mut transition = Transition::default();
@@ -50,11 +56,12 @@ pub fn one(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    Ok(Expression::new(ExpressionType::State(state), Span::new("")).into())
 }
 
-pub fn give(arguments: Vec<Expression>) -> Context<Expression> {
-    let next = arguments!(arguments, Kind::State);
+pub fn give(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
+    let next = arguments!(arguments, Kind::State)?;
+    let span = next.span;
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Flip).set_next(next);
@@ -62,11 +69,14 @@ pub fn give(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    Ok(Expression::new(ExpressionType::State(state), span).into())
 }
 
-pub fn and(arguments: Vec<Expression>) -> Context<Expression> {
+pub fn and(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let (left, right) = arguments!(arguments, Kind::State, Kind::State);
+    let left = left?;
+    let right = right?;
+    let left_span = left.span;
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Spawn(right)).set_next(left);
@@ -74,20 +84,24 @@ pub fn and(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    // TODO: different span?
+    Ok(Expression::new(ExpressionType::State(state), left_span).into())
 }
 
-pub fn or(arguments: Vec<Expression>) -> Context<Expression> {
+pub fn or(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let (left, right) = arguments!(arguments, Kind::State, Kind::State);
+    let left = left?;
+    let right = right?;
+    let left_span = left.span;
 
     let mut left_transition = Transition::default();
     left_transition
-        .add_condition(Observable::IsParty.into())
+        .add_condition(Expression::new(Observable::IsParty.into(), left.span))
         .set_next(left);
 
     let mut right_transition = Transition::default();
     right_transition
-        .add_condition(Observable::IsParty.into())
+        .add_condition(Expression::new(Observable::IsParty.into(), right.span))
         .set_next(right);
 
     let mut state = State::default();
@@ -95,11 +109,15 @@ pub fn or(arguments: Vec<Expression>) -> Context<Expression> {
         .add_transition(left_transition)
         .add_transition(right_transition);
 
-    Expression::State(state).into()
+    // TODO: different span?
+    Ok(Expression::new(ExpressionType::State(state), left_span).into())
 }
 
-pub fn scale(arguments: Vec<Expression>) -> Context<Expression> {
+pub fn scale(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let (scalar, next) = arguments!(arguments, Kind::Observable(Kind::Word.into()), Kind::State);
+    let scalar = scalar?;
+    let next = next?;
+    let next_span = next.span;
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Scale(scalar)).set_next(next);
@@ -107,40 +125,56 @@ pub fn scale(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    // TODO: different span?
+    Ok(Expression::new(ExpressionType::State(state), next_span).into())
 }
 
-pub fn anytime(arguments: Vec<Expression>) -> Context<Expression> {
-    let next = arguments!(arguments, Kind::State);
+pub fn anytime(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
+    let next = arguments!(arguments, Kind::State)?;
+    let next_span = next.span;
 
     let mut transition = Transition::default();
     transition
-        .add_condition(Observable::IsParty.into())
+        .add_condition(Expression::new(Observable::IsParty.into(), next.span))
         .set_next(next);
 
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    // TODO: different span?
+    Ok(Expression::new(ExpressionType::State(state), next_span).into())
 }
 
-pub fn konst(arguments: Vec<Expression>) -> Context<Expression> {
-    let value = arguments!(arguments, Kind::default());
-    Expression::Observable(value.into()).into()
+pub fn konst(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
+    let value = arguments!(arguments, Kind::default())?;
+    let value_span = value.span;
+    // TODO: different span?
+    Ok(Expression::new(ExpressionType::Observable(value.into()), value_span).into())
 }
 
 fn argument<'a>(
     arguments: &mut impl Iterator<Item = Expression<'a>>,
     kind: Kind,
-) -> Expression<'a> {
-    let argument = arguments
-        .next()
-        .expect("invalid number of arguments in primitive application");
-
+) -> Result<'a, Expression<'a>> {
+    let argument = match arguments.next() {
+        Some(argument) => argument,
+        None => {
+            return Err(Err::Error(CombinedError::from_sprint_error(
+                SprintError::InvalidNumberArgsError,
+            )));
+        }
+    };
     argument
+        .expression
         .kind()
         .unify(kind.into())
-        .expect("invalid argument kind in primitive application");
+        .map_err(|sprint_error| {
+            Err::Error(CombinedError::from_sprint_error_and_error_kind(
+                argument.span,
+                ErrorKind::Tag,
+                sprint_error,
+            ))
+        })?;
 
-    argument
+    Ok(argument)
 }
