@@ -65,11 +65,6 @@ module Contract {
         // Check the current state to make sure we can execute this transition.
         assert(*(&mut copy(context_ref).state) == {{ transition.origin_state() }}, 1);
 
-        // Check the conditions for this transition.
-        {%- for condition in transition.conditions() %}
-        {{ condition }}
-        {%- endfor %}
-
         // Initialize the variable definitions
         {% for definition in transition.definitions() %}
         {% if !definition.default.is_none() %}

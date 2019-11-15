@@ -2,13 +2,14 @@ use super::{definition::TERMINAL_ID, expression};
 use crate::{
     jog::{
         action::{
+            assert::Assert,
             flip::Flip,
             libra::{Address, Withdraw},
             scale::Scale,
             spawn::{PushContext, Spawn},
             update_state::UpdateState,
         },
-        method::{Condition, Transition},
+        method::Transition,
         module,
         variable::Variable,
     },
@@ -63,9 +64,7 @@ impl<'a, 'b> State<'a, 'b> {
             let mut method = Transition::new(id, next_id);
 
             for condition in transition.conditions() {
-                method.add_condition(
-                    Condition::new(expression::visit(condition, self.numbers), 0).into(),
-                );
+                method.add_action(Assert::new(expression::visit(condition, self.numbers), 0));
             }
 
             let mut post_actions = Vec::new();
