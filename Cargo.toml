@@ -4,5 +4,4 @@ members = [
     "parser",
     "sprintc",
     "client",
-    "swarm",
 ]
