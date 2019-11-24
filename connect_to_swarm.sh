@@ -2,6 +2,13 @@
 
 #./connect_to_swarm.sh 45549 ../libra/ /tmp/b8fa2886e24b6fb34072458429532275/0/consensus_peers.config.toml /tmp/60787786b009cc80b74e238da2013ce7/temp_faucet_keys
 
+if [ $# -le 1 ]
+then
+  echo "Missing arguments error!"
+  echo "Usage: ./connect_to_swarm.sh <port> <path to libra repo> <path to consensus peers config> <path to faucet keys>"
+  exit -1
+fi
+
 PORT=$1;
 PATH_TO_LIBRA=$2;
 
