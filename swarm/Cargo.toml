@@ -1,0 +1,17 @@
+[package]
+name = "sprint-swarm"
+version = "0.1.0"
+authors = [
+    "Alex Nielsen <alex@hitecherik.net>",
+    "Ivan Kapelyukh <ivankapelyukh@gmail.com>",
+    "Pablo Gamito <pablo@gamito.me>",
+    "Tom Claydon <tom@claydon.me.uk>",
+    "Zak Cutner <me@zakcutner.uk>"
+]
+edition = "2018"
+
+[dependencies]
+structopt = { version = "0.3", default-features = false }
+libra-swarm = { git = "https://github.com/libra/libra" }
+libra-config = { git = "https://github.com/libra/libra" }
+libra-tools = { git = "https://github.com/libra/libra" }

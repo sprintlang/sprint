@@ -3,4 +3,6 @@ members = [
     "move",
     "parser",
     "sprintc",
+    "client",
+    "swarm",
 ]
