@@ -1,210 +1,118 @@
+mod commands;
+
+use self::commands::{Command, DeployCommand};
 use chrono::prelude::{SecondsFormat, Utc};
 use client::{client_proxy::ClientProxy, commands::*};
-use libra_logger::set_default_global_logger;
 use rustyline::{config::CompletionType, error::ReadlineError, Config, Editor};
-use std::num::NonZeroU16;
-use structopt::StructOpt;
+use std::{collections::HashMap, sync::Arc};
 
 fn main() -> std::io::Result<()> {
-    let (commands, alias_to_cmd) = get_commands(true);
+    let (commands, alias_to_cmd) = get_commands();
 
     let mut client_proxy = ClientProxy::new(
         "localhost",
         5001,
         "./swarm_server_files/consensus_peers.config.toml",
         "./swarm_server_files/temp_faucet_keys",
-        true,
+        true, // sync_on_wallet_recovery
         None, // args.faucet_server,
         None, // args.mnemonic_file,
     )
     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, &format!("{}", e)[..]))?;
 
-    let test_ret = client_proxy.test_validator_connection();
-
-    if let Err(e) = test_ret {
-        println!("Not able to connect to validator, error {:?}", e);
-        return Ok(());
-    }
+    // TODO: Figure out why this fails... INVALID SIGANTURE
+    // let test_ret = client_proxy.test_validator_connection();
+    // if let Err(e) = test_ret {
+    //     println!("Not able to connect to validator, error {:?}", e);
+    //     return Ok(());
+    // }
 
     // let cli_info = format!("Connected to validator");
     // print_help(&cli_info, &commands);
-    // println!("Please, input commands: \n");
 
-    // let config = Config::builder()
-    //     .history_ignore_space(true)
-    //     .completion_type(CompletionType::List)
-    //     .auto_add_history(true)
-    //     .build();
-    // let mut rl = Editor::<()>::with_config(config);
-    // loop {
-    //     let readline = rl.readline("libra% ");
-    //     match readline {
-    //         Ok(line) => {
-    //             let params = parse_cmd(&line);
-    //             if params.is_empty() {
-    //                 continue;
-    //             }
-    //             match alias_to_cmd.get(&params[0]) {
-    //                 Some(cmd) => {
-    //                     println!("{}", Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true));
-    //                     cmd.execute(&mut client_proxy, &params);
-    //                 }
-    //                 None => match params[0] {
-    //                     "quit" | "q!" => break,
-    //                     "help" | "h" => print_help(&cli_info, &commands),
-    //                     "" => continue,
-    //                     x => println!("Unknown command: {:?}", x),
-    //                 },
-    //             }
-    //         }
-    //         Err(ReadlineError::Interrupted) => {
-    //             println!("CTRL-C");
-    //             break;
-    //         }
-    //         Err(ReadlineError::Eof) => {
-    //             println!("CTRL-D");
-    //             break;
-    //         }
-    //         Err(err) => {
-    //             println!("Error: {:?}", err);
-    //             break;
-    //         }
-    //     }
-    // }
+    let config = Config::builder()
+        .history_ignore_space(true)
+        .completion_type(CompletionType::List)
+        .auto_add_history(true)
+        .build();
+    let mut rl = Editor::<()>::with_config(config);
+
+    // Creates an Account
+    match client_proxy.create_next_account(true) {
+        Ok(account_data) => println!(
+            "Created/retrieved account #{} address {}",
+            account_data.index,
+            hex::encode(account_data.address)
+        ),
+        Err(e) => report_error("Error creating account", e),
+    }
+
+    // Command input loop
+    loop {
+        let readline = rl.readline("sprint > ");
+        match readline {
+            Ok(line) => {
+                let params = parse_cmd(&line);
+                if params.is_empty() {
+                    continue;
+                }
+                match alias_to_cmd.get(&params[0]) {
+                    Some(cmd) => {
+                        println!("{}", Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true));
+                        cmd.execute(&mut client_proxy, &params);
+                    }
+                    None => match params[0] {
+                        "quit" | "q!" => break,
+                        "help" | "h" => print_help(&commands),
+                        "" => continue,
+                        x => println!("Unknown command: {:?}", x),
+                    },
+                }
+            }
+            Err(ReadlineError::Interrupted) => {
+                println!("CTRL-C");
+                break;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("CTRL-D");
+                break;
+            }
+            Err(err) => {
+                println!("Error: {:?}", err);
+                break;
+            }
+        }
+    }
 
     Ok(())
 }
 
-// #[derive(Debug, StructOpt)]
-// #[structopt(
-//     name = "Libra Client",
-//     author = "The Libra Association",
-//     about = "Libra client to connect to a specific validator"
-// )]
-// struct Args {
-//     /// Admission Control port to connect to.
-//     #[structopt(short = "p", long, default_value = "8001")]
-//     pub port: NonZeroU16,
-//     /// Host address/name to connect to.
-//     #[structopt(short = "a", long)]
-//     pub host: String,
-//     /// Path to the generated keypair for the faucet account. The faucet account can be used to
-//     /// mint coins. If not passed, a new keypair will be generated for
-//     /// you and placed in a temporary directory.
-//     /// To manually generate a keypair, use generate-keypair:
-//     /// `cargo run -p generate-keypair -- -o <output_file_path>`
-//     #[structopt(short = "m", long = "faucet-key-file-path")]
-//     pub faucet_account_file: Option<String>,
-//     /// Host that operates a faucet service
-//     /// If not passed, will be derived from host parameter
-//     #[structopt(short = "f", long)]
-//     pub faucet_server: Option<String>,
-//     /// File location from which to load mnemonic word for user account address/key generation.
-//     /// If not passed, a new mnemonic file will be generated by libra-wallet in the current
-//     /// directory.
-//     #[structopt(short = "n", long)]
-//     pub mnemonic_file: Option<String>,
-//     /// File location from which to load config of trusted validators. It is used to verify
-//     /// validator signatures in validator query response. The file should at least include public
-//     /// key of all validators trusted by the client - which should typically be all validators on
-//     /// the network. To connect to testnet, use 'libra/scripts/cli/consensus_peers.config.toml'.
-//     /// Can be generated by libra-config for local testing:
-//     /// `cargo run --bin libra-config`
-//     /// But the preferred method is to simply use libra-swarm to run local networks
-//     #[structopt(short = "s", long)]
-//     pub validator_set_file: String,
-//     /// If set, client will sync with validator during wallet recovery.
-//     #[structopt(short = "r", long = "sync")]
-//     pub sync: bool,
-//     /// Verbose output.
-//     #[structopt(short = "v", long = "verbose")]
-//     pub verbose: bool,
-// }
+type Commands = (
+    Vec<Arc<dyn Command>>,
+    HashMap<&'static str, Arc<dyn Command>>,
+);
 
-// fn main() -> std::io::Result<()> {
-//     let _logger = set_default_global_logger(false /* async */, None);
-//     // crash_handler::setup_panic_handler();
-//     let args = Args::from_args();
+/// Returns all the commands available, as well as the reverse index from the aliases to the
+/// commands.
+fn get_commands() -> Commands {
+    let commands: Vec<Arc<dyn Command>> = vec![
+        // Arc::new(AccountCommand {}),
+        // Arc::new(QueryCommand {}),
+        // Arc::new(TransferCommand {}),
+        Arc::new(DeployCommand {}),
+    ];
 
-//     let (commands, alias_to_cmd) = get_commands(args.faucet_account_file.is_some());
-
-//     let faucet_account_file = args.faucet_account_file.unwrap_or_else(|| "".to_string());
-
-// let mut client_proxy = ClientProxy::new(
-//     &args.host,
-//     args.port.get(),
-//     &args.validator_set_file,
-//     &faucet_account_file,
-//     args.sync,
-//     args.faucet_server,
-//     args.mnemonic_file,
-// )
-// .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, &format!("{}", e)[..]))?;
-
-// // Test connection to validator
-// let test_ret = client_proxy.test_validator_connection();
-
-// if let Err(e) = test_ret {
-//     println!(
-//         "Not able to connect to validator at {}:{}, error {:?}",
-//         args.host, args.port, e
-//     );
-//     return Ok(());
-// }
-// let cli_info = format!("Connected to validator at: {}:{}", args.host, args.port);
-// print_help(&cli_info, &commands);
-// println!("Please, input commands: \n");
-
-// let config = Config::builder()
-//     .history_ignore_space(true)
-//     .completion_type(CompletionType::List)
-//     .auto_add_history(true)
-//     .build();
-// let mut rl = Editor::<()>::with_config(config);
-// loop {
-//     let readline = rl.readline("libra% ");
-//     match readline {
-//         Ok(line) => {
-//             let params = parse_cmd(&line);
-//             if params.is_empty() {
-//                 continue;
-//             }
-//             match alias_to_cmd.get(&params[0]) {
-//                 Some(cmd) => {
-//                     if args.verbose {
-//                         println!("{}", Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true));
-//                     }
-//                     cmd.execute(&mut client_proxy, &params);
-//                 }
-//                 None => match params[0] {
-//                     "quit" | "q!" => break,
-//                     "help" | "h" => print_help(&cli_info, &commands),
-//                     "" => continue,
-//                     x => println!("Unknown command: {:?}", x),
-//                 },
-//             }
-//         }
-//         Err(ReadlineError::Interrupted) => {
-//             println!("CTRL-C");
-//             break;
-//         }
-//         Err(ReadlineError::Eof) => {
-//             println!("CTRL-D");
-//             break;
-//         }
-//         Err(err) => {
-//             println!("Error: {:?}", err);
-//             break;
-//         }
-//     }
-// }
-
-// Ok(())
-// }
+    let mut alias_to_cmd = HashMap::new();
+    for command in &commands {
+        for alias in command.get_aliases() {
+            alias_to_cmd.insert(alias, Arc::clone(command));
+        }
+    }
+    (commands, alias_to_cmd)
+}
 
 /// Print the help message for the client and underlying command.
-fn print_help(client_info: &str, commands: &[std::sync::Arc<dyn Command>]) {
-    println!("{}", client_info);
+fn print_help(commands: &[std::sync::Arc<dyn Command>]) {
     println!("usage: <command> <args>\n\nUse the following commands:\n");
     for cmd in commands {
         println!(
