@@ -1,5 +1,5 @@
 [package]
-name = "sprint-swarm"
+name = "swarm"
 version = "0.1.0"
 authors = [
     "Alex Nielsen <alex@hitecherik.net>",
@@ -12,6 +12,9 @@ edition = "2018"
 
 [dependencies]
 structopt = { version = "0.3", default-features = false }
+ctrlc = "3.1.3"
 libra-swarm = { git = "https://github.com/libra/libra" }
 libra-config = { git = "https://github.com/libra/libra" }
 libra-tools = { git = "https://github.com/libra/libra" }
+generate-keypair = { git = "https://github.com/libra/libra" }
+libra-node = { git = "https://github.com/libra/libra" }
