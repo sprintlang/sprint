@@ -1,6 +1,8 @@
 use super::Command;
 use client::client_proxy::ClientProxy;
-use sprintc::compile;
+use std::env;
+use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
 
 pub struct DeployCommand {}
@@ -30,17 +32,36 @@ impl Command for DeployCommand {
         let source = params[2];
         let source_path = PathBuf::from(source);
 
-        let move_code_path;
-        match compile(&source_path, &None, false) {
+        // Compile sprint program
+        println!("Compiling sprint program...");
+
+        let output_path;
+        match sprintc::compile(&source_path, &None, false) {
             Ok(path) => {
+                output_path = path;
+                // move_code_path = String::from(path.to_str().unwrap());
                 println!("Successfully compiled {} to move code!", source);
-                move_code_path = String::from(path.to_str().unwrap());
             }
             Err(e) => {
                 println!("Failed to compiler {} to move code... {}", source, e);
                 return;
             }
         }
+
+        let move_code_path = fs::canonicalize(&output_path).unwrap().to_owned();
+        let move_code_path = move_code_path.to_str().unwrap();
+
+        // Update working directory to where libra repository is found
+        let current_working_directory = env::current_dir().unwrap();
+        let libra_directory = Path::new("../libra");
+        assert!(env::set_current_dir(&libra_directory).is_ok());
+        println!(
+            "Successfully changed working directory to {}!",
+            libra_directory.display()
+        );
+
+        // Compile move program
+        println!("Compiling generated move program...");
 
         let compiled_path;
         match client.compile_program(&[params[0], sender, &move_code_path, "module"]) {
@@ -54,6 +75,9 @@ impl Command for DeployCommand {
             }
         };
 
+        // Deploy byte code
+        println!("Publishing program...");
+
         match client.publish_module(&[params[0], sender, &compiled_path]) {
             Ok(_) => println!("Successfully published module"),
             Err(e) => {
@@ -61,5 +85,11 @@ impl Command for DeployCommand {
                 return;
             }
         }
+
+        assert!(env::set_current_dir(&current_working_directory).is_ok());
+        println!(
+            "Successfully changed working directory to {}!",
+            current_working_directory.display()
+        );
     }
 }
