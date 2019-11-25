@@ -1,6 +1,8 @@
+mod account;
 mod deploy;
 mod transition;
 
+pub use self::account::AccountCommand;
 pub use self::deploy::DeployCommand;
 pub use self::transition::TransitionCommand;
 use client::client_proxy::ClientProxy;
