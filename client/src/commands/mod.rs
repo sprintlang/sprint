@@ -1,6 +1,8 @@
 mod deploy;
+mod transition;
 
 pub use self::deploy::DeployCommand;
+pub use self::transition::TransitionCommand;
 use client::client_proxy::ClientProxy;
 
 /// Trait to perform client operations.

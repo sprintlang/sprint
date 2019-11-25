@@ -1,6 +1,6 @@
 mod commands;
 
-use self::commands::{Command, DeployCommand};
+use self::commands::{Command, DeployCommand, TransitionCommand};
 use chrono::prelude::{SecondsFormat, Utc};
 use client::{client_proxy::ClientProxy, commands::*};
 use rustyline::{config::CompletionType, error::ReadlineError, Config, Editor};
@@ -11,21 +11,20 @@ fn main() -> std::io::Result<()> {
 
     let mut client_proxy = ClientProxy::new(
         "localhost",
-        5001,
-        "./swarm_server_files/consensus_peers.config.toml",
-        "./swarm_server_files/temp_faucet_keys",
+        42523,
+        "/tmp/4ae89dead9c0f8f74360917a5afe14e6/0/consensus_peers.config.toml",
+        "/tmp/ccce68cdc4bba2c6dd498fefa1ad8db8/temp_faucet_keys",
         true, // sync_on_wallet_recovery
         None, // args.faucet_server,
         None, // args.mnemonic_file,
     )
     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, &format!("{}", e)[..]))?;
 
-    // TODO: Figure out why this fails... INVALID SIGANTURE
-    // let test_ret = client_proxy.test_validator_connection();
-    // if let Err(e) = test_ret {
-    //     println!("Not able to connect to validator, error {:?}", e);
-    //     return Ok(());
-    // }
+    let test_ret = client_proxy.test_validator_connection();
+    if let Err(e) = test_ret {
+        println!("Not able to connect to validator, error {:?}", e);
+        return Ok(());
+    }
 
     // let cli_info = format!("Connected to validator");
     // print_help(&cli_info, &commands);
@@ -100,6 +99,7 @@ fn get_commands() -> Commands {
         // Arc::new(QueryCommand {}),
         // Arc::new(TransferCommand {}),
         Arc::new(DeployCommand {}),
+        Arc::new(TransitionCommand {}),
     ];
 
     let mut alias_to_cmd = HashMap::new();
