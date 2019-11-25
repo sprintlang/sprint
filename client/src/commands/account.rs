@@ -164,7 +164,6 @@ pub fn print_subcommand_help(parent_command: &str, commands: &[Box<dyn Command>]
 }
 
 /// Execute sub command.
-// TODO: Convert subcommands arrays to lazy statics
 pub fn subcommand_execute(
     parent_command_name: &str,
     commands: Vec<Box<dyn Command>>,

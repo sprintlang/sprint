@@ -24,7 +24,7 @@ impl Command for DeployCommand {
     fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
         if params.len() != 3 {
             println!("Invalid number of arguments");
-            println!("Usage: deploy <sender_account_address>|<sender_account_ref_id> <file_path>");
+            println!("Usage: {} {}", params[0], self.get_params_help());
             return;
         }
 
@@ -52,19 +52,16 @@ impl Command for DeployCommand {
         let move_code_path = move_code_path.to_str().unwrap();
 
         // Update working directory to where libra repository is found
+        // TODO: Remove once libra doesn't rely on compiler cargo memeber
         let current_working_directory = env::current_dir().unwrap();
         let libra_directory = Path::new("../libra");
         assert!(env::set_current_dir(&libra_directory).is_ok());
-        println!(
-            "Successfully changed working directory to {}!",
-            libra_directory.display()
-        );
 
         // Compile move program
         println!("Compiling generated move program...");
 
         let compiled_path;
-        match client.compile_program(&[params[0], sender, &move_code_path, "module"]) {
+        match client.compile_program(&["", sender, &move_code_path, "module"]) {
             Ok(path) => {
                 println!("Successfully compiled generated move code to bytecode!");
                 compiled_path = path;
@@ -86,10 +83,8 @@ impl Command for DeployCommand {
             }
         }
 
+        // Change working directory back to original working directory.
+        // TODO: Remove once libra doesn't rely on compiler cargo memeber
         assert!(env::set_current_dir(&current_working_directory).is_ok());
-        println!(
-            "Successfully changed working directory to {}!",
-            current_working_directory.display()
-        );
     }
 }

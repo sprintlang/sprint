@@ -5,6 +5,10 @@ mod visitor;
 use self::visitor::definitions;
 use sprint_parser::ast;
 
-pub fn generate(definitions: &[ast::Definition]) -> String {
-    definitions::visit(definitions).to_string()
+pub use jog::script;
+
+pub fn generate(state: &ast::State) -> String {
+    let mut visitor = State::default();
+    visitor.visit(state);
+    visitor.contract().to_string()
 }

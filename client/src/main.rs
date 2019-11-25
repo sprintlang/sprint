@@ -81,15 +81,10 @@ fn main() -> std::io::Result<()> {
         .build();
     let mut rl = Editor::<()>::with_config(config);
 
-    // Creates an Account
-    match client_proxy.create_next_account(true) {
-        Ok(account_data) => println!(
-            "Created/retrieved account #{} address {}",
-            account_data.index,
-            hex::encode(account_data.address)
-        ),
-        Err(e) => report_error("Error creating account", e),
-    }
+    // Creates an Account and give it money
+    // TODO: In real version this should be removed and an account should be passed in.
+    client_proxy.create_next_account(true).ok();
+    client_proxy.mint_coins(&["", "0", "100"], true).ok();
 
     // Command input loop
     loop {
