@@ -1,0 +1,10 @@
+module M {
+    import 0x0.LibraAccount;
+
+    struct MyEvent {}
+
+    public emit_event(handle: &mut LibraAccount.EventHandle<Self.MyEvent>) {
+        LibraAccount.emit_event<Self.MyEvent>(move(handle), MyEvent<T2, T1>{});
+        return;
+    }
+}
