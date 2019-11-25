@@ -20,3 +20,4 @@ sprintc = { path = "../sprintc" }
 client = { git = "https://github.com/libra/libra" }
 libra-logger = { git = "https://github.com/libra/libra" }
 libra-wallet = { git = "https://github.com/libra/libra" }
+compiler = { git = "https://github.com/libra/libra" }
