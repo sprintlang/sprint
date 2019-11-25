@@ -1,6 +1,7 @@
 use sprintc::compile;
-use std::{error::Error, path::PathBuf};
 use structopt::StructOpt;
+
+use std::{error::Error, path::PathBuf};
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR")]
@@ -21,5 +22,19 @@ pub struct Args {
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::from_args();
 
-    compile(&args.source_path, &args.output_path, args.verbose)
+    match compile(&args.source_path, &args.output_path, args.verbose) {
+        Ok(path) => {
+            println!(
+                "Succesfully compiled {}!\nCompiled to {}.",
+                args.source_path
+                    .clone()
+                    .into_os_string()
+                    .into_string()
+                    .unwrap(),
+                path.to_str().unwrap()
+            );
+            Ok(())
+        }
+        Err(e) => Err(e),
+    }
 }

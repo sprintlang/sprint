@@ -12,11 +12,11 @@ use std::{
 const MVIR_EXTENSION: &str = "mvir";
 const SPRINT_EXTENSION: &str = "sprint";
 
-pub fn compile(
-    source: &PathBuf,
-    output: &Option<PathBuf>,
+pub fn compile<'a>(
+    source: &'a PathBuf,
+    output: &'a Option<PathBuf>,
     verbose: bool,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<Cow<'a, Path>, Box<dyn Error>> {
     let (source_path, output_path) = check_args(source, output)?;
 
     let source = read_source(source_path)?;
@@ -33,7 +33,7 @@ pub fn compile(
     let output = generate(&ast);
     write_output(&output_path, output.as_bytes())?;
 
-    Ok(())
+    Ok(output_path)
 }
 
 // Checks for presence of output path and that file extensions are valid.
