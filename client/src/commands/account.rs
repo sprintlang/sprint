@@ -110,7 +110,7 @@ impl Command for AccountCommandGetBalance {
         }
         match client.get_balance(&params) {
             Ok(balance) => println!("Balance is: {}", balance),
-            Err(e) => report_error("Failed to get balance", e),
+            Err(e) => println!("[ERROE] Failed to get balance: {}", e),
         }
     }
 }
