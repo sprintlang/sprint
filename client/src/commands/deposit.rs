@@ -1,28 +1,29 @@
 use super::{publish, Command, PublishType};
+use askama::Template;
 use client::client_proxy::ClientProxy;
-use sprint_move::script::MoveState;
+use sprint_move::script::Deposit;
 use std::fs;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
-pub struct TransitionCommand {}
+pub struct DepositCommand {}
 
-impl Command for TransitionCommand {
+impl Command for DepositCommand {
     fn get_aliases(&self) -> Vec<&'static str> {
-        vec!["transition", "t"]
+        vec!["deposit", "d"]
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<sender_account_address>|<sender_account_ref_id> <author_account_address>|<author_account_ref_id> <owner_account_address>|<owner_account_ref_id> <module_name> <context_id> <from_state> <to_state>"
+        "<sender> <author> <module_name> <owner>"
     }
 
     fn get_description(&self) -> &'static str {
-        "Transition to a new state in the contract."
+        "Deposit libra into initialized contract."
     }
 
     #[allow(clippy::needless_return)]
     fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
-        if params.len() != 8 {
+        if params.len() != 5 {
             println!("Invalid number of arguments");
             println!("Usage: {} {}", params[0], self.get_params_help());
             return;
@@ -31,7 +32,7 @@ impl Command for TransitionCommand {
         let sender = params[1];
 
         println!("Generating transaction code...");
-
+        // TODO: Add proper error handling if any of these are invalid.
         let author = hex::encode(
             client
                 .get_account_address_from_parameter(params[2])
@@ -41,26 +42,25 @@ impl Command for TransitionCommand {
         .to_string();
         let owner = hex::encode(
             client
-                .get_account_address_from_parameter(params[3])
+                .get_account_address_from_parameter(params[4])
                 .unwrap()
                 .to_vec(),
         )
         .to_string();
-        // TODO: Add proper error handling if any of the addresses are invalid.
-        let move_state = MoveState {
+
+        let deposit = Deposit {
             author: format!("0x{}", author),
-            module: params[4].into(),
+            module: params[3].into(),
             owner: format!("0x{}", owner),
-            context_id: params[5].parse().unwrap(),
-            from_state: params[6].parse().unwrap(), // TODO: Make this implicit, fetch it from context
-            to_state: params[7].parse().unwrap(),
         };
 
         // Create a file inside of `std::env::temp_dir()`.
         let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "{}", move_state).ok();
+        writeln!(file, "{}", deposit.render().unwrap()).ok();
         let file_path = file.path().to_str().unwrap();
         println!("Sucessfully generated transaction code!");
+
+        println!("Compiling sprint program...");
 
         let move_code_path = fs::canonicalize(&file_path).unwrap().to_owned();
         let move_code_path = move_code_path.to_str().unwrap();

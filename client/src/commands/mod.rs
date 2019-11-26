@@ -1,11 +1,13 @@
 mod account;
 mod create;
 mod deploy;
+mod deposit;
 mod transition;
 
 pub use self::account::AccountCommand;
 pub use self::create::CreateCommand;
 pub use self::deploy::DeployCommand;
+pub use self::deposit::DepositCommand;
 pub use self::transition::TransitionCommand;
 
 use client::client_proxy::ClientProxy;
@@ -57,8 +59,7 @@ fn publish(
     println!("Compiling generated move program...");
 
     let compiled_path;
-    let type_as_string = &publish_type.to_str();
-    match client.compile_program(&["", sender, move_code_path, type_as_string]) {
+    match client.compile_program(&["", sender, move_code_path, &publish_type.to_str()]) {
         Ok(path) => {
             println!("Successfully compiled move code to bytecode!");
             compiled_path = path;
@@ -69,14 +70,27 @@ fn publish(
         }
     };
 
-    // Deploy byte code
-    println!("Publishing program...");
+    match publish_type {
+        PublishType::Module => {
+            // Deploy byte code
+            println!("Publishing program...");
 
-    match client.publish_module(&["", sender, &compiled_path]) {
-        Ok(_) => println!("Successfully published module"),
-        Err(e) => {
-            println!("Failed to publish {}... {}", type_as_string, e);
-            return;
+            match client.publish_module(&["", sender, &compiled_path]) {
+                Ok(_) => println!("Successfully published module"),
+                Err(e) => {
+                    println!("[ERROR]: Failed to publish... {}", e);
+                    return;
+                }
+            }
+        }
+        PublishType::Script => {
+            // Deploy byte code
+            println!("Executing script...");
+
+            match client.execute_script(&["", sender, &compiled_path]) {
+                Ok(_) => println!("Successfully executed!"),
+                Err(e) => println!("[ERROR]: Failed to execute script... {}", e),
+            }
         }
     }
 
