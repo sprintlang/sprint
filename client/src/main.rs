@@ -1,6 +1,6 @@
 mod commands;
 
-use self::commands::{AccountCommand, Command, DeployCommand, TransitionCommand};
+use self::commands::{AccountCommand, Command, CreateCommand, DeployCommand, TransitionCommand};
 use chrono::prelude::{SecondsFormat, Utc};
 use client::{client_proxy::ClientProxy, commands::*};
 use rustyline::{config::CompletionType, error::ReadlineError, Config, Editor};
@@ -140,6 +140,7 @@ fn get_commands() -> Commands {
         // Arc::new(TransferCommand {}),
         Arc::new(DeployCommand {}),
         Arc::new(TransitionCommand {}),
+        Arc::new(CreateCommand {}),
     ];
 
     let mut alias_to_cmd = HashMap::new();

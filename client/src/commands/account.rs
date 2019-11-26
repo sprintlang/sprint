@@ -16,8 +16,7 @@ impl Command for AccountCommand {
         let commands: Vec<Box<dyn Command>> = vec![
             Box::new(AccountCommandCreate {}),
             Box::new(AccountCommandListAccounts {}),
-            Box::new(AccountCommandRecoverWallet {}),
-            Box::new(AccountCommandWriteRecovery {}),
+            Box::new(AccountCommandGetBalance {}),
             Box::new(AccountCommandMint {}),
         ];
 
@@ -44,61 +43,6 @@ impl Command for AccountCommandCreate {
                 hex::encode(account_data.address)
             ),
             Err(e) => println!("[ERROR] Error creating account : {}", e),
-        }
-    }
-}
-
-/// Sub command to recover wallet from the file specified.
-pub struct AccountCommandRecoverWallet {}
-
-impl Command for AccountCommandRecoverWallet {
-    fn get_aliases(&self) -> Vec<&'static str> {
-        vec!["recover", "r"]
-    }
-    fn get_params_help(&self) -> &'static str {
-        "<file_path>"
-    }
-    fn get_description(&self) -> &'static str {
-        "Recover Libra wallet from the file path"
-    }
-    fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
-        println!(">> Recovering Wallet");
-        match client.recover_wallet_accounts(&params) {
-            Ok(account_data) => {
-                println!(
-                    "Wallet recovered and the first {} child accounts were derived",
-                    account_data.len()
-                );
-                for data in account_data {
-                    println!("#{} address {}", data.index, hex::encode(data.address));
-                }
-            }
-            Err(e) => println!("[ERROR] Error recovering Libra wallet : {}", e),
-        }
-    }
-}
-
-/// Sub command to backup wallet to the file specified.
-pub struct AccountCommandWriteRecovery {}
-
-impl Command for AccountCommandWriteRecovery {
-    fn get_aliases(&self) -> Vec<&'static str> {
-        vec!["write", "w"]
-    }
-    fn get_params_help(&self) -> &'static str {
-        "<file_path>"
-    }
-    fn get_description(&self) -> &'static str {
-        "Save Libra wallet mnemonic recovery seed to disk"
-    }
-    fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
-        println!(">> Saving Libra wallet mnemonic recovery seed to disk");
-        match client.write_recovery(&params) {
-            Ok(_) => println!("Saved mnemonic seed to disk"),
-            Err(e) => println!(
-                "[ERROR] Error writing mnemonic recovery seed to file : {}",
-                e
-            ),
         }
     }
 }
@@ -142,6 +86,31 @@ impl Command for AccountCommandMint {
                 println!("Finished minting!");
             }
             Err(e) => println!("[ERROR] Error minting coins: {}", e),
+        }
+    }
+}
+
+/// Sub commands to query balance for the account specified.
+pub struct AccountCommandGetBalance {}
+
+impl Command for AccountCommandGetBalance {
+    fn get_aliases(&self) -> Vec<&'static str> {
+        vec!["balance", "b"]
+    }
+    fn get_params_help(&self) -> &'static str {
+        "<account_ref_id>|<account_address>"
+    }
+    fn get_description(&self) -> &'static str {
+        "Get the current balance of an account"
+    }
+    fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
+        if params.len() != 2 {
+            println!("Invalid number of arguments for balance query");
+            return;
+        }
+        match client.get_balance(&params) {
+            Ok(balance) => println!("Balance is: {}", balance),
+            Err(e) => report_error("Failed to get balance", e),
         }
     }
 }

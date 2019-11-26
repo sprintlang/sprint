@@ -38,10 +38,17 @@ impl Command for TransitionCommand {
         assert!(env::set_current_dir(&libra_directory).is_ok());
 
         println!("Generating transaction code...");
+        // TODO: Add proper error handling if any of the addresses are invalid.
         let move_state = MoveState {
-            author: params[2].into(),
+            author: client
+                .get_account_address_from_parameter(params[2])
+                .unwrap()
+                .short_str(),
             module: params[4].into(),
-            owner: params[3].into(),
+            owner: client
+                .get_account_address_from_parameter(params[3])
+                .unwrap()
+                .short_str(),
             context_id: params[5].parse().unwrap(),
             from_state: params[6].parse().unwrap(), // TODO: Make this implicit, fetch it from context
             to_state: params[7].parse().unwrap(),
@@ -72,7 +79,7 @@ impl Command for TransitionCommand {
         println!("Publishing transaction...");
 
         match client.publish_module(&[params[0], sender, &compiled_path]) {
-            Ok(_) => println!("Successfully published transcation"),
+            Ok(_) => println!("Successfully published transacation"),
             Err(e) => {
                 println!("Failed to publish transaction... {}", e);
                 return;
