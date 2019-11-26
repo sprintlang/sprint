@@ -1,6 +1,8 @@
 mod commands;
 
-use self::commands::{AccountCommand, Command, CreateCommand, DeployCommand, TransitionCommand};
+use self::commands::{
+    AccountCommand, Command, CreateCommand, DeployCommand, DepositCommand, TransitionCommand,
+};
 use chrono::prelude::{SecondsFormat, Utc};
 use client::{client_proxy::ClientProxy, commands::*};
 use rustyline::{config::CompletionType, error::ReadlineError, Config, Editor};
@@ -84,7 +86,10 @@ fn main() -> std::io::Result<()> {
     // Creates an Account and give it money
     // TODO: In real version this should be removed and an account should be passed in.
     client_proxy.create_next_account(true).ok();
-    client_proxy.mint_coins(&["", "0", "100"], true).ok();
+    client_proxy.create_next_account(true).ok();
+    client_proxy.create_next_account(true).ok();
+    client_proxy.create_next_account(true).ok();
+    client_proxy.create_next_account(true).ok();
 
     // Command input loop
     loop {
@@ -139,8 +144,9 @@ fn get_commands() -> Commands {
         // Arc::new(QueryCommand {}),
         // Arc::new(TransferCommand {}),
         Arc::new(DeployCommand {}),
-        Arc::new(TransitionCommand {}),
         Arc::new(CreateCommand {}),
+        Arc::new(DepositCommand {}),
+        Arc::new(TransitionCommand {}),
     ];
 
     let mut alias_to_cmd = HashMap::new();

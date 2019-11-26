@@ -8,3 +8,5 @@ target/
 
 # Files
 .DS_Store
+
+client.mnemonic

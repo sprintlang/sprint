@@ -1,14 +1,5 @@
 import {{author}}.{{module}};
 
-// Template requires inputs:
-
-// author:        Libra account that has deployed the contract module
-// owner:         Libra account storing the contract resource
-// module:        Name of the contract module being advanced
-// context_id:    Identifies context in owner's vector of contexts
-// from_state:    Current state of that contract
-// to_state:      State to advance to
-
 main() {
     {{module}}.transition_{{from_state}}_{{to_state}}({{owner}}, {{context_id}});
 
