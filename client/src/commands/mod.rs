@@ -1,11 +1,16 @@
 mod account;
+mod create;
 mod deploy;
 mod transition;
 
 pub use self::account::AccountCommand;
+pub use self::create::CreateCommand;
 pub use self::deploy::DeployCommand;
 pub use self::transition::TransitionCommand;
+
 use client::client_proxy::ClientProxy;
+use std::env;
+use std::path::Path;
 
 /// Trait to perform client operations.
 pub trait Command {
@@ -19,4 +24,63 @@ pub trait Command {
     fn get_description(&self) -> &'static str;
     /// code to execute.
     fn execute(&self, client: &mut ClientProxy, params: &[&str]);
+}
+
+enum PublishType {
+    Module,
+    Script,
+}
+
+impl PublishType {
+    pub fn to_str(&self) -> String {
+        match self {
+            PublishType::Module => String::from("module"),
+            PublishType::Script => String::from("script"),
+        }
+    }
+}
+
+fn publish(
+    client: &mut ClientProxy,
+    sender: &str,
+    move_code_path: &str,
+    publish_type: PublishType,
+) {
+    // Update working directory to where libra repository is found
+    // TODO: Remove once libra doesn't rely on compiler cargo memeber
+    let current_working_directory = env::current_dir().unwrap();
+    // TODO: Unhard code this
+    let libra_directory = Path::new("../libra");
+    assert!(env::set_current_dir(&libra_directory).is_ok());
+
+    // Compile move program
+    println!("Compiling generated move program...");
+
+    let compiled_path;
+    let type_as_string = &publish_type.to_str();
+    match client.compile_program(&["", sender, move_code_path, type_as_string]) {
+        Ok(path) => {
+            println!("Successfully compiled move code to bytecode!");
+            compiled_path = path;
+        }
+        Err(e) => {
+            println!("Failed to compile move code to bytecode... {}", e);
+            return;
+        }
+    };
+
+    // Deploy byte code
+    println!("Publishing program...");
+
+    match client.publish_module(&["", sender, &compiled_path]) {
+        Ok(_) => println!("Successfully published module"),
+        Err(e) => {
+            println!("Failed to publish {}... {}", type_as_string, e);
+            return;
+        }
+    }
+
+    // Change working directory back to original working directory.
+    // TODO: Remove once libra doesn't rely on compiler cargo memeber
+    assert!(env::set_current_dir(&current_working_directory).is_ok());
 }

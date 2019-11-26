@@ -1,8 +1,6 @@
-use super::Command;
+use super::{publish, Command, PublishType};
 use client::client_proxy::ClientProxy;
-use std::env;
 use std::fs;
-use std::path::Path;
 use std::path::PathBuf;
 
 pub struct DeployCommand {}
@@ -51,40 +49,6 @@ impl Command for DeployCommand {
         let move_code_path = fs::canonicalize(&output_path).unwrap().to_owned();
         let move_code_path = move_code_path.to_str().unwrap();
 
-        // Update working directory to where libra repository is found
-        // TODO: Remove once libra doesn't rely on compiler cargo memeber
-        let current_working_directory = env::current_dir().unwrap();
-        let libra_directory = Path::new("../libra");
-        assert!(env::set_current_dir(&libra_directory).is_ok());
-
-        // Compile move program
-        println!("Compiling generated move program...");
-
-        let compiled_path;
-        match client.compile_program(&["", sender, &move_code_path, "module"]) {
-            Ok(path) => {
-                println!("Successfully compiled generated move code to bytecode!");
-                compiled_path = path;
-            }
-            Err(e) => {
-                println!("Failed to compile generated move code to bytecode... {}", e);
-                return;
-            }
-        };
-
-        // Deploy byte code
-        println!("Publishing program...");
-
-        match client.publish_module(&[params[0], sender, &compiled_path]) {
-            Ok(_) => println!("Successfully published module"),
-            Err(e) => {
-                println!("Failed to publish module... {}", e);
-                return;
-            }
-        }
-
-        // Change working directory back to original working directory.
-        // TODO: Remove once libra doesn't rely on compiler cargo memeber
-        assert!(env::set_current_dir(&current_working_directory).is_ok());
+        publish(client, sender, &move_code_path, PublishType::Module);
     }
 }
