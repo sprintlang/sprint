@@ -14,7 +14,7 @@ use crate::{
         identifier::Identifier,
         kind::Kind,
         method::Method,
-        variable::Variable,
+        variable::{Variable, CONTEXTS, CONTEXT_REF},
     },
     numbers::Numbers,
 };
@@ -40,53 +40,62 @@ pub fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> us
 
         let mut method = if let Some(args) = context.arguments() {
             let mut method = Method::private(Identifier::Transition(id, next_id));
+            let origin_state = Variable::new(Identifier::Raw("origin_state"), Kind::Unsigned);
 
             for arg in args {
                 method.add_argument(arg.clone());
             }
 
-            method.add_argument(Variable::new(Identifier::Raw("context_ref"), Kind::Context));
-            method.add_argument(Variable::new(
-                Identifier::Raw("origin_state"),
-                Kind::Unsigned,
-            ));
-
             method.add_action(Assert::new(
-                Expression::Expression("*(&mut copy(context_ref).state) == origin_state".into()),
+                Expression::Expression(
+                    format!(
+                        "*(&mut copy({}).state) == {}",
+                        CONTEXT_REF.identifier(),
+                        origin_state.identifier()
+                    )
+                    .into(),
+                ),
                 1,
             ));
+
+            method.add_argument(CONTEXT_REF.clone());
+            method.add_argument(origin_state);
 
             method
         } else {
             let mut method = Method::public(Identifier::Transition(id, next_id));
-
-            method.add_argument(Variable::new(
-                Identifier::Raw("context_index"),
-                Kind::Unsigned,
-            ));
+            let context_index = Variable::new(Identifier::Raw("context_index"), Kind::Unsigned);
 
             method.add_action(Assign::new(
-                Variable::new(Identifier::Raw("contexts"), Kind::Contexts),
+                CONTEXTS.clone(),
                 Expression::Expression("&mut copy(contract_ref).contexts".into()),
             ));
 
             method.add_action(Assign::new(
-                Variable::new(Identifier::Raw("context_ref"), Kind::Context),
+                CONTEXT_REF.clone(),
                 Expression::Expression(
-                    "Vector.borrow_mut<Self.Context>(copy(contexts), copy(context_index))".into(),
+                    format!(
+                        "Vector.borrow_mut<Self.Context>(copy({}), copy({}))",
+                        CONTEXTS.identifier(),
+                        context_index.identifier()
+                    )
+                    .into(),
                 ),
             ));
 
             method.add_action(Assert::new(
                 Expression::Expression(
                     format!(
-                        "*(&mut copy(context_ref).state) == {}",
+                        "*(&mut copy({}).state) == {}",
+                        context_index.identifier(),
                         id
                     )
                     .into(),
                 ),
                 1,
             ));
+
+            method.add_argument(context_index);
 
             method
         };

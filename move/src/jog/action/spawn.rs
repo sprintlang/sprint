@@ -1,5 +1,9 @@
 use super::{
-    super::{expression::Address, expression::Expression, variable::Variable},
+    super::{
+        expression::Address,
+        expression::Expression,
+        variable::{Variable, CONTEXTS},
+    },
     Action,
 };
 use std::{
@@ -70,7 +74,8 @@ impl Display for PushContext<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
-            "Vector.push_back<Self.Context>(copy(contexts), move({}));",
+            "Vector.push_back<Self.Context>(copy({}), move({}));",
+            CONTEXTS.identifier(),
             self.context.identifier()
         )
     }
