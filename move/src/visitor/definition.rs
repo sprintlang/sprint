@@ -1,4 +1,4 @@
-use super::{expression, Context};
+use super::{expression, Context, FunctionContext};
 use crate::jog::{
     contract::Contract, identifier::Identifier, kind::Kind, method::Method, variable::Variable,
 };
@@ -15,7 +15,7 @@ pub fn visit<'a, S: BuildHasher>(
 
     for (_, definition) in definitions.iter() {
         if definition.name == "main" {
-            context.unset_arguments();
+            context.unset_function_context();
             expression::visit(&mut context, &definition.expression);
         } else {
             let mut expression = &definition.expression;
@@ -27,7 +27,7 @@ pub fn visit<'a, S: BuildHasher>(
             }
 
             if *expression.kind() == ast::Kind::State {
-                context.set_arguments(arguments);
+                context.set_function_context(FunctionContext::new(arguments, definition.name));
                 expression::visit(&mut context, expression);
             } else {
                 let mut method = Method::private(Identifier::Prefixed(definition.name));

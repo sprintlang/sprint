@@ -38,11 +38,15 @@ pub fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> us
             None => TERMINAL_ID,
         };
 
-        let mut method = if let Some(args) = context.arguments() {
-            let mut method = Method::private(Identifier::Transition(id, next_id));
+        let mut method = match context.function_context() {
+            Some(context) => Method::private(Identifier::AbstractTransition(context.name, id)),
+            None => Method::public(Identifier::Transition(id, next_id)),
+        };
+
+        if let Some(function_context) = context.function_context() {
             let origin_state = Variable::new(Identifier::Raw("origin_state"), Kind::Unsigned);
 
-            for arg in args {
+            for arg in &function_context.arguments {
                 method.add_argument(arg.clone());
             }
 
@@ -60,10 +64,7 @@ pub fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> us
 
             method.add_argument(CONTEXT_REF.clone());
             method.add_argument(origin_state);
-
-            method
         } else {
-            let mut method = Method::public(Identifier::Transition(id, next_id));
             let context_index = Variable::new(Identifier::Raw("context_index"), Kind::Unsigned);
 
             method.add_action(Assign::new(
@@ -87,7 +88,7 @@ pub fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> us
                 Expression::Expression(
                     format!(
                         "*(&mut copy({}).state) == {}",
-                        context_index.identifier(),
+                        CONTEXT_REF.identifier(),
                         id
                     )
                     .into(),
@@ -96,8 +97,6 @@ pub fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> us
             ));
 
             method.add_argument(context_index);
-
-            method
         };
 
         for condition in transition.conditions() {
@@ -121,7 +120,7 @@ pub fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> us
                         Kind::Context,
                     ));
 
-                    if context.arguments().is_some() {
+                    if context.function_context().is_some() {
                         let variable = Variable::new(
                             Identifier::Spawn(spawn_numbers.next().unwrap()),
                             Kind::Unsigned,
@@ -142,7 +141,9 @@ pub fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> us
             }
         }
 
-        method.add_action(UpdateState::new(next_id));
+        if context.function_context().is_none() {
+            method.add_action(UpdateState::new(next_id));
+        }
 
         for action in post_actions {
             method.add_action(action);

@@ -77,6 +77,9 @@ fn visit_state<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> 
 fn visit_variable<'a>(_context: &mut Context, variable: &ast::Variable<'a>) -> Expression<'a> {
     match variable {
         ast::Variable::Argument(argument) => Identifier::Prefixed(argument.name).into(),
-        _ => unreachable!(),
+        _ => {
+            println!("{:#?}", variable);
+            unreachable!()
+        } // TODO: remove print
     }
 }
