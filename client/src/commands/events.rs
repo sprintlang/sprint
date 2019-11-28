@@ -1,5 +1,11 @@
 use super::Command;
 use client::client_proxy::ClientProxy;
+use libra_types::{
+    access_path::{AccessPath, Accesses},
+    account_address::AccountAddress,
+    identifier::Identifier,
+    language_storage::StructTag,
+};
 
 pub struct EventsCommand {}
 
@@ -29,12 +35,32 @@ impl Command for EventsCommand {
         // <account_ref_id>|<account_address> <sent|received> <start_sequence_number> <ascending=true|false> <limit>
 
         println!(">> Getting events by account and event type.");
-        match client.get_events_by_account_and_type(&[
-            "", account, "sent",  /*sent|received*/
-            "0",     /*start_sequence_number*/
-            "false", /*ascending*/
-            "100",   /*limit*/
-        ]) {
+
+        let account = client.get_account_address_from_parameter(account).unwrap();
+
+        let mut path = AccessPath::resource_access_vec(
+            &StructTag {
+                address: AccountAddress::default(),
+                module: Identifier::new("LibraAccount").unwrap(),
+                name: Identifier::new("T").unwrap(),
+                type_params: vec![],
+            },
+            &Accesses::empty(),
+        );
+        path.extend_from_slice(b"/received_events_count/");
+        // path.extend_from_slice(b"/sent_events_count/");
+        let access_path = AccessPath::new(account, path.to_vec());
+
+        let start_seq_number = 0;
+        let ascending = true;
+        let limit = 100;
+
+        match client.client.get_events_by_access_path(
+            access_path,
+            start_seq_number,
+            ascending,
+            limit,
+        ) {
             Ok((events, last_event_state)) => {
                 if events.is_empty() {
                     println!("No events returned");
