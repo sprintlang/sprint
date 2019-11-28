@@ -2,11 +2,11 @@ import 0x0.LibraAccount;
 import {{sender}}.M;
 
 main() {
-    let handle: LibraAccount.EventHandle<M.MyEvent>;
+    let handle: LibraAccount.EventHandle<M.Event>;
 
-    handle = LibraAccount.new_event_handle<M.MyEvent>();
+    handle = LibraAccount.new_event_handle<M.Event>();
     M.emit_event(&mut handle);
-    LibraAccount.destroy_handle<M.MyEvent>(move(handle));
+    LibraAccount.destroy_handle<M.Event>(move(handle));
 
     return;
 }

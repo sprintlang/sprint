@@ -1,7 +1,8 @@
 mod commands;
 
 use self::commands::{
-    AccountCommand, Command, CreateCommand, DeployCommand, DepositCommand, TransitionCommand,
+    AccountCommand, Command, CreateCommand, DeployCommand, DepositCommand, EventsCommand,
+    TransitionCommand,
 };
 use chrono::prelude::{SecondsFormat, Utc};
 use client::{client_proxy::ClientProxy, commands::*};
@@ -155,6 +156,7 @@ fn get_commands() -> Commands {
         Arc::new(CreateCommand {}),
         Arc::new(DepositCommand {}),
         Arc::new(TransitionCommand {}),
+        Arc::new(EventsCommand {}),
     ];
 
     let mut alias_to_cmd = HashMap::new();

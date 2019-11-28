@@ -2,12 +2,14 @@ mod account;
 mod create;
 mod deploy;
 mod deposit;
+mod events;
 mod transition;
 
 pub use self::account::AccountCommand;
 pub use self::create::CreateCommand;
 pub use self::deploy::DeployCommand;
 pub use self::deposit::DepositCommand;
+pub use self::events::EventsCommand;
 pub use self::transition::TransitionCommand;
 
 use client::client_proxy::ClientProxy;

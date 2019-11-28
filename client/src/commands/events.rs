@@ -1,10 +1,5 @@
 use super::Command;
 use client::client_proxy::ClientProxy;
-use sprint_move::script::MoveState;
-use std::env;
-use std::io::Write;
-use std::path::Path;
-use tempfile::NamedTempFile;
 
 pub struct EventsCommand {}
 
@@ -23,7 +18,7 @@ impl Command for EventsCommand {
 
     #[allow(clippy::needless_return)]
     fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
-        if params.len() != 1 {
+        if params.len() != 2 {
             println!("Invalid number of arguments");
             println!("Usage: {} {}", params[0], self.get_params_help());
             return;
@@ -50,7 +45,7 @@ impl Command for EventsCommand {
                 }
                 println!("Last event state: {:#?}", last_event_state);
             }
-            Err(e) => report_error("Error getting events by access path", e),
+            Err(e) => println!("[ERROR]: Error getting events by access path: {}", e),
         }
     }
 }
