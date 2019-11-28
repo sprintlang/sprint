@@ -5,7 +5,7 @@ pub const CONTEXTS: Variable<'static> = Variable::new(Identifier::Raw("contexts"
 pub const CONTEXT_REF: Variable<'static> =
     Variable::new(Identifier::Raw("context_ref"), Kind::Context);
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct Variable<'a> {
     identifier: Identifier<'a>,
     kind: Kind,

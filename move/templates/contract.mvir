@@ -28,7 +28,7 @@ module Contract {
 
     public initialize(contract_ref: &mut Self.T, holder: address, counterparty: address) {
         Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
-            state: 1,
+            state: {{ initial_state }},
             holder: move(holder),
             counterparty: move(counterparty),
             scale: 1,

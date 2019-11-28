@@ -7,6 +7,7 @@ const DEPENDENCIES: [&str; 3] = ["0x0.Vector", "0x0.LibraCoin", "0x0.LibraAccoun
 #[derive(Template, Default)]
 #[template(path = "contract.mvir", escape = "none")]
 pub struct Contract<'a> {
+    initial_state: usize,
     methods: Vec<Method<'a>>,
 }
 
@@ -27,5 +28,9 @@ impl<'a> Contract<'a> {
 
     pub fn add_method(&mut self, method: Method<'a>) {
         self.methods.push(method);
+    }
+
+    pub fn set_initial_state(&mut self, state: usize) {
+        self.initial_state = state;
     }
 }

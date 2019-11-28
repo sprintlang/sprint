@@ -3,7 +3,7 @@ use crate::jog::{
     contract::Contract, identifier::Identifier, kind::Kind, method::Method, variable::Variable,
 };
 use sprint_parser::ast;
-use std::{collections::HashMap, hash::BuildHasher, rc::Rc};
+use std::{collections::HashMap, convert::TryInto, hash::BuildHasher, rc::Rc};
 
 pub(super) const TERMINAL_ID: usize = 0;
 
@@ -15,8 +15,11 @@ pub fn visit<'a, S: BuildHasher>(
 
     for (_, definition) in definitions.iter() {
         if definition.name == "main" {
-            context.unset_function_context();
-            expression::visit(&mut context, &definition.expression);
+            context.function_context.take();
+            let state = expression::visit(&mut context, &definition.expression)
+                .try_into()
+                .unwrap();
+            context.contract.set_initial_state(state);
         } else {
             let mut expression = &definition.expression;
             let mut arguments = Vec::new();
@@ -27,7 +30,9 @@ pub fn visit<'a, S: BuildHasher>(
             }
 
             if *expression.kind() == ast::Kind::State {
-                context.set_function_context(FunctionContext::new(arguments, definition.name));
+                context
+                    .function_context
+                    .replace(FunctionContext::new(arguments, definition.name));
                 expression::visit(&mut context, expression);
             } else {
                 let mut method = Method::private(Identifier::Prefixed(definition.name));

@@ -1,4 +1,4 @@
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Numbers(usize);
 
 impl Iterator for Numbers {

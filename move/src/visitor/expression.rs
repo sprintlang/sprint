@@ -1,14 +1,18 @@
-use super::{state, Context};
+use super::{state, Context, StubContext};
 use crate::jog::{
     application::Application,
     expression::{Address, Expression},
     identifier::Identifier,
 };
 use sprint_parser::ast;
+use std::rc::Rc;
 
-pub fn visit<'a>(context: &mut Context<'a>, expression: &ast::Expression<'a>) -> Expression<'a> {
+pub(super) fn visit<'a>(
+    context: &mut Context<'a>,
+    expression: &ast::Expression<'a>,
+) -> Expression<'a> {
     match expression {
-        ast::Expression::Abstraction(_, _) => unreachable!(),
+        ast::Expression::Abstraction(_, r) => visit(context, r),
         ast::Expression::Application(f, a) => visit_application(context, f, a),
         ast::Expression::Boolean(_) => unimplemented!(),
         ast::Expression::Class(c) => visit_class(context, c),
@@ -21,32 +25,18 @@ pub fn visit<'a>(context: &mut Context<'a>, expression: &ast::Expression<'a>) ->
 
 fn visit_application<'a>(
     context: &mut Context<'a>,
-    mut abstraction: &ast::Expression<'a>,
+    abstraction: &ast::Expression<'a>,
     argument: &ast::Expression<'a>,
 ) -> Expression<'a> {
-    let mut application = Application::default();
+    let stack = context.take_argument_stack();
+    let argument = visit(context, argument);
+    context.set_argument_stack(stack);
 
-    application.add_argument(visit(context, argument));
-    while let ast::Expression::Application(f, a) = abstraction {
-        application.add_argument(visit(context, a));
-        abstraction = f;
-    }
-
-    match abstraction {
-        ast::Expression::Variable(reference) => match &*reference.borrow() {
-            ast::Variable::Definition(definition) => {
-                let definition = definition.upgrade().unwrap();
-                application.set_name(definition.name)
-            }
-            _ => unreachable!(),
-        },
-        _ => unreachable!(),
-    };
-
-    Expression::Application(application)
+    context.push_argument(argument);
+    visit(context, abstraction)
 }
 
-fn visit_class<'a>(_context: &mut Context, class: &ast::Class<'a>) -> Expression<'a> {
+fn visit_class<'a>(_context: &mut Context<'a>, class: &ast::Class<'a>) -> Expression<'a> {
     match class {
         ast::Class::Comparable(_) => unimplemented!(),
         ast::Class::Equatable(_) => unimplemented!(),
@@ -74,12 +64,45 @@ fn visit_state<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> 
     Expression::Unsigned(state::visit(context, state))
 }
 
-fn visit_variable<'a>(_context: &mut Context, variable: &ast::Variable<'a>) -> Expression<'a> {
+fn visit_variable<'a>(context: &mut Context<'a>, variable: &ast::Variable<'a>) -> Expression<'a> {
     match variable {
         ast::Variable::Argument(argument) => Identifier::Prefixed(argument.name).into(),
-        _ => {
-            println!("{:#?}", variable);
-            unreachable!()
-        } // TODO: remove print
+        ast::Variable::Definition(definition) => {
+            let definition = definition.upgrade().unwrap();
+
+            if results_in_state(definition.kind.clone()) {
+                if context.stub_context.is_none() {
+                    context.stub_context = Some(StubContext::new(context, &definition));
+                    let expression = visit(context, &definition.expression);
+                    context.stub_context = None;
+
+                    expression
+                } else {
+                    context.take_argument_stack();
+                    visit(context, &definition.expression)
+                }
+            } else {
+                let mut application = Application::from(Identifier::Prefixed(definition.name));
+
+                for argument in context.take_argument_stack().into_iter().rev() {
+                    application.add_argument(argument);
+                }
+
+                application.into()
+            }
+        }
+        _ => unreachable!(),
+    }
+}
+
+fn results_in_state(kind: Rc<ast::Kind>) -> bool {
+    match kind.as_ref() {
+        ast::Kind::Abstraction(_, s) => results_in_state(s.clone()),
+        ast::Kind::State => true,
+        ast::Kind::Unresolved(k) => k
+            .borrow()
+            .clone()
+            .map_or(false, |k| results_in_state(k.clone())),
+        _ => false,
     }
 }

@@ -5,6 +5,7 @@ use std::{
     fmt::{self, Display, Formatter},
 };
 
+#[derive(Clone, Debug)]
 pub enum Expression<'a> {
     Application(Application<'a>),
     Expression(Cow<'static, str>),
@@ -29,21 +30,33 @@ impl Display for Expression<'_> {
     }
 }
 
+impl<'a> From<Application<'a>> for Expression<'a> {
+    fn from(a: Application<'a>) -> Self {
+        Self::Application(a)
+    }
+}
+
+impl From<usize> for Expression<'_> {
+    fn from(n: usize) -> Self {
+        Self::Unsigned(n)
+    }
+}
+
 impl<'a> From<Identifier<'a>> for Expression<'a> {
     fn from(i: Identifier<'a>) -> Self {
         Self::Identifier(i)
     }
 }
 
-impl TryFrom<Expression<'_>> for usize {
-    type Error = ();
+impl<'a> TryFrom<Expression<'a>> for usize {
+    type Error = Expression<'a>;
 
-    fn try_from(expression: Expression<'_>) -> Result<Self, Self::Error> {
+    fn try_from(expression: Expression<'a>) -> Result<Self, Self::Error> {
         if let Expression::Unsigned(u) = expression {
             return Ok(u);
         }
 
-        Err(())
+        Err(expression)
     }
 }
 
