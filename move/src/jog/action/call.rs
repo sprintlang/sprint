@@ -1,19 +1,19 @@
 use super::{
-    super::{application, variable::Variable},
+    super::{call, variable::Variable},
     Action,
 };
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
-pub struct Application<'a>(application::Application<'a>);
+pub struct Call<'a>(call::Call<'a>);
 
-impl<'a> From<application::Application<'a>> for Application<'a> {
-    fn from(application: application::Application<'a>) -> Self {
-        Self(application)
+impl<'a> From<call::Call<'a>> for Call<'a> {
+    fn from(call: call::Call<'a>) -> Self {
+        Self(call)
     }
 }
 
-impl Action for Application<'_> {
+impl Action for Call<'_> {
     fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
@@ -23,7 +23,7 @@ impl Action for Application<'_> {
     }
 }
 
-impl Display for Application<'_> {
+impl Display for Call<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         self.0.fmt(f)?;
         write!(f, ";")

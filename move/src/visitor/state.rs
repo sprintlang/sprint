@@ -11,7 +11,7 @@ use crate::{
             spawn::{PushContext, Spawn},
             update_state::UpdateState,
         },
-        application::Application,
+        call::Call,
         expression::{Address, Expression},
         identifier::Identifier,
         kind::Kind,
@@ -21,7 +21,7 @@ use crate::{
     numbers::Numbers,
 };
 use sprint_parser::ast;
-use std::{convert::TryInto, rc::Rc};
+use std::{convert::{TryInto, TryFrom}, rc::Rc};
 
 pub(super) fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> usize {
     match &mut context.stub_context {
@@ -61,7 +61,7 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                 method.add_argument(arg.clone());
             }
 
-            from_state.replace(from_variable.identifier().clone().into());
+            from_state = Some(from_variable.identifier().clone().into());
             method.add_argument(from_variable);
 
             to_state.get_or_insert_with(|| {
@@ -117,8 +117,8 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                 ast::state::Effect::Scale(scalar) => {
                     method.add_action(Scale::new(expression::visit(context, scalar)))
                 }
-                ast::state::Effect::Spawn(root_state) => {
-                    let root = expression::visit(context, root_state);
+                ast::state::Effect::Spawn(child_state) => {
+                    let child = expression::visit(context, child_state);
 
                     let spawned_context = Rc::new(Variable::new(
                         Identifier::Raw("spawned_context"),
@@ -126,18 +126,26 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                     ));
 
                     if context.function_context.is_some() {
-                        let variable = Variable::new(
-                            Identifier::Spawn(spawn_numbers.next().unwrap()),
-                            Kind::Unsigned,
-                        );
+                        let expression = match usize::try_from(child) {
+                            Ok(_) => {
+                                let variable = Variable::new(
+                                    Identifier::Spawn(spawn_numbers.next().unwrap()),
+                                    Kind::Unsigned,
+                                );
+                                let expression = variable.identifier().clone().into();
+
+                                method.add_argument(variable);
+                                expression
+                            },
+                            Err(expression) => expression,
+                        };
 
                         method.add_action(Spawn::new(
                             spawned_context.clone(),
-                            variable.identifier().clone().into(),
+                            expression
                         ));
-                        method.add_argument(variable);
                     } else {
-                        method.add_action(Spawn::new(spawned_context.clone(), root));
+                        method.add_action(Spawn::new(spawned_context.clone(), child));
                     }
 
                     post_actions.push(PushContext::new(spawned_context));
@@ -198,7 +206,7 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                 method.add_argument(arg.clone());
             }
 
-            from_state.replace(from_variable.identifier().clone().into());
+            from_state = Some(from_variable.identifier().clone().into());
             method.add_argument(from_variable);
 
             to_state.get_or_insert_with(|| {
@@ -230,41 +238,48 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
         }
 
         let stub_context = context.stub_context.as_mut().unwrap();
-        let mut application = Application::from(Identifier::AbstractTransition(
+        let mut call = Call::from(Identifier::AbstractTransition(
             stub_context.name,
             abstract_id,
             next_abstract_id,
         ));
 
-        application.add_argument(CONTEXT_REF.identifier().clone().into());
+        call.add_argument(Expression::MovedMutableReference(CONTEXT_REF.identifier().clone()));
 
         for argument in &stub_context.arguments {
-            application.add_argument(argument.clone());
+            call.add_argument(argument.clone());
         }
 
-        application.add_argument(from_state.unwrap_or(Expression::Unsigned(id)));
+        call.add_argument(from_state.unwrap_or(Expression::Unsigned(id)));
 
         if to_state.is_none() {
-            application.add_argument(Expression::Unsigned(id));
+            call.add_argument(Expression::Unsigned(id));
         }
 
         let mut spawn_numbers = Numbers::default();
 
         for effect in transition.effects() {
-            if let ast::state::Effect::Spawn(root_state) = effect {
-                let root = expression::visit(context, root_state);
+            if let ast::state::Effect::Spawn(child_state) = effect {
+                if let Ok(id) = expression::visit(context, child_state).try_into() {
+                    let argument = if context.function_context.is_some() {
+                        let variable = Variable::new(
+                            Identifier::Spawn(spawn_numbers.next().unwrap()),
+                            Kind::Unsigned,
+                        );
+                        let expression = variable.identifier().clone().into();
 
-                if context.function_context.is_some() {
-                    let spawn_argument = Identifier::Spawn(spawn_numbers.next().unwrap());
-                    method.add_argument(Variable::new(spawn_argument.clone(), Kind::Unsigned));
-                    application.add_argument(spawn_argument.into());
-                } else {
-                    application.add_argument(root);
+                        method.add_argument(variable);
+                        expression
+                    } else {
+                        Expression::Unsigned(id)
+                    };
+
+                    call.add_argument(argument);
                 }
             }
         }
 
-        method.add_action(action::application::Application::from(application));
+        method.add_action(action::call::Call::from(call));
         context.contract.add_method(method);
     }
 

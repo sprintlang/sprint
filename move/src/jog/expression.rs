@@ -1,4 +1,4 @@
-use super::{application::Application, identifier::Identifier};
+use super::{call::Call, identifier::Identifier};
 use std::{
     borrow::Cow,
     convert::TryFrom,
@@ -7,9 +7,10 @@ use std::{
 
 #[derive(Clone, Debug)]
 pub enum Expression<'a> {
-    Application(Application<'a>),
+    Call(Call<'a>),
     Expression(Cow<'static, str>),
     Identifier(Identifier<'a>),
+    MovedMutableReference(Identifier<'a>),
     Unsigned(usize),
 }
 
@@ -22,17 +23,18 @@ impl Default for Expression<'_> {
 impl Display for Expression<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Application(a) => a.fmt(f),
+            Self::Call(c) => c.fmt(f),
             Self::Expression(e) => e.fmt(f),
             Self::Identifier(i) => i.fmt(f),
+            Self::MovedMutableReference(i) => write!(f, "&mut move({})", i),
             Self::Unsigned(u) => u.fmt(f),
         }
     }
 }
 
-impl<'a> From<Application<'a>> for Expression<'a> {
-    fn from(a: Application<'a>) -> Self {
-        Self::Application(a)
+impl<'a> From<Call<'a>> for Expression<'a> {
+    fn from(c: Call<'a>) -> Self {
+        Self::Call(c)
     }
 }
 

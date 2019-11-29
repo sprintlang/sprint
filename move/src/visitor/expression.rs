@@ -1,6 +1,6 @@
 use super::{state, Context, StubContext};
 use crate::jog::{
-    application::Application,
+    call::Call,
     expression::{Address, Expression},
     identifier::Identifier,
 };
@@ -82,13 +82,13 @@ fn visit_variable<'a>(context: &mut Context<'a>, variable: &ast::Variable<'a>) -
                     visit(context, &definition.expression)
                 }
             } else {
-                let mut application = Application::from(Identifier::Prefixed(definition.name));
+                let mut call = Call::from(Identifier::Prefixed(definition.name));
 
                 for argument in context.take_argument_stack().into_iter().rev() {
-                    application.add_argument(argument);
+                    call.add_argument(argument);
                 }
 
-                application.into()
+                call.into()
             }
         }
         _ => unreachable!(),
