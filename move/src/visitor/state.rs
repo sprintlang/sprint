@@ -92,7 +92,7 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                 CONTEXT_REF.clone(),
                 Expression::Expression(
                     format!(
-                        "Vector.borrow_mut<context>(copy({}), copy({}))",
+                        "Vector.borrow_mut<Self.Context>(copy({}), copy({}))",
                         CONTEXTS.identifier(),
                         context_index.identifier()
                     )
@@ -243,7 +243,7 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                 CONTEXT_REF.clone(),
                 Expression::Expression(
                     format!(
-                        "Vector.borrow_mut<context>(copy({}), copy({}))",
+                        "Vector.borrow_mut<Self.Context>(copy({}), copy({}))",
                         CONTEXTS.identifier(),
                         context_index.identifier()
                     )
