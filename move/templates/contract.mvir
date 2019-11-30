@@ -4,32 +4,44 @@ module Contract {
     {%- endfor %}
 
     resource T {
-        coin_store: LibraCoin.T,
+        coinstores: Vector.T<LibraCoin.T>,
         contexts: Vector.T<Self.Context>,
     }
 
     resource Context {
         state: u64,
-        holder: address,
+        coinstore_index: u64,
+        party: address,
         counterparty: address,
         scale: u64,
     }
 
-    public create(): Self.T {
+    // Create a contract with a party and counterparty.
+    public create() {
         let contract: Self.T;
 
         contract = T {
-            coin_store: LibraCoin.zero(),
+            coinstores: Vector.empty<LibraCoin.T>(),
             contexts: Vector.empty<Self.Context>(),
         };
 
-        return move(contract);
+        move_to_sender<T>(move(contract));
+
+        return;
     }
 
-    public initialize(contract_ref: &mut Self.T, holder: address, counterparty: address) {
+    public initialize(owner: address, party: address, counterparty: address) acquires T {
+        let contract_ref: &mut Self.T;
+        let coinstore_index: u64;
+
+        contract_ref = borrow_global_mut<T>(move(owner));
+        coinstore_index = Vector.length<Self.Context>(&copy(contract_ref).contexts);
+        Vector.push_back<LibraCoin.T>(&mut copy(contract_ref).coinstores, LibraCoin.zero());
+
         Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
             state: {{ initial_state }},
-            holder: move(holder),
+            coinstore_index: move(coinstore_index),
+            party: move(party),
             counterparty: move(counterparty),
             scale: 1,
         });
@@ -38,8 +50,14 @@ module Contract {
     }
 
     // TODO: create this in code generation.
-    public deposit(contract_ref: &mut Self.T, coin: LibraCoin.T) {
-        LibraCoin.deposit(&mut move(contract_ref).coin_store, move(coin));
+    public deposit(owner: address, coin: LibraCoin.T, coinstore_index: u64) acquires T {
+        LibraCoin.deposit(
+            Vector.borrow_mut<LibraCoin.T>(
+                &mut borrow_global_mut<T>(move(owner)).coinstores,
+                move(coinstore_index)
+            ),
+            move(coin));
+
         return;
     }
 

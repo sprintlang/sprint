@@ -51,7 +51,7 @@ fn visit_observable<'a>(
 ) -> Expression<'a> {
     match observable {
         ast::Observable::IsHolder => {
-            Expression::Expression(format!("get_txn_address() == {}", Address::Holder).into())
+            Expression::Expression(format!("get_txn_address() == {}", Address::Party).into())
         }
         ast::Observable::IsCounterparty => {
             Expression::Expression(format!("get_txn_address() == {}", Address::Counterparty).into())

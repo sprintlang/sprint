@@ -1,5 +1,4 @@
     {%- if public -%}public {% endif -%}{{ identifier }}(
-        contract_ref: &mut Self.T,
         {%- for argument in arguments %}
         {{ argument }},
         {%- endfor %}

@@ -24,9 +24,15 @@ impl<'a> Call<'a> {
 
 impl Display for Call<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{}(&mut copy(contract_ref)", self.name)?;
+        write!(f, "{}(", self.name)?;
 
-        for argument in self.arguments.iter() {
+        let mut arguments = self.arguments.iter();
+
+        if let Some(argument) = arguments.next() {
+            argument.fmt(f)?;
+        }
+
+        for argument in arguments {
             write!(f, ", {}", argument)?;
         }
 

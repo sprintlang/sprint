@@ -31,7 +31,11 @@ impl Display for Deposit {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "LibraCoin.deposit(&mut move(contract_ref).coin_store, LibraAccount.withdraw_from_sender({}));",
+            "LibraCoin.deposit(
+                Vector.borrow_mut<LibraCoin.T>(
+                    &mut copy(contract_ref).coinstores,
+                    *(&copy(context_ref).coinstore_index),
+                ), LibraAccount.withdraw_from_sender({}));",
             self.amount
         )
     }
@@ -61,8 +65,17 @@ impl Display for Withdraw {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "LibraAccount.deposit({}, LibraCoin.withdraw(&mut copy(contract_ref).coin_store, *(&mut copy(context_ref).scale)));",
-            self.payee
+            "LibraAccount.deposit(
+                {},
+                LibraCoin.withdraw(
+                    Vector.borrow_mut<LibraCoin.T>(
+                        &mut copy(contract_ref).coinstores,
+                        *(&copy(context_ref).coinstore_index),
+                    ),
+                    *(&mut copy(context_ref).scale)
+                )
+            );",
+            self.payee,
         )
     }
 }

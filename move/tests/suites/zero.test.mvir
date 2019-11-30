@@ -1,43 +1,9 @@
 //! new-transaction
 //! sender: alice
-module ContractStore {
-  import {{alice}}.Contract;
-
-  resource T {
-    contract: Contract.T,
-  }
-
-  public store(contract: Contract.T) {
-    let contract_holder: Self.T;
-
-    contract_holder = T {
-      contract: move(contract),
-    };
-
-    move_to_sender<T>(move(contract_holder));
-
-    return;
-  }
-
-  public get(holder: address): Contract.T acquires T {
-    let contract: Contract.T;
-
-    T { contract } = move_from<T>({{alice}});
-
-    return move(contract);
-  }
-}
-
-//! new-transaction
-//! sender: alice
 import {{alice}}.Contract;
-import {{alice}}.ContractStore;
 
 main() {
-  let contract: Contract.T;
-
-  contract = Contract.create();
-  ContractStore.store(move(contract));
+  Contract.create();
 
   return;
 }

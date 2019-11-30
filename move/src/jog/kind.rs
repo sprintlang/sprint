@@ -6,6 +6,7 @@ pub enum Kind {
     Coin,
     Context,
     Contexts,
+    Contract,
     Unsigned,
 }
 
@@ -16,6 +17,7 @@ impl Display for Kind {
             Self::Coin => write!(f, "LibraCoin.T"),
             Self::Context => write!(f, "&mut Self.Context"),
             Self::Contexts => write!(f, "&mut Vector.T<Self.Context>"),
+            Self::Contract => write!(f, "&mut Self.T"),
             Self::Unsigned => write!(f, "u64"),
         }
     }

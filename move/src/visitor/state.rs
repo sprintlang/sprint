@@ -16,12 +16,15 @@ use crate::{
         identifier::Identifier,
         kind::Kind,
         method::Method,
-        variable::{Variable, CONTEXTS, CONTEXT_REF},
+        variable::{Variable, CONTEXTS, CONTEXT_REF, CONTRACT_REF, OWNER},
     },
     numbers::Numbers,
 };
 use sprint_parser::ast;
-use std::{convert::{TryInto, TryFrom}, rc::Rc};
+use std::{
+    convert::{TryFrom, TryInto},
+    rc::Rc,
+};
 
 pub(super) fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> usize {
     match &mut context.stub_context {
@@ -55,6 +58,7 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
             let from_variable = Variable::new(Identifier::Raw("from_state"), Kind::Unsigned);
             let to_variable = Variable::new(Identifier::Raw("to_state"), Kind::Unsigned);
 
+            method.add_argument(CONTRACT_REF.clone());
             method.add_argument(CONTEXT_REF.clone());
 
             for arg in &function_context.arguments {
@@ -73,6 +77,13 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
             let context_index = Variable::new(Identifier::Raw("context_index"), Kind::Unsigned);
 
             method.add_action(Assign::new(
+                CONTRACT_REF.clone(),
+                Expression::Expression(
+                    format!("borrow_global_mut<T>(move({}))", OWNER.identifier()).into(),
+                ),
+            ));
+
+            method.add_action(Assign::new(
                 CONTEXTS.clone(),
                 Expression::Expression("&mut copy(contract_ref).contexts".into()),
             ));
@@ -89,6 +100,7 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                 ),
             ));
 
+            method.add_argument(OWNER.clone());
             method.add_argument(context_index);
         }
 
@@ -136,21 +148,18 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
 
                                 method.add_argument(variable);
                                 expression
-                            },
+                            }
                             Err(expression) => expression,
                         };
 
-                        method.add_action(Spawn::new(
-                            spawned_context.clone(),
-                            expression
-                        ));
+                        method.add_action(Spawn::new(spawned_context.clone(), expression));
                     } else {
                         method.add_action(Spawn::new(spawned_context.clone(), child));
                     }
 
                     post_actions.push(PushContext::new(spawned_context));
                 }
-                ast::state::Effect::Withdraw => method.add_action(Withdraw::new(Address::Holder)),
+                ast::state::Effect::Withdraw => method.add_action(Withdraw::new(Address::Party)),
             }
         }
 
@@ -200,6 +209,7 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
             let from_variable = Variable::new(Identifier::Raw("from_state"), Kind::Unsigned);
             let to_variable = Variable::new(Identifier::Raw("to_state"), Kind::Unsigned);
 
+            method.add_argument(CONTRACT_REF.clone());
             method.add_argument(CONTEXT_REF.clone());
 
             for arg in &function_context.arguments {
@@ -218,6 +228,13 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
             let context_index = Variable::new(Identifier::Raw("context_index"), Kind::Unsigned);
 
             method.add_action(Assign::new(
+                CONTRACT_REF.clone(),
+                Expression::Expression(
+                    format!("borrow_global_mut<T>(move({}))", OWNER.identifier()).into(),
+                ),
+            ));
+
+            method.add_action(Assign::new(
                 CONTEXTS.clone(),
                 Expression::Expression("&mut copy(contract_ref).contexts".into()),
             ));
@@ -234,6 +251,7 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                 ),
             ));
 
+            method.add_argument(OWNER.clone());
             method.add_argument(context_index);
         }
 
@@ -244,7 +262,12 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
             next_abstract_id,
         ));
 
-        call.add_argument(Expression::MovedMutableReference(CONTEXT_REF.identifier().clone()));
+        call.add_argument(Expression::MovedMutableReference(
+            CONTRACT_REF.identifier().clone(),
+        ));
+        call.add_argument(Expression::MovedMutableReference(
+            CONTEXT_REF.identifier().clone(),
+        ));
 
         for argument in &stub_context.arguments {
             call.add_argument(argument.clone());

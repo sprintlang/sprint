@@ -38,13 +38,14 @@ impl Display for Spawn<'_> {
             f,
             "{} = Context {{
                 state: {},
-                holder: {},
+                coinstore_index: *(&copy(context_ref).coinstore_index),
+                party: {},
                 counterparty: {},
                 scale: *(&copy(context_ref).scale),
             }};",
             self.context.identifier(),
             self.root,
-            Address::Holder,
+            Address::Party,
             Address::Counterparty,
         )
     }

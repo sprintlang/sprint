@@ -63,14 +63,14 @@ impl<'a> TryFrom<Expression<'a>> for usize {
 }
 
 pub enum Address {
-    Holder,
+    Party,
     Counterparty,
 }
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Address::Holder => write!(f, "*(&copy(context_ref).holder)"),
+            Address::Party => write!(f, "*(&copy(context_ref).party)"),
             Address::Counterparty => write!(f, "*(&copy(context_ref).counterparty)"),
         }
     }

@@ -1,4 +1,9 @@
-use functional_tests::{checker::check, evaluator::eval, utils::parse_input};
+use functional_tests::{
+    checker::check,
+    config::global::Config as GlobalConfig,
+    evaluator::eval,
+    utils::{build_transactions, split_input},
+};
 use sprint_move::generate;
 use sprint_parser::parser::contract;
 use std::{
@@ -30,7 +35,9 @@ fn test(module: impl Display, suite: &Path) {
     let mut file = File::create(&generated_file).unwrap();
     file.write_all(input.as_bytes()).unwrap();
 
-    let (config, directives, transactions) = parse_input(&input).unwrap();
+    let (config, directives, transactions) = split_input(&input).unwrap();
+    let config = GlobalConfig::build(&config).unwrap();
+    let transactions = build_transactions(&config, &transactions).unwrap();
     let log = eval(&config, &transactions).unwrap();
 
     if let Err(err) = check(&log, &directives) {
@@ -42,7 +49,7 @@ fn test(module: impl Display, suite: &Path) {
 #[test]
 fn generated_zero() {
     let suite = Path::new("tests/suites/zero.test.mvir");
-    let contract = contract("zero").unwrap();
+    let contract = contract("main = zero").unwrap();
 
     test(generate(&contract), suite);
 }
@@ -50,7 +57,7 @@ fn generated_zero() {
 #[test]
 fn generated_one() {
     let suite = Path::new("tests/suites/one.test.mvir");
-    let contract = contract("one").unwrap();
+    let contract = contract("main = one").unwrap();
 
     test(generate(&contract), suite);
 }
@@ -58,7 +65,7 @@ fn generated_one() {
 #[test]
 fn generated_one_and_one() {
     let suite = Path::new("tests/suites/one_and_one.test.mvir");
-    let contract = contract("one and one").unwrap();
+    let contract = contract("main = and one one").unwrap();
 
     test(generate(&contract), suite);
 }
