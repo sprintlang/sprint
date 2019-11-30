@@ -2,7 +2,7 @@
         {%- for argument in arguments %}
         {{ argument }},
         {%- endfor %}
-    ){%- if result.is_some() -%}: u64{%- endif %} {
+    ){%- if result.is_some() -%}: u64{%- endif -%} {%- if acquires_resource -%} acquires T {%- endif %} {
         {%- for definition in self.definitions() %}
         let {{ definition }};
         {%- endfor %}

@@ -7,6 +7,7 @@ pub enum Kind {
     Context,
     Contexts,
     Contract,
+    MutableReference(Box<Self>),
     Unsigned,
 }
 
@@ -15,9 +16,10 @@ impl Display for Kind {
         match self {
             Self::Address => write!(f, "address"),
             Self::Coin => write!(f, "LibraCoin.T"),
-            Self::Context => write!(f, "&mut Self.Context"),
-            Self::Contexts => write!(f, "&mut Vector.T<Self.Context>"),
-            Self::Contract => write!(f, "&mut Self.T"),
+            Self::Context => write!(f, "Self.Context"),
+            Self::Contexts => write!(f, "Vector.T<Self.Context>"),
+            Self::Contract => write!(f, "Self.T"),
+            Self::MutableReference(kind) => write!(f, "&mut {}", kind),
             Self::Unsigned => write!(f, "u64"),
         }
     }

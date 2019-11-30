@@ -1,12 +1,23 @@
 use super::{identifier::Identifier, kind::Kind};
+use lazy_static::lazy_static;
 use std::fmt::{self, Display, Formatter};
 
-pub const CONTEXTS: Variable<'static> = Variable::new(Identifier::Raw("contexts"), Kind::Contexts);
-pub const CONTEXT_REF: Variable<'static> =
-    Variable::new(Identifier::Raw("context_ref"), Kind::Context);
-pub const CONTRACT_REF: Variable<'static> =
-    Variable::new(Identifier::Raw("contract_ref"), Kind::Contract);
-pub const OWNER: Variable<'static> = Variable::new(Identifier::Raw("owner"), Kind::Address);
+lazy_static! {
+    pub static ref CONTEXTS: Variable<'static> = Variable::new(
+        Identifier::Raw("contexts"),
+        Kind::MutableReference(Kind::Contexts.into()),
+    );
+    pub static ref CONTEXT_REF: Variable<'static> = Variable::new(
+        Identifier::Raw("context_ref"),
+        Kind::MutableReference(Kind::Context.into()),
+    );
+    pub static ref CONTRACT_REF: Variable<'static> = Variable::new(
+        Identifier::Raw("contract_ref"),
+        Kind::MutableReference(Kind::Contract.into()),
+    );
+    pub static ref OWNER: Variable<'static> =
+        Variable::new(Identifier::Raw("owner"), Kind::Address);
+}
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct Variable<'a> {

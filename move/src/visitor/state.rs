@@ -82,6 +82,7 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                     format!("borrow_global_mut<T>(move({}))", OWNER.identifier()).into(),
                 ),
             ));
+            method.set_acquires_resource(true);
 
             method.add_action(Assign::new(
                 CONTEXTS.clone(),
@@ -233,6 +234,7 @@ fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
                     format!("borrow_global_mut<T>(move({}))", OWNER.identifier()).into(),
                 ),
             ));
+            method.set_acquires_resource(true);
 
             method.add_action(Assign::new(
                 CONTEXTS.clone(),

@@ -10,6 +10,7 @@ pub struct Method<'a> {
     arguments: Vec<Variable<'a>>,
     actions: Vec<Box<dyn Action + 'a>>,
     result: Option<Expression<'a>>,
+    acquires_resource: bool,
 }
 
 impl<'a> Method<'a> {
@@ -20,6 +21,7 @@ impl<'a> Method<'a> {
             arguments: Default::default(),
             actions: Default::default(),
             result: Default::default(),
+            acquires_resource: false,
         }
     }
 
@@ -61,6 +63,10 @@ impl<'a> Method<'a> {
 
     pub fn set_result(&mut self, expression: Expression<'a>) {
         self.result = Some(expression);
+    }
+
+    pub fn set_acquires_resource(&mut self, acquires_resource: bool) {
+        self.acquires_resource = acquires_resource;
     }
 
     fn result(&self) -> String {
