@@ -67,7 +67,7 @@ impl Expression<'_> {
             },
 
             Self::Observable(o) => Kind::Observable(match o {
-                Observable::IsHolder => Kind::Boolean.into(),
+                Observable::IsParty => Kind::Boolean.into(),
                 Observable::IsCounterparty => Kind::Boolean.into(),
                 Observable::Konst(e) => e.kind(),
             })
@@ -132,7 +132,7 @@ impl<'a> Argument<'a> {
 
 #[derive(Debug)]
 pub enum Observable<'a> {
-    IsHolder,
+    IsParty,
     IsCounterparty,
     Konst(Rc<Expression<'a>>),
 }

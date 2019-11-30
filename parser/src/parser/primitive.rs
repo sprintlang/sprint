@@ -82,12 +82,12 @@ pub fn or(arguments: Vec<Expression>) -> Context<Expression> {
 
     let mut left_transition = Transition::default();
     left_transition
-        .add_condition(Observable::IsHolder.into())
+        .add_condition(Observable::IsParty.into())
         .set_next(left);
 
     let mut right_transition = Transition::default();
     right_transition
-        .add_condition(Observable::IsHolder.into())
+        .add_condition(Observable::IsParty.into())
         .set_next(right);
 
     let mut state = State::default();
@@ -115,7 +115,7 @@ pub fn anytime(arguments: Vec<Expression>) -> Context<Expression> {
 
     let mut transition = Transition::default();
     transition
-        .add_condition(Observable::IsHolder.into())
+        .add_condition(Observable::IsParty.into())
         .set_next(next);
 
     let mut state = State::default();
