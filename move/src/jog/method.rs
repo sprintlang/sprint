@@ -65,8 +65,8 @@ impl<'a> Method<'a> {
         self.result = Some(expression);
     }
 
-    pub fn set_acquires_resource(&mut self, acquires_resource: bool) {
-        self.acquires_resource = acquires_resource;
+    pub fn set_acquires_resource(&mut self) {
+        self.acquires_resource = true;
     }
 
     fn result(&self) -> String {
