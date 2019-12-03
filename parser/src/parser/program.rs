@@ -15,7 +15,7 @@ use nom::{
 };
 
 pub fn program(input: Span) -> IResult<Span, Context<()>> {
-    let separator = alt((line_ending, tag(";")));
+    let separator = alt((line_ending, padding0(tag(";"))));
     let (input, contexts) = separated_list(many1(separator), alt((signature, definition)))(input)?;
     let (input, _) = many0(alt((multispace1, tag(";"))))(input)?;
 
