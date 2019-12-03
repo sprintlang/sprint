@@ -10,24 +10,22 @@ pub use self::{
 
 use self::state::State;
 use std::{
-    cell::RefCell,
-    rc::{Rc, Weak},
+    hash::{Hash, Hasher},
+    rc::Rc,
 };
 
-pub type Reference<'a> = Rc<RefCell<Variable<'a>>>;
+pub type Program<'a> = Vec<Definition<'a>>;
 
 #[derive(Debug)]
 pub struct Definition<'a> {
-    pub name: &'a str,
-    pub kind: Rc<Kind>,
+    pub variable: Variable<'a>,
     pub expression: Expression<'a>,
 }
 
 impl<'a> Definition<'a> {
-    pub fn new(name: &'a str, expression: Expression<'a>) -> Self {
+    pub fn new(variable: Variable<'a>, expression: Expression<'a>) -> Self {
         Self {
-            name,
-            kind: expression.kind(),
+            variable,
             expression,
         }
     }
@@ -35,22 +33,20 @@ impl<'a> Definition<'a> {
 
 #[derive(Debug)]
 pub enum Expression<'a> {
-    Abstraction(Rc<Argument<'a>>, Box<Self>),
+    Abstraction(Variable<'a>, Box<Self>),
     Application(Box<Self>, Box<Self>),
     Boolean(bool),
     Class(Class<'a>),
     Observable(Observable<'a>),
     State(State<'a>),
-    Variable(Reference<'a>),
+    Variable(Variable<'a>),
     Word(u64),
 }
 
 impl Expression<'_> {
     pub fn kind(&self) -> Rc<Kind> {
         match self {
-            Self::Abstraction(from, to) => {
-                Kind::Abstraction(from.as_ref().kind.clone(), to.kind()).into()
-            }
+            Self::Abstraction(from, to) => Kind::Abstraction(from.kind.clone(), to.kind()).into(),
 
             Self::Application(f, _) => match f.kind().as_ref() {
                 Kind::Abstraction(_, k) => k.clone(),
@@ -75,7 +71,7 @@ impl Expression<'_> {
 
             Self::State(_) => Kind::State.into(),
 
-            Self::Variable(v) => v.borrow().kind(),
+            Self::Variable(v) => v.kind.clone(),
 
             Self::Word(_) => Kind::Word.into(),
         }
@@ -106,8 +102,8 @@ impl<'a> From<State<'a>> for Expression<'a> {
     }
 }
 
-impl<'a> From<Rc<RefCell<Variable<'a>>>> for Expression<'a> {
-    fn from(v: Rc<RefCell<Variable<'a>>>) -> Self {
+impl<'a> From<Variable<'a>> for Expression<'a> {
+    fn from(v: Variable<'a>) -> Self {
         Self::Variable(v)
     }
 }
@@ -118,15 +114,27 @@ impl From<u64> for Expression<'_> {
     }
 }
 
-#[derive(Debug)]
-pub struct Argument<'a> {
+#[derive(Eq, Clone, Debug)]
+pub struct Variable<'a> {
     pub name: &'a str,
     pub kind: Rc<Kind>,
 }
 
-impl<'a> Argument<'a> {
+impl<'a> Variable<'a> {
     pub fn new(name: &'a str, kind: Rc<Kind>) -> Self {
-        Self { name, kind }
+        Variable { name, kind }
+    }
+}
+
+impl PartialEq for Variable<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Hash for Variable<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
     }
 }
 
@@ -143,41 +151,6 @@ impl<'a> From<Expression<'a>> for Observable<'a> {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum Variable<'a> {
-    Argument(Rc<Argument<'a>>),
-    Definition(Weak<Definition<'a>>),
-    Undefined(Rc<Kind>),
-}
-
-impl Variable<'_> {
-    pub fn kind(&self) -> Rc<Kind> {
-        match self {
-            Self::Argument(a) => a.kind.clone(),
-            Self::Definition(d) => d.upgrade().unwrap().kind.clone(),
-            Self::Undefined(k) => k.clone(),
-        }
-    }
-}
-
-impl<'a> From<Rc<Argument<'a>>> for Variable<'a> {
-    fn from(a: Rc<Argument<'a>>) -> Self {
-        Self::Argument(a)
-    }
-}
-
-impl From<Rc<Kind>> for Variable<'_> {
-    fn from(k: Rc<Kind>) -> Self {
-        Self::Undefined(k)
-    }
-}
-
-impl<'a> From<&Rc<Definition<'a>>> for Variable<'a> {
-    fn from(d: &Rc<Definition<'a>>) -> Self {
-        Self::Definition(Rc::downgrade(d))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -187,9 +160,9 @@ mod tests {
         // one :: Word -> Word -> Boolean
         // one x y = true
         let one = Expression::Abstraction(
-            Argument::new("x", Kind::Word.into()).into(),
+            Variable::new("x", Kind::Word.into()),
             Expression::Abstraction(
-                Argument::new("y", Kind::Word.into()).into(),
+                Variable::new("y", Kind::Word.into()),
                 Expression::Boolean(true).into(),
             )
             .into(),

@@ -1,11 +1,11 @@
-use crate::ast::{Definition, Reference};
-use std::{collections::HashMap, rc::Rc};
+use crate::ast::{Definition, Variable};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 pub struct Context<'a, T> {
     inner: T,
-    pub definitions: HashMap<&'a str, Rc<Definition<'a>>>,
-    pub variables: HashMap<&'a str, Reference<'a>>,
+    pub definitions: HashMap<&'a str, Definition<'a>>,
+    pub variables: HashSet<Variable<'a>>,
 }
 
 impl<T> From<T> for Context<'_, T> {

@@ -1,4 +1,4 @@
-use super::{definition::TERMINAL_ID, expression, Context};
+use super::{expression, program::TERMINAL_ID, Context};
 use crate::{
     jog::{
         action::{
@@ -26,14 +26,14 @@ use std::{
     rc::Rc,
 };
 
-pub(super) fn visit<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> usize {
+pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) -> usize {
     match &mut context.stub_context {
         Some(_) => visit_stub(context, state),
         None => visit_full(context, state),
     }
 }
 
-fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> usize {
+fn visit_full<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) -> usize {
     // Zero is reserved for the terminal state.
     let id = context.next_id();
 
@@ -178,7 +178,7 @@ fn visit_full<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> u
     id
 }
 
-fn visit_stub<'a>(context: &mut Context<'a>, state: &ast::state::State<'a>) -> usize {
+fn visit_stub<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) -> usize {
     let id = context.next_id();
 
     let stub_context = context.stub_context.as_mut().unwrap();

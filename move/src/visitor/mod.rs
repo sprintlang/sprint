@@ -1,27 +1,29 @@
-pub mod definition;
 pub mod expression;
+pub mod program;
 pub mod state;
 
-use self::definition::TERMINAL_ID;
+use self::program::TERMINAL_ID;
 use crate::{
     jog::{contract::Contract, expression::Expression, variable::Variable},
     numbers::Numbers,
 };
 use sprint_parser::ast;
-use std::{collections::HashMap, mem};
+use std::{collections::HashMap, mem, rc::Rc};
 
-struct Context<'a> {
+struct Context<'a, 'b> {
     contract: Contract<'a>,
+    definitions: HashMap<&'a str, Rc<&'b ast::Definition<'a>>>,
     argument_stack: Vec<Expression<'a>>,
     numbers: Numbers,
     function_context: Option<FunctionContext<'a>>,
     stub_context: Option<StubContext<'a>>,
 }
 
-impl Default for Context<'_> {
-    fn default() -> Self {
+impl<'a, 'b> Context<'a, 'b> {
+    pub fn new(program: impl Iterator<Item = Rc<&'b ast::Definition<'a>>>) -> Self {
         Self {
             contract: Default::default(),
+            definitions: program.map(|d| (d.variable.name, d)).collect(),
             argument_stack: Default::default(),
             numbers: Numbers::from(TERMINAL_ID + 1),
             function_context: Default::default(),
@@ -30,7 +32,7 @@ impl Default for Context<'_> {
     }
 }
 
-impl<'a> Context<'a> {
+impl<'a> Context<'a, '_> {
     fn next_id(&mut self) -> usize {
         match &mut self.function_context {
             Some(context) => &mut context.numbers,
@@ -78,7 +80,7 @@ struct StubContext<'a> {
 }
 
 impl<'a> StubContext<'a> {
-    fn new(context: &mut Context<'a>, definition: &ast::Definition<'a>) -> Self {
+    fn new(context: &mut Context<'a, '_>, definition: &ast::Definition<'a>) -> Self {
         let arguments = context.take_argument_stack().into_iter().rev().collect();
         let mut abstracts = HashMap::new();
 
@@ -87,7 +89,7 @@ impl<'a> StubContext<'a> {
 
         Self {
             arguments,
-            name: definition.name,
+            name: definition.variable.name,
             numbers: Numbers::from(TERMINAL_ID + 1),
             abstracts,
         }

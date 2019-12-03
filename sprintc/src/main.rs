@@ -45,9 +45,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     })?;
 
     if args.verbose {
-        for (id, definition) in &ast {
-            println!("{} :: {}", id, definition.kind);
-            println!("{} = {:#?}", id, definition.expression);
+        for definition in &ast {
+            let name = definition.variable.name;
+            println!("{} :: {}", name, definition.variable.kind);
+            println!("{} = {:#?}", name, definition.expression);
         }
     }
 

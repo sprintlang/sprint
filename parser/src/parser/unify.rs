@@ -1,39 +1,27 @@
 use super::context::Context;
-use crate::ast::{Kind, Variable};
+use crate::ast::Kind;
 use std::rc::Rc;
 
 pub trait Unify<O = Self> {
     fn unify(self, other: O) -> Option<()>;
 }
 
-impl<'a, T, U> Unify<&Context<'a, U>> for &mut Context<'a, T> {
-    fn unify(self, other: &Context<'a, U>) -> Option<()> {
-        self.definitions
-            .extend(other.definitions.iter().map(|(&k, v)| (k, v.clone())));
-
-        for (identifier, expression) in &other.variables {
-            if let Some(original) = self.variables.insert(identifier, expression.clone()) {
-                original.borrow_mut().unify(&mut *expression.borrow_mut())?;
+impl<'a, T, U> Unify<Context<'a, U>> for &mut Context<'a, T> {
+    fn unify(self, other: Context<'a, U>) -> Option<()> {
+        for (name, definition) in other.definitions {
+            if self.definitions.insert(name, definition).is_some() {
+                // There is a duplicate definition.
+                return None;
             }
         }
 
-        Some(())
-    }
-}
+        for variable in other.variables {
+            let kind = variable.kind.clone();
 
-impl Unify for &mut Variable<'_> {
-    fn unify(self, other: Self) -> Option<()> {
-        match (&self, &other) {
-            (Variable::Undefined(self_k), Variable::Undefined(other_k)) => {
-                self_k.clone().unify(other_k.clone())?;
+            if let Some(original) = self.variables.replace(variable) {
+                original.kind.unify(kind);
             }
-            (Variable::Undefined(k), _) => {
-                other.kind().unify(k.clone())?;
-                *self = other.clone();
-            }
-            (_, Variable::Undefined(_)) => other.unify(self)?,
-            _ => None?,
-        };
+        }
 
         Some(())
     }

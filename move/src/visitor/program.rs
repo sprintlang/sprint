@@ -3,18 +3,17 @@ use crate::jog::{
     contract::Contract, identifier::Identifier, kind::Kind, method::Method, variable::Variable,
 };
 use sprint_parser::ast;
-use std::{collections::HashMap, convert::TryInto, hash::BuildHasher, rc::Rc};
+use std::{convert::TryInto, rc::Rc};
 
 pub(super) const TERMINAL_ID: usize = 0;
 
 #[allow(dead_code)]
-pub fn visit<'a, S: BuildHasher>(
-    definitions: &HashMap<&str, Rc<ast::Definition<'a>>, S>,
-) -> Contract<'a> {
-    let mut context = Context::default();
+pub fn visit<'a>(program: &[ast::Definition<'a>]) -> Contract<'a> {
+    let program = program.iter().map(Rc::new);
+    let mut context = Context::new(program.clone());
 
-    for (_, definition) in definitions.iter() {
-        if definition.name == "main" {
+    for definition in program {
+        if definition.variable.name == "main" {
             context.function_context.take();
             let state = expression::visit(&mut context, &definition.expression)
                 .try_into()
@@ -32,10 +31,10 @@ pub fn visit<'a, S: BuildHasher>(
             if *expression.kind() == ast::Kind::State {
                 context
                     .function_context
-                    .replace(FunctionContext::new(arguments, definition.name));
+                    .replace(FunctionContext::new(arguments, definition.variable.name));
                 expression::visit(&mut context, expression);
             } else {
-                let mut method = Method::private(Identifier::Prefixed(definition.name));
+                let mut method = Method::private(Identifier::Prefixed(definition.variable.name));
 
                 method.set_arguments(arguments);
                 method.set_result(expression::visit(&mut context, expression));
