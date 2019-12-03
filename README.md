@@ -1,8 +1,8 @@
-# Sprint
+# Sprint :zap:
 
 Sprint is a functional programming language for writing smart contracts. It compiles into Move for Libra.
 
-## Compiling a contract from sprint to Move IR
+## Compiling a contract from sprint to Move
 
 Clone this repository. In its root directory, write a sprint program in a new file, such as `example.sprint`. Then you can run:
 
