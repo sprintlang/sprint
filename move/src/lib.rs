@@ -2,9 +2,9 @@ mod jog;
 mod numbers;
 mod visitor;
 
-use self::visitor::program;
+use self::visitor::definitions;
 use sprint_parser::ast;
 
-pub fn generate(program: &[ast::Definition]) -> String {
-    program::visit(program).to_string()
+pub fn generate(definitions: &[ast::Definition]) -> String {
+    definitions::visit(definitions).to_string()
 }

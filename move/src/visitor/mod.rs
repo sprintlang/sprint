@@ -1,8 +1,8 @@
+pub mod definitions;
 pub mod expression;
-pub mod program;
 pub mod state;
 
-use self::program::TERMINAL_ID;
+use self::definitions::TERMINAL_ID;
 use crate::{
     jog::{contract::Contract, expression::Expression, variable::Variable},
     numbers::Numbers,
@@ -20,10 +20,10 @@ struct Context<'a, 'b> {
 }
 
 impl<'a, 'b> Context<'a, 'b> {
-    pub fn new(program: impl Iterator<Item = Rc<&'b ast::Definition<'a>>>) -> Self {
+    pub fn new(definitions: impl Iterator<Item = Rc<&'b ast::Definition<'a>>>) -> Self {
         Self {
             contract: Default::default(),
-            definitions: program.map(|d| (d.variable.name, d)).collect(),
+            definitions: definitions.map(|d| (d.variable.name, d)).collect(),
             argument_stack: Default::default(),
             numbers: Numbers::from(TERMINAL_ID + 1),
             function_context: Default::default(),

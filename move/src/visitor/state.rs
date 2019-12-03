@@ -1,4 +1,4 @@
-use super::{expression, program::TERMINAL_ID, Context};
+use super::{definitions::TERMINAL_ID, expression, Context};
 use crate::{
     jog::{
         action::{

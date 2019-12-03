@@ -8,11 +8,11 @@ use std::{convert::TryInto, rc::Rc};
 pub(super) const TERMINAL_ID: usize = 0;
 
 #[allow(dead_code)]
-pub fn visit<'a>(program: &[ast::Definition<'a>]) -> Contract<'a> {
-    let program = program.iter().map(Rc::new);
-    let mut context = Context::new(program.clone());
+pub fn visit<'a>(definitions: &[ast::Definition<'a>]) -> Contract<'a> {
+    let definitions = definitions.iter().map(Rc::new);
+    let mut context = Context::new(definitions.clone());
 
-    for definition in program {
+    for definition in definitions {
         if definition.variable.name == "main" {
             context.function_context.take();
             let state = expression::visit(&mut context, &definition.expression)

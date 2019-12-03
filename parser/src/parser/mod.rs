@@ -7,7 +7,7 @@ mod program;
 mod unify;
 
 use self::{combinator::span, error::Error, program::program};
-use crate::ast::Program;
+use crate::ast::Definitions;
 use nom::{
     combinator::{all_consuming, complete},
     Err,
@@ -21,7 +21,7 @@ type Result<'a, T> = result::Result<T, Err<Error<'a>>>;
 
 type IResult<'a, I, O> = nom::IResult<I, O, Error<'a>>;
 
-pub fn contract<'a>(input: &'a str) -> result::Result<Program<'a>, Error> {
+pub fn contract<'a>(input: &'a str) -> result::Result<Definitions<'a>, Error> {
     match span(all_consuming(complete(program)))(input) {
         Ok((_, context)) => Ok(context.definitions.into_iter().map(|(_, d)| d).collect()),
         Err(nom::Err::Error(error)) | Err(nom::Err::Failure(error)) => Err(error),

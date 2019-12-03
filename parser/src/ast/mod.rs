@@ -14,7 +14,7 @@ use std::{
     rc::Rc,
 };
 
-pub type Program<'a> = Vec<Definition<'a>>;
+pub type Definitions<'a> = Vec<Definition<'a>>;
 
 #[derive(Debug)]
 pub struct Definition<'a> {
