@@ -47,7 +47,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::super::{
-        error::{CombinedError, Error, SprintError},
+        error::{CombinedError, Error},
         Span,
     };
     use super::*;
@@ -81,7 +81,7 @@ mod tests {
                         input: &abd[2..],
                         kind: ErrorKind::Char,
                     }),
-                    sprint_error: Some(SprintError::None),
+                    sprint_error: None,
                 }
             ),
             _ => unreachable!(),

@@ -175,10 +175,10 @@ mod tests {
         // one x y = true
         let one = Expression::new(
             ExpressionType::Abstraction(
-                Variable::new("x", Kind::Word.into()).into(),
+                Variable::new("x", Kind::Word.into()),
                 Expression::new(
                     ExpressionType::Abstraction(
-                        Variable::new("y", Kind::Word.into()).into(),
+                        Variable::new("y", Kind::Word.into()),
                         Expression::new(ExpressionType::Boolean(true), Span::new("")).into(),
                     ),
                     Span::new(""),
