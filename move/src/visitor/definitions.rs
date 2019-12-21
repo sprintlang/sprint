@@ -7,7 +7,6 @@ use std::{convert::TryInto, rc::Rc};
 
 pub(super) const TERMINAL_ID: usize = 0;
 
-#[allow(dead_code)]
 pub fn visit<'a>(definitions: &[ast::Definition<'a>]) -> Contract<'a> {
     let definitions = definitions.iter().map(Rc::new);
     let mut context = Context::new(definitions.clone());
