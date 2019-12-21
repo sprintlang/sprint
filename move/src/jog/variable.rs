@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 lazy_static! {
     pub static ref CONTEXTS: Variable<'static> = Variable::new(
         Identifier::Raw("contexts"),
-        Kind::MutableReference(Kind::Contexts.into()),
+        Kind::MutableReference(Kind::Vector(Kind::Context.into()).into()),
     );
     pub static ref CONTEXT_REF: Variable<'static> = Variable::new(
         Identifier::Raw("context_ref"),
