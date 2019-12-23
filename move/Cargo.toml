@@ -17,3 +17,4 @@ sprint-parser = { path = "../parser" }
 
 [dev-dependencies]
 functional_tests = { git = "https://github.com/libra/libra" }
+termcolor = "1"
