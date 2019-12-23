@@ -101,10 +101,7 @@ fn results_in_state(kind: Rc<ast::Kind>) -> bool {
     match kind.as_ref() {
         ast::Kind::Abstraction(_, s) => results_in_state(s.clone()),
         ast::Kind::State => true,
-        ast::Kind::Unresolved(k) => k
-            .borrow()
-            .clone()
-            .map_or(false, |k| results_in_state(k.clone())),
+        ast::Kind::Unresolved(k) => k.borrow().clone().map_or(false, results_in_state),
         _ => false,
     }
 }
