@@ -38,22 +38,19 @@ impl Command for CreateCommand {
                 .get_account_address_from_parameter(params[2])
                 .unwrap()
                 .to_vec(),
-        )
-        .to_string();
+        );
         let party = hex::encode(
             client
                 .get_account_address_from_parameter(params[4])
                 .unwrap()
                 .to_vec(),
-        )
-        .to_string();
+        );
         let counterparty = hex::encode(
             client
                 .get_account_address_from_parameter(params[5])
                 .unwrap()
                 .to_vec(),
-        )
-        .to_string();
+        );
 
         let move_state = CreateContract {
             author: format!("0x{}", author),
@@ -70,7 +67,7 @@ impl Command for CreateCommand {
 
         println!("Compiling sprint program...");
 
-        let move_code_path = fs::canonicalize(&file_path).unwrap().to_owned();
+        let move_code_path = fs::canonicalize(&file_path).unwrap();
         let move_code_path = move_code_path.to_str().unwrap();
 
         let contents =

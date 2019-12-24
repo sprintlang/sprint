@@ -37,15 +37,13 @@ impl Command for TransitionCommand {
                 .get_account_address_from_parameter(params[2])
                 .unwrap()
                 .to_vec(),
-        )
-        .to_string();
+        );
         let owner = hex::encode(
             client
                 .get_account_address_from_parameter(params[3])
                 .unwrap()
                 .to_vec(),
-        )
-        .to_string();
+        );
         // TODO: Add proper error handling if any of the addresses are invalid.
         let move_state = MoveState {
             author: format!("0x{}", author),
@@ -62,7 +60,7 @@ impl Command for TransitionCommand {
         let file_path = file.path().to_str().unwrap();
         println!("Sucessfully generated transaction code!");
 
-        let move_code_path = fs::canonicalize(&file_path).unwrap().to_owned();
+        let move_code_path = fs::canonicalize(&file_path).unwrap();
         let move_code_path = move_code_path.to_str().unwrap();
 
         let contents =

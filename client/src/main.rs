@@ -59,22 +59,30 @@ fn main() -> std::io::Result<()> {
     let mut client_proxy = ClientProxy::new(
         &args.host,
         args.port.get(),
-        &args.validator_set_file,
         &faucet_account_file,
         args.sync,
         args.faucet_server,
         args.mnemonic_file,
+        None,
     )
     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, &format!("{}", e)[..]))?;
 
-    let test_ret = client_proxy.test_validator_connection();
-    if let Err(e) = test_ret {
-        println!("Not able to connect to validator, error {:?}", e);
-        return Ok(());
-    }
-
-    // let cli_info = format!("Connected to validator");
-    // print_help(&cli_info, &commands);
+    // Test connection to validator
+    let latest_li = match client_proxy.test_validator_connection() {
+        Ok(li) => li,
+        Err(e) => {
+            println!(
+                "Not able to connect to validator at {}:{}, error {:?}",
+                args.host, args.port, e
+            );
+            return Ok(());
+        }
+    };
+    let ledger_info_str = format!("latest version = {}", latest_li.ledger_info().version(),);
+    let _cli_info = format!(
+        "Connected to validator at: {}:{}, {}",
+        args.host, args.port, ledger_info_str
+    );
 
     let config = Config::builder()
         .history_ignore_space(true)
