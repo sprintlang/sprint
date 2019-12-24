@@ -1,8 +1,21 @@
-use super::{context::Context, primitive::PRIMITIVES, unify::Unify, Result};
+use super::{
+    context::Context,
+    primitive::{self, PRIMITIVES},
+    unify::Unify,
+    Result,
+};
 use crate::ast::{Definition, Expression, Kind, Variable};
 
 pub fn program<'a>(definitions: Vec<Context<'a, Expression>>) -> Result<'a, Context<'a, ()>> {
     let mut context = Context::from(());
+
+    context.unify(primitive::zero());
+    context.unify(primitive::one());
+    context.unify(primitive::give());
+    context.unify(primitive::and());
+    context.unify(primitive::or());
+    context.unify(primitive::scale());
+    context.unify(primitive::anytime());
 
     context = definitions
         .into_iter()
