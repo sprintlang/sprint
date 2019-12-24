@@ -34,7 +34,7 @@ impl Command for DeployCommand {
         println!("Compiling sprint program...");
 
         let output_path;
-        let args = sprintc::Args {
+        let args = sprintc::CompileArgs {
             source_path,
             output_path: None,
             verbose: true,
@@ -52,7 +52,7 @@ impl Command for DeployCommand {
             }
         }
 
-        let move_code_path = fs::canonicalize(&output_path).unwrap().to_owned();
+        let move_code_path = fs::canonicalize(&output_path).unwrap();
         let move_code_path = move_code_path.to_str().unwrap();
 
         publish(client, sender, &move_code_path, PublishType::Module);

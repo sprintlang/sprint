@@ -8,32 +8,22 @@ use std::{
     io::{BufReader, Read, Write},
     path::{Path, PathBuf},
 };
-use structopt::StructOpt;
 
 const MVIR_EXTENSION: &str = "mvir";
 const SPRINT_EXTENSION: &str = "sprint";
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR")]
-pub struct Args {
+pub struct CompileArgs {
     /// File to be compiled
-    #[structopt(parse(from_os_str))]
-    source_path: PathBuf,
-
+    pub source_path: PathBuf,
     /// Optional path to output file
-    #[structopt(parse(from_os_str))]
-    output_path: Option<PathBuf>,
-
+    pub output_path: Option<PathBuf>,
     /// Prints extra debugging output
-    #[structopt(short, long)]
-    verbose: bool,
-
+    pub verbose: bool,
     /// Checks program without code generation
-    #[structopt(short, long)]
-    check: bool,
+    pub check: bool,
 }
 
-pub fn compile<'a>(args: &'a Args) -> Result<Cow<'a, Path>, Box<dyn Error>> {
+pub fn compile<'a>(args: &'a CompileArgs) -> Result<Cow<'a, Path>, Box<dyn Error>> {
     let (source_path, output_path) = check_args(args)?;
 
     let source = read_source(source_path)?;
@@ -60,7 +50,7 @@ pub fn compile<'a>(args: &'a Args) -> Result<Cow<'a, Path>, Box<dyn Error>> {
 }
 
 // Checks for presence of output path and that file extensions are valid.
-fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
+fn check_args(args: &CompileArgs) -> Result<(&Path, Cow<Path>), String> {
     let source = &args.source_path;
     let extension = source.extension();
 
@@ -88,7 +78,7 @@ fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
     Ok((source, output))
 }
 
-fn create_output_path(args: &Args) -> Result<Cow<Path>, String> {
+fn create_output_path(args: &CompileArgs) -> Result<Cow<Path>, String> {
     let output_path = &args.output_path;
 
     match output_path {
@@ -144,7 +134,7 @@ mod tests {
 
     #[test]
     fn create_output_path_no_output_specified() {
-        let args = Args {
+        let args = CompileArgs {
             source_path: PathBuf::from("test.sprint"),
             output_path: None,
             verbose: false,
@@ -159,7 +149,7 @@ mod tests {
 
     #[test]
     fn create_output_path_output_specified() {
-        let args = Args {
+        let args = CompileArgs {
             source_path: PathBuf::from("test.sprint"),
             output_path: Some(PathBuf::from("output.mvir")),
             verbose: false,

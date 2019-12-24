@@ -7,5 +7,5 @@ pub use jog::script;
 use sprint_parser::ast;
 
 pub fn generate(definitions: &[ast::Definition]) -> String {
-  definitions::visit(definitions).to_string()
+    definitions::visit(definitions).to_string()
 }

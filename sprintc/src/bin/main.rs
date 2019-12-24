@@ -8,21 +8,32 @@ use std::{error::Error, path::PathBuf};
 pub struct Args {
     /// File to be compiled
     #[structopt(parse(from_os_str))]
-    source_path: PathBuf,
+    pub source_path: PathBuf,
 
     /// Optional path to output file
     #[structopt(parse(from_os_str))]
-    output_path: Option<PathBuf>,
+    pub output_path: Option<PathBuf>,
 
     /// Prints extra debugging output
     #[structopt(short, long)]
-    verbose: bool,
+    pub verbose: bool,
+
+    /// Checks program without code generation
+    #[structopt(short, long)]
+    pub check: bool,
 }
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::from_args();
 
-    match compile(&args.source_path, &args.output_path, args.verbose) {
+    let args = sprintc::CompileArgs {
+        source_path: args.source_path,
+        output_path: args.output_path,
+        verbose: args.verbose,
+        check: args.check,
+    };
+
+    match compile(&args) {
         Ok(path) => {
             println!(
                 "Succesfully compiled {}!\nCompiled to {}.",

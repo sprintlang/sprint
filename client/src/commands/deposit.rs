@@ -38,15 +38,13 @@ impl Command for DepositCommand {
                 .get_account_address_from_parameter(params[2])
                 .unwrap()
                 .to_vec(),
-        )
-        .to_string();
+        );
         let owner = hex::encode(
             client
                 .get_account_address_from_parameter(params[4])
                 .unwrap()
                 .to_vec(),
-        )
-        .to_string();
+        );
 
         let deposit = Deposit {
             author: format!("0x{}", author),
@@ -62,7 +60,7 @@ impl Command for DepositCommand {
 
         println!("Compiling sprint program...");
 
-        let move_code_path = fs::canonicalize(&file_path).unwrap().to_owned();
+        let move_code_path = fs::canonicalize(&file_path).unwrap();
         let move_code_path = move_code_path.to_str().unwrap();
 
         let contents =
