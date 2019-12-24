@@ -1,53 +1,79 @@
 pub mod state;
 
 mod class;
+mod kind;
 
-pub use self::class::{Class, Comparable, Equatable, Negatable, Numerable};
+pub use self::{
+    class::{Class, Comparable, Equatable, Negatable, Numerable},
+    kind::Kind,
+};
 
-#[derive(PartialEq, Eq, Debug)]
+use self::state::State;
+use std::{
+    hash::{Hash, Hasher},
+    rc::Rc,
+};
+
+pub type Definitions<'a> = Vec<Definition<'a>>;
+
+#[derive(Debug)]
+pub struct Definition<'a> {
+    pub variable: Variable<'a>,
+    pub expression: Expression<'a>,
+}
+
+impl<'a> Definition<'a> {
+    pub fn new(variable: Variable<'a>, expression: Expression<'a>) -> Self {
+        Self {
+            variable,
+            expression,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum Expression<'a> {
-    Application(Box<Expression<'a>>, Box<Expression<'a>>),
+    Abstraction(Variable<'a>, Box<Self>),
+    Application(Box<Self>, Box<Self>),
     Boolean(bool),
     Class(Class<'a>),
-    Identifier(&'a str, Kind),
     Observable(Observable<'a>),
+    State(State<'a>),
+    Variable(Variable<'a>),
     Word(u64),
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum Kind {
-    Abstraction(Box<Kind>, Box<Kind>),
-    Boolean,
-    Observable(Box<Kind>),
-    Word,
-}
-
 impl Expression<'_> {
-    pub fn kind(&self) -> Kind {
+    pub fn kind(&self) -> Rc<Kind> {
         match self {
-            Self::Application(f, _) => match f.kind() {
-                Kind::Abstraction(_, k) => k.as_ref().clone(),
+            Self::Abstraction(from, to) => Kind::Abstraction(from.kind.clone(), to.kind()).into(),
+
+            Self::Application(f, _) => match f.kind().as_ref() {
+                Kind::Abstraction(_, k) => k.clone(),
                 _ => unreachable!(),
             },
 
-            Self::Boolean(_) => Kind::Boolean,
+            Self::Boolean(_) => Kind::Boolean.into(),
 
             Self::Class(c) => match c {
-                Class::Comparable(_) => Kind::Boolean,
-                Class::Equatable(_) => Kind::Boolean,
+                Class::Comparable(_) => Kind::Boolean.into(),
+                Class::Equatable(_) => Kind::Boolean.into(),
                 Class::Negatable(Negatable::Negate(e)) => e.kind(),
                 Class::Numerable(n) => n.kind(),
             },
 
-            Self::Identifier(_, k) => k.clone(),
-
-            Self::Observable(o) => Kind::Observable(Box::new(match o {
-                Observable::IsHolder => Kind::Boolean,
-                Observable::IsCounterparty => Kind::Boolean,
+            Self::Observable(o) => Kind::Observable(match o {
+                Observable::IsParty => Kind::Boolean.into(),
+                Observable::IsCounterparty => Kind::Boolean.into(),
                 Observable::Konst(e) => e.kind(),
-            })),
+            })
+            .into(),
 
-            Self::Word(_) => Kind::Word,
+            Self::State(_) => Kind::State.into(),
+
+            Self::Variable(v) => v.kind.clone(),
+
+            Self::Word(_) => Kind::Word.into(),
         }
     }
 }
@@ -70,17 +96,53 @@ impl<'a> From<Observable<'a>> for Expression<'a> {
     }
 }
 
+impl<'a> From<State<'a>> for Expression<'a> {
+    fn from(s: State<'a>) -> Self {
+        Self::State(s)
+    }
+}
+
+impl<'a> From<Variable<'a>> for Expression<'a> {
+    fn from(v: Variable<'a>) -> Self {
+        Self::Variable(v)
+    }
+}
+
 impl From<u64> for Expression<'_> {
     fn from(w: u64) -> Self {
         Self::Word(w)
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Eq, Clone, Debug)]
+pub struct Variable<'a> {
+    pub name: &'a str,
+    pub kind: Rc<Kind>,
+}
+
+impl<'a> Variable<'a> {
+    pub fn new(name: &'a str, kind: Rc<Kind>) -> Self {
+        Variable { name, kind }
+    }
+}
+
+impl PartialEq for Variable<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Hash for Variable<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
+}
+
+#[derive(Debug)]
 pub enum Observable<'a> {
-    IsHolder,
+    IsParty,
     IsCounterparty,
-    Konst(Box<Expression<'a>>),
+    Konst(Rc<Expression<'a>>),
 }
 
 impl<'a> From<Expression<'a>> for Observable<'a> {
@@ -96,12 +158,14 @@ mod tests {
     #[test]
     fn kind_of_application() {
         // one :: Word -> Word -> Boolean
-        let one = Expression::Identifier(
-            "one",
-            Kind::Abstraction(
-                Kind::Word.into(),
-                Kind::Abstraction(Kind::Word.into(), Kind::Boolean.into()).into(),
-            ),
+        // one x y = true
+        let one = Expression::Abstraction(
+            Variable::new("x", Kind::Word.into()),
+            Expression::Abstraction(
+                Variable::new("y", Kind::Word.into()),
+                Expression::Boolean(true).into(),
+            )
+            .into(),
         );
 
         // two = one 42
@@ -109,7 +173,7 @@ mod tests {
 
         // two :: Word -> Boolean
         assert_eq!(
-            two.kind(),
+            *two.kind(),
             Kind::Abstraction(Kind::Word.into(), Kind::Boolean.into())
         );
 
@@ -117,6 +181,6 @@ mod tests {
         let three = Expression::Application(two.into(), Expression::Word(29).into());
 
         // three :: Boolean
-        assert_eq!(three.kind(), Kind::Boolean);
+        assert_eq!(*three.kind(), Kind::Boolean);
     }
 }

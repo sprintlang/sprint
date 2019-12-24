@@ -1,12 +1,11 @@
-use super::{super::variable::Variable, Action};
-use std::{
-    fmt::{self, Display, Formatter},
-    rc::Rc,
+use super::{
+    super::{expression::Address, variable::Variable},
+    Action,
 };
+use std::fmt::{self, Display, Formatter};
 
 const DEPENDENCIES: &[&str] = &["0x0.LibraAccount", "0x0.LibraCoin"];
 
-#[allow(dead_code)]
 pub struct Deposit {
     amount: u64,
 }
@@ -23,11 +22,7 @@ impl Action for Deposit {
         DEPENDENCIES
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
+    fn definitions(&self) -> Vec<&Variable> {
         vec![]
     }
 }
@@ -61,11 +56,7 @@ impl Action for Withdraw {
         DEPENDENCIES
     }
 
-    fn properties(&self) -> Vec<Rc<Variable>> {
-        vec![]
-    }
-
-    fn definitions(&self) -> Vec<Rc<Variable>> {
+    fn definitions(&self) -> Vec<&Variable> {
         vec![]
     }
 }
@@ -86,19 +77,5 @@ impl Display for Withdraw {
             );",
             self.payee,
         )
-    }
-}
-
-pub enum Address {
-    Party,
-    Counterparty,
-}
-
-impl fmt::Display for Address {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Address::Party => write!(f, "*(&copy(context_ref).party)"),
-            Address::Counterparty => write!(f, "*(&copy(context_ref).counterparty)"),
-        }
     }
 }

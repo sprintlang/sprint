@@ -49,7 +49,7 @@ fn test(module: impl Display, suite: &Path) {
 #[test]
 fn generated_zero() {
     let suite = Path::new("tests/suites/zero.test.mvir");
-    let contract = contract("zero").unwrap();
+    let contract = contract("main = zero").unwrap();
 
     test(generate(&contract), suite);
 }
@@ -57,7 +57,7 @@ fn generated_zero() {
 #[test]
 fn generated_one() {
     let suite = Path::new("tests/suites/one.test.mvir");
-    let contract = contract("one").unwrap();
+    let contract = contract("main = one").unwrap();
 
     test(generate(&contract), suite);
 }
@@ -65,7 +65,7 @@ fn generated_one() {
 #[test]
 fn generated_one_and_one() {
     let suite = Path::new("tests/suites/one_and_one.test.mvir");
-    let contract = contract("one and one").unwrap();
+    let contract = contract("main = and one one").unwrap();
 
     test(generate(&contract), suite);
 }

@@ -1,7 +1,6 @@
 use super::Expression;
-use std::rc::Rc;
 
-#[derive(Default, Debug, Eq, PartialEq)]
+#[derive(Default, Debug)]
 pub struct State<'a> {
     transitions: Vec<Transition<'a>>,
 }
@@ -17,19 +16,19 @@ impl<'a> State<'a> {
     }
 }
 
-#[derive(Default, Debug, Eq, PartialEq)]
+#[derive(Default, Debug)]
 pub struct Transition<'a> {
-    conditions: Vec<Rc<Expression<'a>>>,
+    conditions: Vec<Expression<'a>>,
     effects: Vec<Effect<'a>>,
-    next: Option<Rc<State<'a>>>,
+    next: Option<Expression<'a>>,
 }
 
 impl<'a> Transition<'a> {
-    pub fn conditions(&self) -> &[Rc<Expression>] {
+    pub fn conditions(&self) -> &[Expression<'a>] {
         &self.conditions
     }
 
-    pub fn add_condition(&mut self, condition: Rc<Expression<'a>>) -> &mut Self {
+    pub fn add_condition(&mut self, condition: Expression<'a>) -> &mut Self {
         self.conditions.push(condition);
         self
     }
@@ -43,20 +42,20 @@ impl<'a> Transition<'a> {
         self
     }
 
-    pub fn next(&self) -> Option<Rc<State<'a>>> {
-        self.next.clone()
+    pub fn next(&self) -> Option<&Expression<'a>> {
+        self.next.as_ref()
     }
 
-    pub fn set_next(&mut self, next: Rc<State<'a>>) -> &mut Self {
+    pub fn set_next(&mut self, next: Expression<'a>) -> &mut Self {
         self.next = Some(next);
         self
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug)]
 pub enum Effect<'a> {
     Flip,
-    Scale(Rc<Expression<'a>>),
-    Spawn(Rc<State<'a>>),
+    Scale(Expression<'a>),
+    Spawn(Expression<'a>),
     Withdraw,
 }

@@ -8,16 +8,33 @@ use std::{
     io::{BufReader, Read, Write},
     path::{Path, PathBuf},
 };
+use structopt::StructOpt;
 
 const MVIR_EXTENSION: &str = "mvir";
 const SPRINT_EXTENSION: &str = "sprint";
 
-pub fn compile<'a>(
-    source: &'a PathBuf,
-    output: &'a Option<PathBuf>,
+#[derive(Debug, StructOpt)]
+#[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR")]
+pub struct Args {
+    /// File to be compiled
+    #[structopt(parse(from_os_str))]
+    source_path: PathBuf,
+
+    /// Optional path to output file
+    #[structopt(parse(from_os_str))]
+    output_path: Option<PathBuf>,
+
+    /// Prints extra debugging output
+    #[structopt(short, long)]
     verbose: bool,
-) -> Result<Cow<'a, Path>, Box<dyn Error>> {
-    let (source_path, output_path) = check_args(source, output)?;
+
+    /// Checks program without code generation
+    #[structopt(short, long)]
+    check: bool,
+}
+
+pub fn compile<'a>(args: &'a Args) -> Result<Cow<'a, Path>, Box<dyn Error>> {
+    let (source_path, output_path) = check_args(args)?;
 
     let source = read_source(source_path)?;
 
@@ -26,21 +43,25 @@ pub fn compile<'a>(
         format!("Unable to parse file `{}`", source_path.display())
     })?;
 
-    if verbose {
-        println!("{:#?}", ast);
+    if args.verbose {
+        for definition in &ast {
+            let name = definition.variable.name;
+            println!("{} :: {}", name, definition.variable.kind);
+            println!("{} = {:#?}", name, definition.expression);
+        }
     }
 
-    let output = generate(&ast);
-    write_output(&output_path, output.as_bytes())?;
+    if !args.check {
+        let output = generate(&ast);
+        write_output(&output_path, output.as_bytes())?;
+    }
 
     Ok(output_path)
 }
 
 // Checks for presence of output path and that file extensions are valid.
-fn check_args<'a>(
-    source: &'a PathBuf,
-    output: &'a Option<PathBuf>,
-) -> Result<(&'a Path, Cow<'a, Path>), String> {
+fn check_args(args: &Args) -> Result<(&Path, Cow<Path>), String> {
+    let source = &args.source_path;
     let extension = source.extension();
 
     match extension {
@@ -62,15 +83,14 @@ fn check_args<'a>(
         }
     }
 
-    let output = create_output_path(source, output)?;
+    let output = create_output_path(&args)?;
 
     Ok((source, output))
 }
 
-fn create_output_path<'a>(
-    source_path: &PathBuf,
-    output_path: &'a Option<PathBuf>,
-) -> Result<Cow<'a, Path>, String> {
+fn create_output_path(args: &Args) -> Result<Cow<Path>, String> {
+    let output_path = &args.output_path;
+
     match output_path {
         Some(path) => {
             if path.extension() != Some(OsStr::new(MVIR_EXTENSION)) {
@@ -85,7 +105,7 @@ fn create_output_path<'a>(
         None => {
             let mut output = PathBuf::new();
 
-            output.push(source_path.file_stem().unwrap());
+            output.push(args.source_path.file_stem().unwrap());
             output.set_extension(MVIR_EXTENSION);
 
             Ok(output.into())
@@ -124,20 +144,30 @@ mod tests {
 
     #[test]
     fn create_output_path_no_output_specified() {
+        let args = Args {
+            source_path: PathBuf::from("test.sprint"),
+            output_path: None,
+            verbose: false,
+            check: false,
+        };
+
         assert_eq!(
-            create_output_path(&PathBuf::from("test.sprint"), &None).unwrap(),
+            create_output_path(&args).unwrap(),
             PathBuf::from("test.mvir")
         );
     }
 
     #[test]
     fn create_output_path_output_specified() {
+        let args = Args {
+            source_path: PathBuf::from("test.sprint"),
+            output_path: Some(PathBuf::from("output.mvir")),
+            verbose: false,
+            check: false,
+        };
+
         assert_eq!(
-            create_output_path(
-                &PathBuf::from("test.sprint"),
-                &Some(PathBuf::from("output.mvir"))
-            )
-            .unwrap(),
+            create_output_path(&args).unwrap(),
             PathBuf::from("output.mvir")
         );
     }

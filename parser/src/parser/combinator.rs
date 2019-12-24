@@ -3,6 +3,7 @@ use nom::{
     character::complete::char,
     character::complete::multispace0,
     error::ParseError,
+    multi::{count, many1_count},
     sequence::{delimited, terminated},
     AsBytes, AsChar, InputIter, InputTakeAtPosition, Slice,
 };
@@ -20,7 +21,7 @@ where
     }
 }
 
-pub fn padding<I, O, E, F>(f: F) -> impl Fn(I) -> nom::IResult<I, O, E>
+pub fn padding0<I, O, E, F>(f: F) -> impl Fn(I) -> nom::IResult<I, O, E>
 where
     I: InputTakeAtPosition,
     <I as InputTakeAtPosition>::Item: AsChar + Clone,
@@ -30,7 +31,7 @@ where
     delimited(multispace0, f, multispace0)
 }
 
-pub fn brackets<I, O, E, F>(f: F) -> impl Fn(I) -> nom::IResult<I, O, E>
+pub fn brackets1<I, O, E, F>(f: F) -> impl Fn(I) -> nom::IResult<I, O, E>
 where
     I: Slice<RangeFrom<usize>> + InputIter + Clone + PartialEq,
     <I as InputIter>::Item: AsChar,
@@ -38,8 +39,8 @@ where
     F: Fn(I) -> nom::IResult<I, O, E> + Copy,
 {
     move |input: I| {
-        let (input, _) = char('(')(input)?;
-        terminated(f, char(')'))(input)
+        let (input, brackets) = many1_count(char('('))(input)?;
+        terminated(f, count(char(')'), brackets))(input)
     }
 }
 
@@ -82,22 +83,22 @@ mod tests {
     }
 
     #[test]
-    fn parse_padding() {
-        assert_eq!(padding(parser)("abc"), Ok(("", "abc")));
-        assert_eq!(padding(parser)(" abc"), Ok(("", "abc")));
-        assert_eq!(padding(parser)("  abc"), Ok(("", "abc")));
-        assert_eq!(padding(parser)("abc "), Ok(("", "abc")));
-        assert_eq!(padding(parser)("abc  "), Ok(("", "abc")));
-        assert_eq!(padding(parser)(" abc "), Ok(("", "abc")));
-        assert_eq!(padding(parser)("  abc  "), Ok(("", "abc")));
+    fn parse_padding0() {
+        assert_eq!(padding0(parser)("abc"), Ok(("", "abc")));
+        assert_eq!(padding0(parser)(" abc"), Ok(("", "abc")));
+        assert_eq!(padding0(parser)("  abc"), Ok(("", "abc")));
+        assert_eq!(padding0(parser)("abc "), Ok(("", "abc")));
+        assert_eq!(padding0(parser)("abc  "), Ok(("", "abc")));
+        assert_eq!(padding0(parser)(" abc "), Ok(("", "abc")));
+        assert_eq!(padding0(parser)("  abc  "), Ok(("", "abc")));
     }
 
     #[test]
-    fn parse_brackets() {
-        assert_eq!(brackets(parser)("(abc)"), Ok(("", "abc")));
-        brackets(parser)("(abc").unwrap_err();
-        brackets(parser)("((abc").unwrap_err();
-        brackets(parser)("((abc)").unwrap_err();
-        brackets(parser)("(((abc))").unwrap_err();
+    fn parse_brackets1() {
+        assert_eq!(brackets1(parser)("(abc)"), Ok(("", "abc")));
+        brackets1(parser)("(abc").unwrap_err();
+        brackets1(parser)("((abc").unwrap_err();
+        brackets1(parser)("((abc)").unwrap_err();
+        brackets1(parser)("(((abc))").unwrap_err();
     }
 }

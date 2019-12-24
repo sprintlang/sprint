@@ -1,6 +1,7 @@
 use super::{Expression, Kind};
+use std::rc::Rc;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Class<'a> {
     Comparable(Comparable<'a>),
     Equatable(Equatable<'a>),
@@ -8,7 +9,7 @@ pub enum Class<'a> {
     Numerable(Numerable<'a>),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Comparable<'a> {
     Greater(Box<Expression<'a>>, Box<Expression<'a>>),
     Less(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -16,18 +17,18 @@ pub enum Comparable<'a> {
     LessEqual(Box<Expression<'a>>, Box<Expression<'a>>),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Equatable<'a> {
     Equal(Box<Expression<'a>>, Box<Expression<'a>>),
     NotEqual(Box<Expression<'a>>, Box<Expression<'a>>),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Negatable<'a> {
     Negate(Box<Expression<'a>>),
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub enum Numerable<'a> {
     Add(Box<Expression<'a>>, Box<Expression<'a>>),
     Subtract(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -36,7 +37,7 @@ pub enum Numerable<'a> {
 }
 
 impl Numerable<'_> {
-    pub(super) fn kind(&self) -> Kind {
+    pub(super) fn kind(&self) -> Rc<Kind> {
         match self {
             Self::Add(e, _) | Self::Subtract(e, _) | Self::Multiply(e, _) | Self::Divide(e, _) => {
                 e.kind()

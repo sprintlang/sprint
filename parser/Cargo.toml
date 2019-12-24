@@ -13,6 +13,7 @@ edition = "2018"
 [dependencies]
 nom = "5.0.1"
 nom_locate = "1.0.0"
+phf = { version = "0.8.0", features = [ "macros" ] }
 
 [dev-dependencies]
 indoc = "0.3.4"

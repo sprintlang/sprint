@@ -1,13 +1,11 @@
 mod jog;
+mod numbers;
 mod visitor;
 
-use self::visitor::State;
-use sprint_parser::ast::state as ast;
-
+use self::visitor::definitions;
 pub use jog::script;
+use sprint_parser::ast;
 
-pub fn generate(state: &ast::State) -> String {
-    let mut visitor = State::default();
-    visitor.visit(state);
-    visitor.contract().to_string()
+pub fn generate(definitions: &[ast::Definition]) -> String {
+  definitions::visit(definitions).to_string()
 }

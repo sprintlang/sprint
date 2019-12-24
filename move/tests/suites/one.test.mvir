@@ -10,17 +10,22 @@ main() {
 
 // Checks the contract can be initialized properly
 //! new-transaction
-//! sender: bob
+//! sender: chris
 import {{alice}}.Contract;
 import 0x0.LibraCoin;
 import 0x0.LibraAccount;
 
 main() {
+  let initial_balance: u64;
   let contract: Contract.T;
+
+  initial_balance = LibraAccount.balance({{chris}});
 
   Contract.initialize({{alice}}, {{bob}}, {{chris}});
   // TODO: REMOVE THIS LINE. This should happen in initialization in the future.
   Contract.deposit({{alice}}, LibraAccount.withdraw_from_sender(1), 0);
+
+  assert(move(initial_balance) - 1 == LibraAccount.balance({{chris}}), 1);
 
   return;
 }
@@ -33,9 +38,14 @@ import 0x0.LibraCoin;
 import 0x0.LibraAccount;
 
 main() {
+  let initial_balance: u64;
   let contract: Contract.T;
 
+  initial_balance = LibraAccount.balance({{bob}});
+
   Contract.transition_1_0({{alice}}, 0);
+
+  assert(move(initial_balance) + 1 == LibraAccount.balance({{bob}}), 1);
 
   return;
 }

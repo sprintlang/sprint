@@ -6,9 +6,6 @@ module Contract {
     resource T {
         coinstores: Vector.T<LibraCoin.T>,
         contexts: Vector.T<Self.Context>,
-        {%- for property in self.properties() %}
-        {{ property.name }}: {{ property.type_name }},
-        {%- endfor %}
     }
 
     resource Context {
@@ -26,9 +23,6 @@ module Contract {
         contract = T {
             coinstores: Vector.empty<LibraCoin.T>(),
             contexts: Vector.empty<Self.Context>(),
-            {%- for property in self.properties() %}
-            {{ property.name }}: {{ property.default.as_ref().unwrap() }},
-            {%- endfor %}
         };
 
         move_to_sender<T>(move(contract));
@@ -45,7 +39,7 @@ module Contract {
         Vector.push_back<LibraCoin.T>(&mut copy(contract_ref).coinstores, LibraCoin.zero());
 
         Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
-            state: 1,
+            state: {{ initial_state }},
             coinstore_index: move(coinstore_index),
             party: move(party),
             counterparty: move(counterparty),
@@ -55,6 +49,7 @@ module Contract {
         return;
     }
 
+    // TODO: create this in code generation.
     public deposit(owner: address, coin: LibraCoin.T, coinstore_index: u64) acquires T {
         LibraCoin.deposit(
             Vector.borrow_mut<LibraCoin.T>(
@@ -66,45 +61,11 @@ module Contract {
         return;
     }
 
-    {% for transition in transition_methods %}
-    public transition_{{ transition.origin_state() }}_{{ transition.to_state() }}(owner: address, context_index: u64) acquires T {
-        let contract_ref: &mut Self.T;
-        let contexts: &mut Vector.T<Self.Context>;
-        let context_ref: &mut Self.Context;
-        {% for definition in transition.definitions() %}
-        let {{ definition.name }}: {{ definition.type_name }};
-        {% endfor %}
+    {% for method in methods -%}
+    {{ method }}
 
-        contract_ref = borrow_global_mut<T>(move(owner));
-        // Get the specified context.
-        contexts = &mut copy(contract_ref).contexts;
-        context_ref = Vector.borrow_mut<Self.Context>(copy(contexts), copy(context_index));
+    {% endfor -%}
 
-        // Check the current state to make sure we can execute this transition.
-        assert(*(&mut copy(context_ref).state) == {{ transition.origin_state() }}, 1);
-
-        // Check the conditions for this transition.
-        {%- for condition in transition.conditions() %}
-        {{ condition }}
-        {%- endfor %}
-
-        // Initialize the variable definitions
-        {% for definition in transition.definitions() %}
-        {% if !definition.default.is_none() %}
-        {{ definition.name }} = {{ definition.default.as_ref().unwrap() }};
-        {% endif %}
-        {% endfor %}
-
-        {%- for action in transition.actions() %}
-        {{ action }}
-        {%- endfor %}
-
-        return;
-    }
-    {% endfor %}
-
-    // TODO: Figure out destroy, requires destroying all contexts as well.
-    // Destroy the contract resource.
+    // TODO: figure out destroy, requires destroying all contexts as well.
     // public destroy(contract: Self.T) {}
-
 }

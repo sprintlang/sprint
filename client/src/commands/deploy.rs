@@ -34,7 +34,13 @@ impl Command for DeployCommand {
         println!("Compiling sprint program...");
 
         let output_path;
-        match sprintc::compile(&source_path, &None, false) {
+        let args = sprintc::Args {
+            source_path,
+            output_path: None,
+            verbose: true,
+            check: false,
+        };
+        match sprintc::compile(&args) {
             Ok(path) => {
                 output_path = path;
                 // move_code_path = String::from(path.to_str().unwrap());
