@@ -42,6 +42,7 @@ impl Display for Spawn<'_> {
                 party: {},
                 counterparty: {},
                 scale: *(&copy(context_ref).scale),
+                stack: Vector.empty<u64>(),
             }};",
             self.context.identifier(),
             self.root,

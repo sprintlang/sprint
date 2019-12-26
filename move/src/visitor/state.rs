@@ -39,7 +39,7 @@ fn visit_full<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) 
 
     for transition in state.transitions() {
         let mut from_state = None;
-        let (next_id, mut to_state) = match transition.next() {
+        let (mut next_id, mut to_state) = match transition.next() {
             Some(next) => match expression::visit(context, next).try_into() {
                 Ok(id) => (id, None),
                 Err(expression) => (TERMINAL_ID, Some(expression)),
@@ -51,7 +51,13 @@ fn visit_full<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) 
             Some(context) => {
                 Method::private(Identifier::AbstractTransition(context.name, id, next_id))
             }
-            None => Method::public(Identifier::Transition(id, next_id)),
+            None => {
+                if next_id == TERMINAL_ID {
+                    next_id = context.next_id();
+                }
+
+                Method::public(Identifier::Transition(next_id))
+            }
         };
 
         if let Some(function_context) = &context.function_context {
@@ -188,7 +194,7 @@ fn visit_stub<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) 
 
     for transition in state.transitions() {
         let mut from_state = None;
-        let (next_id, mut to_state) = match transition.next() {
+        let (mut next_id, mut to_state) = match transition.next() {
             Some(next) => match expression::visit(context, next).try_into() {
                 Ok(id) => (id, None),
                 Err(expression) => (TERMINAL_ID, Some(expression)),
@@ -203,7 +209,13 @@ fn visit_stub<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) 
             Some(context) => {
                 Method::private(Identifier::AbstractTransition(context.name, id, next_id))
             }
-            None => Method::public(Identifier::Transition(id, next_id)),
+            None => {
+                if next_id == TERMINAL_ID {
+                    next_id = context.next_id();
+                }
+
+                Method::public(Identifier::Transition(next_id))
+            }
         };
 
         if let Some(function_context) = &context.function_context {
