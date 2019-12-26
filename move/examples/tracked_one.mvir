@@ -1,0 +1,93 @@
+module Contract {
+    import 0x0.LibraCoin;
+    import 0x0.LibraAccount;
+    import 0x0.Vector;
+
+    resource T {
+        coinstores: Vector.T<LibraCoin.T>,
+        contexts: Vector.T<Self.Context>,
+    }
+
+    resource Context {
+        state: u64,
+        coinstore_index: u64,
+        party: address,
+        counterparty: address,
+        scale: u64,
+    }
+
+    // Create a contract with a party and counterparty.
+    public create() {
+        let contract: Self.T;
+
+        contract = T {
+            coinstores: Vector.empty<LibraCoin.T>(),
+            contexts: Vector.empty<Self.Context>(),
+        };
+
+        move_to_sender<T>(move(contract));
+
+        return;
+    }
+
+    public initialize(owner: address, party: address, counterparty: address) acquires T {
+        let contract_ref: &mut Self.T;
+        let coinstore_index: u64;
+
+        contract_ref = borrow_global_mut<T>(move(owner));
+        coinstore_index = Vector.length<Self.Context>(&copy(contract_ref).contexts);
+        Vector.push_back<LibraCoin.T>(&mut copy(contract_ref).coinstores, LibraCoin.zero());
+
+        Vector.push_back<Self.Context>(&mut move(contract_ref).contexts, Context {
+            state: 1,
+            coinstore_index: move(coinstore_index),
+            party: move(party),
+            counterparty: move(counterparty),
+            scale: 1,
+        });
+
+        return;
+    }
+
+    // TODO: create this in code generation.
+    public deposit(owner: address, coin: LibraCoin.T, coinstore_index: u64) acquires T {
+        LibraCoin.deposit(
+            Vector.borrow_mut<LibraCoin.T>(
+                &mut borrow_global_mut<T>(move(owner)).coinstores,
+                move(coinstore_index)
+            ),
+            move(coin));
+
+        return;
+    }
+
+    public transition_1_0(
+        owner: address,
+        context_index: u64,
+    )acquires T {
+        let contexts: &mut Vector.T<Self.Context>;
+        let context_ref: &mut Self.Context;
+        let contract_ref: &mut Self.T;
+        contract_ref = borrow_global_mut<T>(move(owner));
+        contexts = &mut copy(contract_ref).contexts;
+        context_ref = Vector.borrow_mut<Self.Context>(copy(contexts), copy(context_index));
+        assert(*(&mut copy(context_ref).state) == 1, 1);
+        LibraAccount.deposit(
+                *(&copy(context_ref).party),
+                LibraCoin.withdraw(
+                    Vector.borrow_mut<LibraCoin.T>(
+                        &mut copy(contract_ref).coinstores,
+                        *(&copy(context_ref).coinstore_index),
+                    ),
+                    *(&mut copy(context_ref).scale)
+                )
+            );
+        *(&mut move(context_ref).state) = 0;
+
+
+        return;
+    }
+
+    // TODO: figure out destroy, requires destroying all contexts as well.
+    // public destroy(contract: Self.T) {}
+}
