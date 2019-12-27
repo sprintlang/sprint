@@ -33,6 +33,7 @@ module Contract {
     public initialize(owner: address, party: address, counterparty: address) acquires T {
         let contract_ref: &mut Self.T;
         let coinstore_index: u64;
+        let handle: LibraAccount.EventHandle<u64>;
 
         contract_ref = borrow_global_mut<T>(move(owner));
         coinstore_index = Vector.length<Self.Context>(&copy(contract_ref).contexts);
@@ -45,6 +46,11 @@ module Contract {
             counterparty: move(counterparty),
             scale: 1,
         });
+
+        // Emit event announcing that new context now in state 1.
+        handle = LibraAccount.new_event_handle<u64>();
+        LibraAccount.emit_event<u64>(&mut handle, 1);
+        LibraAccount.destroy_handle<u64>(move(handle));
 
         return;
     }
