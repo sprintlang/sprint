@@ -11,12 +11,12 @@ use std::rc::Rc;
 
 pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, Context<'a, ()>> {
     let mut context = Context::from(());
-
+    // println!("Definitions: {:#?}", definitions);
     context = definitions.into_iter().fold(Ok(context), unify_context)?;
 
     context
         .unify(signature(Span::new("main"), Kind::State).unwrap())
-        .map_err(|sprint_err| Err::Error(CombinedError::from_sprint_error(sprint_err)))?;
+        .map_err(|err| Err::Error(err))?;
 
     for variable in &context.variables {
         if !context.definitions.contains_key(variable.name) {
@@ -37,16 +37,24 @@ pub fn unify_context<'a>(
     definition: Context<'a, Expression<'a>>,
 ) -> Result<'a, Context<'a, ()>> {
     let span = definition.as_ref().span;
+    println!("Definition in unify context: {:#?}", definition);
     match context {
         Err(_) => context,
         Ok(mut c) => match c.unify(definition) {
             Ok(_) => Ok(c),
-            Err(e) => Err(Err::Error(CombinedError::from_sprint_error_and_error_kind(
-                span,
-                ErrorKind::Tag,
-                e,
-            ))),
-        },
+            Err(e) => Err(Err::Error(e)),
+        }
+        // Ok(mut c) => match c.unify(definition) {
+        //     Ok(_) => Ok(c),
+        //     Err(e) => {
+        //         println!("Span in error: {:#?}", span);
+        //         return Err(Err::Error(CombinedError::from_sprint_error_and_error_kind(
+        //             span,
+        //             ErrorKind::Tag,
+        //             e,
+        //         )));
+        //     }
+        // },
     }
 }
 
@@ -91,13 +99,14 @@ pub fn definition<'a>(
     context.variables.insert(variable);
 
     // TODO: Bespoke sprint error?
-    context.unify(expression).map_err(|sprint_error| {
-        Err::Error(CombinedError::from_sprint_error_and_error_kind(
-            identifier,
-            ErrorKind::Tag,
-            sprint_error,
-        ))
-    })?;
+    // context.unify(expression).map_err(|sprint_error| {
+    //     Err::Error(CombinedError::from_sprint_error_and_error_kind(
+    //         identifier,
+    //         ErrorKind::Tag,
+    //         sprint_error,
+    //     ))
+    // })?;
+    context.unify(expression).map_err(|err| Err::Error(err))?;
 
     Ok(context)
 }
@@ -133,13 +142,14 @@ pub fn application<'a>(
 
     for c in contexts {
         // TODO: bespoke sprint error?
-        context.unify(c).map_err(|sprint_error| {
-            Err::Error(CombinedError::from_sprint_error_and_error_kind(
-                identifier,
-                ErrorKind::Tag,
-                sprint_error,
-            ))
-        })?;
+        // context.unify(c).map_err(|sprint_error| {
+        //     Err::Error(CombinedError::from_sprint_error_and_error_kind(
+        //         identifier,
+        //         ErrorKind::Tag,
+        //         sprint_error,
+        //     ))
+        // })?;
+        context.unify(c).map_err(|err| Err::Error(err))?;
     }
 
     Ok(context)

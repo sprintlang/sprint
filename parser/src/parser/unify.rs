@@ -1,26 +1,41 @@
-use super::{context::Context, error::SprintError};
+use super::{
+    context::Context,
+    error::{CombinedError, SprintError},
+};
 use crate::ast::Kind;
+use nom::error::ErrorKind;
 use std::rc::Rc;
 
 pub trait Unify<'a, O = Self> {
-    fn unify(self, other: O) -> Result<(), SprintError<'a>>;
+    fn unify(self, other: O) -> Result<(), CombinedError<'a>>;
 }
 
 impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
-    fn unify(self, other: Context<'a, U>) -> Result<(), SprintError<'a>> {
-        for (name, definition) in other.definitions {
-            if self.definitions.insert(name, definition).is_some() {
+    fn unify(self, other: Context<'a, U>) -> Result<(), CombinedError<'a>> {
+        for (name, definition) in &other.definitions {
+            if self.definitions.insert(name, definition.clone()).is_some() {
                 // There is a duplicate definition.
                 // TODO: duplicate definition error.
-                return Err(SprintError::InvalidNumberArgsError);
+                return Err(CombinedError::from_sprint_error(
+                    SprintError::InvalidNumberArgsError,
+                ));
             }
         }
 
         for variable in other.variables {
+            let name = variable.name;
             let kind = variable.kind.clone();
 
             if let Some(original) = self.variables.replace(variable) {
-                original.kind.unify(kind)?;
+                if let Err(e) = original.kind.unify(kind) {
+                    let def = self.definitions.get(name).unwrap();
+                    let span = def.expression.span;
+                    return Err(CombinedError::from_sprint_error_and_error_kind(
+                        span,
+                        ErrorKind::Tag,
+                        e.sprint_error.unwrap(),
+                    ));
+                }
             }
         }
 
@@ -29,7 +44,7 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
 }
 
 impl<'a> Unify<'a> for Rc<Kind> {
-    fn unify(self, other: Self) -> Result<(), SprintError<'a>> {
+    fn unify(self, other: Self) -> Result<(), CombinedError<'a>> {
         let mut this = Kind::simplify(self);
         let mut other = Kind::simplify(other);
 
@@ -50,10 +65,10 @@ impl<'a> Unify<'a> for Rc<Kind> {
             (_, Kind::Unresolved(_)) => other.unify(this)?,
             (Kind::Word, Kind::Word) => {}
             _ => {
-                return Err(SprintError::TypeError(
+                return Err(CombinedError::from_sprint_error(SprintError::TypeError(
                     Rc::make_mut(&mut this).clone(),
                     Rc::make_mut(&mut other).clone(),
-                ))
+                )))
             }
         }
 

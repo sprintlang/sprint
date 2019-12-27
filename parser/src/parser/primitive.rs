@@ -168,13 +168,14 @@ fn argument<'a>(
         .expression
         .kind()
         .unify(kind.into())
-        .map_err(|sprint_error| {
-            Err::Error(CombinedError::from_sprint_error_and_error_kind(
-                argument.span,
-                ErrorKind::Tag,
-                sprint_error,
-            ))
-        })?;
+        .map_err(|err| Err::Error(err))?;
+    // .map_err(|sprint_error| {
+    //     Err::Error(CombinedError::from_sprint_error_and_error_kind(
+    //         argument.span,
+    //         ErrorKind::Tag,
+    //         sprint_error,
+    //     ))
+    // })?;
 
     Ok(argument)
 }
