@@ -74,6 +74,8 @@ module Contract {
         let contexts: &mut Vector.T<Self.Context>;
         let context_ref: &mut Self.Context;
         let contract_ref: &mut Self.T;
+        let handle: LibraAccount.EventHandle<u64>;
+
         contract_ref = borrow_global_mut<T>(move(owner));
         contexts = &mut copy(contract_ref).contexts;
         context_ref = Vector.borrow_mut<Self.Context>(copy(contexts), copy(context_index));
@@ -90,6 +92,9 @@ module Contract {
             );
         *(&mut move(context_ref).state) = 0;
 
+        handle = LibraAccount.new_event_handle<u64>();
+        LibraAccount.emit_event<u64>(&mut handle, 0);
+        LibraAccount.destroy_handle<u64>(move(handle));
 
         return;
     }
