@@ -80,6 +80,16 @@ impl Display for Withdraw {
     }
 }
 
-pub struct Emit {
-    expression: Expression,
+pub struct Emit<'a> {
+    emitted_data: &'a Expression,
+}
+
+impl Action for Emit {
+    fn dependencies(&self) -> &'static [&'static str] {
+        &["0x0.LibraAccount"]
+    }
+
+    fn definitions(&self) -> Vec<&Variable> {
+        vec![]
+    }
 }
