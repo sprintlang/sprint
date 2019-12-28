@@ -3,7 +3,6 @@ use super::{
     error::{CombinedError, SprintError},
 };
 use crate::ast::Kind;
-use nom::error::ErrorKind;
 use std::rc::Rc;
 
 pub trait Unify<'a, O = Self> {
@@ -24,18 +23,14 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
 
         for variable in other.variables {
             let name = variable.name;
-            println!("Name: {:#?}", name);
             let kind = variable.kind.clone();
 
             if let Some(original) = self.variables.replace(variable) {
                 if let Err(e) = original.kind.unify(kind) {
-                    println!("self.Definitions: {:#?}", self.definitions);
-                    println!("other.Definitions: {:#?}", other.definitions);
                     let def = self.definitions.get(name).unwrap();
                     let span = def.expression.span;
-                    return Err(CombinedError::from_sprint_error_and_error_kind(
+                    return Err(CombinedError::from_sprint_error_and_span(
                         span,
-                        ErrorKind::Tag,
                         SprintError::TypeError(name, e.sprint_error.unwrap().into()),
                     ));
                 }

@@ -10,7 +10,7 @@ use crate::ast::{
     state::{Effect, State, Transition},
     {Expression, ExpressionType, Kind, Observable},
 };
-use nom::{error::ErrorKind, Err};
+use nom::Err;
 use phf::phf_map;
 
 type Primitive = fn(Vec<Expression>) -> Result<'_, Context<Expression>>;
@@ -168,14 +168,7 @@ fn argument<'a>(
         .expression
         .kind()
         .unify(kind.into())
-        .map_err(|err| Err::Error(err))?;
-    // .map_err(|sprint_error| {
-    //     Err::Error(CombinedError::from_sprint_error_and_error_kind(
-    //         argument.span,
-    //         ErrorKind::Tag,
-    //         sprint_error,
-    //     ))
-    // })?;
+        .map_err(Err::Error)?;
 
     Ok(argument)
 }

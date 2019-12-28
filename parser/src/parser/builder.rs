@@ -6,23 +6,21 @@ use super::{
     Result, Span,
 };
 use crate::ast::{Definition, Expression, ExpressionType, Kind, Variable};
-use nom::{error::ErrorKind, Err};
+use nom::Err;
 use std::rc::Rc;
 
 pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, Context<'a, ()>> {
     let mut context = Context::from(());
-    // println!("Definitions: {:#?}", definitions);
     context = definitions.into_iter().fold(Ok(context), unify_context)?;
 
     context
         .unify(signature(Span::new("main"), Kind::State).unwrap())
-        .map_err(|err| Err::Error(err))?;
+        .map_err(Err::Error)?;
 
     for variable in &context.variables {
         if !context.definitions.contains_key(variable.name) {
-            return Err(Err::Error(CombinedError::from_sprint_error_and_error_kind(
+            return Err(Err::Error(CombinedError::from_sprint_error_and_span(
                 variable.span,
-                ErrorKind::Tag,
                 SprintError::UnknownIdentifierError(
                     variable.name,
                     Rc::make_mut(&mut variable.kind.clone()).clone(),
@@ -38,25 +36,12 @@ pub fn unify_context<'a>(
     context: Result<'a, Context<'a, ()>>,
     definition: Context<'a, Expression<'a>>,
 ) -> Result<'a, Context<'a, ()>> {
-    let span = definition.as_ref().span;
-    // println!("Definition in unify context: {:#?}", definition);
     match context {
         Err(_) => context,
         Ok(mut c) => match c.unify(definition) {
             Ok(_) => Ok(c),
             Err(e) => Err(Err::Error(e)),
-        }
-        // Ok(mut c) => match c.unify(definition) {
-        //     Ok(_) => Ok(c),
-        //     Err(e) => {
-        //         println!("Span in error: {:#?}", span);
-        //         return Err(Err::Error(CombinedError::from_sprint_error_and_error_kind(
-        //             span,
-        //             ErrorKind::Tag,
-        //             e,
-        //         )));
-        //     }
-        // },
+        },
     }
 }
 
@@ -83,10 +68,8 @@ pub fn definition<'a>(
 
         expression = expression.map(|e| {
             let span = e.span;
-            // println!("span: {:#?}", span);
             Expression::new(ExpressionType::Abstraction(argument, e.into()), span)
         });
-        // println!("Expression: {:#?}", expression);
     }
 
     let (expression, definition) = expression.clear();
@@ -106,15 +89,7 @@ pub fn definition<'a>(
     context.definitions.insert(identifier.fragment, definition);
     context.variables.insert(variable);
 
-    // TODO: Bespoke sprint error?
-    // context.unify(expression).map_err(|sprint_error| {
-    //     Err::Error(CombinedError::from_sprint_error_and_error_kind(
-    //         identifier,
-    //         ErrorKind::Tag,
-    //         sprint_error,
-    //     ))
-    // })?;
-    context.unify(expression).map_err(|err| Err::Error(err))?;
+    context.unify(expression).map_err(Err::Error)?;
 
     Ok(context)
 }
@@ -148,15 +123,7 @@ pub fn application<'a>(
     };
 
     for c in contexts {
-        // TODO: bespoke sprint error?
-        // context.unify(c).map_err(|sprint_error| {
-        //     Err::Error(CombinedError::from_sprint_error_and_error_kind(
-        //         identifier,
-        //         ErrorKind::Tag,
-        //         sprint_error,
-        //     ))
-        // })?;
-        context.unify(c).map_err(|err| Err::Error(err))?;
+        context.unify(c).map_err(Err::Error)?;
     }
 
     Ok(context)
@@ -173,7 +140,6 @@ pub fn map_args<'a>(
                 let span = e.span;
                 Expression::new(ExpressionType::Application(e.into(), argument.into()), span)
             });
-            // println!("Context: {:#?}", tmp);
             Ok(tmp)
         }
     }

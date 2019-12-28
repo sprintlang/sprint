@@ -1,6 +1,6 @@
 use super::Span;
 use crate::ast::Kind;
-use nom::error::{convert_error, ErrorKind, ParseError, VerboseError};
+use nom::error::{ErrorKind, ParseError};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum SprintError<'a> {
@@ -77,9 +77,26 @@ impl<'a> CombinedError<'a> {
             sprint_error: Some(sprint_error),
         }
     }
+
+    pub fn from_sprint_error_and_span(input: Span<'a>, sprint_error: SprintError<'a>) -> Self {
+        CombinedError {
+            nom_error: Some(Error::from_span(input)),
+            sprint_error: Some(sprint_error),
+        }
+    }
 }
 
 impl<'a> Error<'a> {
+    fn from_span(input: Span<'a>) -> Self {
+        Error {
+            line: input.line as usize,
+            column: input.get_column(),
+            input: input.fragment,
+            // nom ErrorKind does not allow Custom or Default ErrorKinds.
+            kind: ErrorKind::Tag,
+        }
+    }
+
     pub fn pretty(&self, original: &str) -> String {
         let line = self.line;
         format!(
