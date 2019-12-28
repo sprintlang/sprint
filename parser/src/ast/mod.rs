@@ -128,15 +128,16 @@ impl From<u64> for ExpressionType<'_> {
     }
 }
 
-#[derive(Eq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Variable<'a> {
     pub name: &'a str,
     pub kind: Rc<Kind>,
+    pub span: Span<'a>,
 }
 
 impl<'a> Variable<'a> {
-    pub fn new(name: &'a str, kind: Rc<Kind>) -> Self {
-        Variable { name, kind }
+    pub fn new(name: &'a str, kind: Rc<Kind>, span: Span<'a>) -> Self {
+        Variable { name, kind, span }
     }
 }
 
@@ -145,6 +146,8 @@ impl PartialEq for Variable<'_> {
         self.name == other.name
     }
 }
+
+impl Eq for Variable<'_> {}
 
 impl Hash for Variable<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -175,10 +178,10 @@ mod tests {
         // one x y = true
         let one = Expression::new(
             ExpressionType::Abstraction(
-                Variable::new("x", Kind::Word.into()),
+                Variable::new("x", Kind::Word.into(), Span::new("x")),
                 Expression::new(
                     ExpressionType::Abstraction(
-                        Variable::new("y", Kind::Word.into()),
+                        Variable::new("y", Kind::Word.into(), Span::new("y")),
                         Expression::new(ExpressionType::Boolean(true), Span::new("")).into(),
                     ),
                     Span::new(""),

@@ -5,7 +5,8 @@ use nom::error::{convert_error, ErrorKind, ParseError, VerboseError};
 #[derive(Debug, PartialEq, Clone)]
 pub enum SprintError<'a> {
     None,
-    TypeError(Kind, Kind),
+    TypeError(&'a str, Box<SprintError<'a>>),
+    MismatchedKinds(Kind, Kind),
     UnknownIdentifierError(&'a str, Kind),
     InvalidNumberArgsError,
 }
@@ -27,8 +28,13 @@ pub struct Error<'a> {
 impl<'a> SprintError<'a> {
     pub fn pretty(self) -> String {
         match self {
-            Self::TypeError(actual, expected) => {
-                format!("Type Error: expected {}, got {}", actual, expected)
+            Self::TypeError(definition, mismatched_kinds) => format!(
+                "Type Error: {} in definition of \"{}\"",
+                mismatched_kinds.pretty(),
+                definition
+            ),
+            Self::MismatchedKinds(actual, expected) => {
+                format!("expected {}, got {}", actual, expected)
             }
             Self::UnknownIdentifierError(id, kind) => {
                 format!("Unknown identifier: {} :: {}", id, kind)
@@ -51,7 +57,7 @@ impl<'a> CombinedError<'a> {
             Some(err) => err.clone().pretty(),
             None => String::from(""),
         };
-        format!("{}{}\n", nom_error, sprint_error)
+        format!("{} {}\n", sprint_error, nom_error)
     }
 
     pub fn from_sprint_error(sprint_error: SprintError<'a>) -> Self {
@@ -75,9 +81,18 @@ impl<'a> CombinedError<'a> {
 
 impl<'a> Error<'a> {
     pub fn pretty(&self, original: &str) -> String {
-        let error = VerboseError::<&str>::from_error_kind(&self.input, self.kind);
-        convert_error(original, error)
+        let line = self.line;
+        format!(
+            "on line {}: \n{}",
+            line,
+            print_code_location(original, line)
+        )
     }
+}
+
+pub fn print_code_location(input: &str, line: usize) -> String {
+    let lines: std::vec::Vec<String> = input.lines().map(String::from).collect();
+    lines[line - 1].clone()
 }
 
 impl<'a> ParseError<Span<'a>> for CombinedError<'a> {

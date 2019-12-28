@@ -24,16 +24,19 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
 
         for variable in other.variables {
             let name = variable.name;
+            println!("Name: {:#?}", name);
             let kind = variable.kind.clone();
 
             if let Some(original) = self.variables.replace(variable) {
                 if let Err(e) = original.kind.unify(kind) {
+                    println!("self.Definitions: {:#?}", self.definitions);
+                    println!("other.Definitions: {:#?}", other.definitions);
                     let def = self.definitions.get(name).unwrap();
                     let span = def.expression.span;
                     return Err(CombinedError::from_sprint_error_and_error_kind(
                         span,
                         ErrorKind::Tag,
-                        e.sprint_error.unwrap(),
+                        SprintError::TypeError(name, e.sprint_error.unwrap().into()),
                     ));
                 }
             }
@@ -65,10 +68,12 @@ impl<'a> Unify<'a> for Rc<Kind> {
             (_, Kind::Unresolved(_)) => other.unify(this)?,
             (Kind::Word, Kind::Word) => {}
             _ => {
-                return Err(CombinedError::from_sprint_error(SprintError::TypeError(
-                    Rc::make_mut(&mut this).clone(),
-                    Rc::make_mut(&mut other).clone(),
-                )))
+                return Err(CombinedError::from_sprint_error(
+                    SprintError::MismatchedKinds(
+                        Rc::make_mut(&mut this).clone(),
+                        Rc::make_mut(&mut other).clone(),
+                    ),
+                ))
             }
         }
 

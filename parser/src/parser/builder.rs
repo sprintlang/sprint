@@ -20,7 +20,9 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, 
 
     for variable in &context.variables {
         if !context.definitions.contains_key(variable.name) {
-            return Err(Err::Error(CombinedError::from_sprint_error(
+            return Err(Err::Error(CombinedError::from_sprint_error_and_error_kind(
+                variable.span,
+                ErrorKind::Tag,
                 SprintError::UnknownIdentifierError(
                     variable.name,
                     Rc::make_mut(&mut variable.kind.clone()).clone(),
@@ -37,7 +39,7 @@ pub fn unify_context<'a>(
     definition: Context<'a, Expression<'a>>,
 ) -> Result<'a, Context<'a, ()>> {
     let span = definition.as_ref().span;
-    println!("Definition in unify context: {:#?}", definition);
+    // println!("Definition in unify context: {:#?}", definition);
     match context {
         Err(_) => context,
         Ok(mut c) => match c.unify(definition) {
@@ -59,7 +61,7 @@ pub fn unify_context<'a>(
 }
 
 pub fn signature(identifier: Span, kind: Kind) -> Result<Context<Expression>> {
-    let variable = Variable::new(identifier.fragment, kind.into());
+    let variable = Variable::new(identifier.fragment, kind.into(), identifier);
 
     let mut context = Context::from(Expression::new(
         ExpressionType::Variable(variable.clone()),
@@ -76,17 +78,23 @@ pub fn definition<'a>(
     mut expression: Context<'a, Expression<'a>>,
 ) -> Result<'a, Context<'a, Expression<'a>>> {
     for argument in arguments.iter().rev() {
-        let argument = Variable::new(argument.fragment, Default::default());
+        let argument = Variable::new(argument.fragment, Default::default(), *argument);
         let argument = expression.variables.take(&argument).unwrap_or(argument);
 
         expression = expression.map(|e| {
             let span = e.span;
+            // println!("span: {:#?}", span);
             Expression::new(ExpressionType::Abstraction(argument, e.into()), span)
         });
+        // println!("Expression: {:#?}", expression);
     }
 
     let (expression, definition) = expression.clear();
-    let variable = Variable::new(identifier.fragment, definition.expression.kind());
+    let variable = Variable::new(
+        identifier.fragment,
+        definition.expression.kind(),
+        identifier,
+    );
 
     let mut context = Context::from(Expression::new(
         ExpressionType::Variable(variable.clone()),
@@ -128,14 +136,13 @@ pub fn application<'a>(
                 .fold(Kind::default(), |kind, argument| {
                     Kind::Abstraction(argument.expression.kind(), kind.into())
                 });
-            let variable = Variable::new(identifier.fragment, kind.into());
+            let variable = Variable::new(identifier.fragment, kind.into(), identifier);
 
             let mut context = Context::from(Expression::new(
                 ExpressionType::Variable(variable.clone()),
                 identifier,
             ));
             context.variables.insert(variable);
-
             arguments.into_iter().fold(Ok(context), map_args)?
         }
     };
@@ -161,9 +168,13 @@ pub fn map_args<'a>(
 ) -> Result<'a, Context<'a, Expression<'a>>> {
     match context {
         Err(_) => context,
-        Ok(c) => Ok(c.map(|e| {
-            let span = e.span;
-            Expression::new(ExpressionType::Application(e.into(), argument.into()), span)
-        })),
+        Ok(c) => {
+            let tmp = c.map(|e| {
+                let span = e.span;
+                Expression::new(ExpressionType::Application(e.into(), argument.into()), span)
+            });
+            // println!("Context: {:#?}", tmp);
+            Ok(tmp)
+        }
     }
 }
