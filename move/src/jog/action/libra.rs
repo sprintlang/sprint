@@ -1,5 +1,5 @@
 use super::{
-    super::{expression::Address, variable::Variable},
+    super::{expression::Address, expression::Expression, variable::Variable},
     Action,
 };
 use std::fmt::{self, Display, Formatter};
@@ -78,4 +78,8 @@ impl Display for Withdraw {
             self.payee,
         )
     }
+}
+
+pub struct Emit {
+    expression: Expression,
 }
