@@ -16,7 +16,7 @@ use crate::{
         identifier::Identifier,
         kind::Kind,
         method::Method,
-        variable::{Variable, CONTEXTS, CONTEXT_REF, CONTRACT_REF, OWNER},
+        variable::{Variable, CONTEXTS, CONTEXT_REF, CONTRACT_REF, EVENT, OWNER},
     },
     numbers::Numbers,
 };
@@ -166,6 +166,12 @@ fn visit_full<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) 
 
         method.add_action(UpdateState::new(
             to_state.unwrap_or(Expression::Unsigned(next_id)),
+        ));
+
+        // TODO: add action for emitting event.
+        method.add_action(Assign::new(
+            EVENT.clone(),
+            Expression::Expression("LibraAccount.new_event_handle<u64>()"),
         ));
 
         for action in post_actions {
