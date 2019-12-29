@@ -28,10 +28,9 @@ impl<'a> SprintError<'a> {
     pub fn pretty(self) -> String {
         match self {
             Self::TypeError(definition, mismatched_kinds) => format!(
-                "Type Error: From definition of \"{}\" {}\n\"{}\" defined",
+                "Type Error: From definition of \"{}\" {} ",
                 definition,
-                mismatched_kinds.pretty(),
-                definition
+                mismatched_kinds.pretty()
             ),
             Self::MismatchedKinds(actual, expected) => {
                 format!("expected {}, got {}", actual, expected)
@@ -56,7 +55,7 @@ impl<'a> CombinedError<'a> {
             Some(err) => err.clone().pretty(),
             None => String::from(""),
         };
-        format!("{} {}\n", sprint_error, nom_error)
+        format!("{}{}\n", sprint_error, nom_error)
     }
 
     pub fn from_sprint_error(sprint_error: SprintError<'a>) -> Self {
