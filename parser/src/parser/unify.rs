@@ -14,9 +14,9 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
         for (name, definition) in &other.definitions {
             if self.definitions.insert(name, definition.clone()).is_some() {
                 // There is a duplicate definition.
-                // TODO: duplicate definition error.
-                return Err(CombinedError::from_sprint_error(
-                    SprintError::InvalidNumberArgsError,
+                return Err(CombinedError::from_sprint_error_and_span(
+                    definition.expression.span,
+                    SprintError::DuplicateDefinitionError(name),
                 ));
             }
         }

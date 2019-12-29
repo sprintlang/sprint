@@ -8,6 +8,7 @@ pub enum SprintError<'a> {
     MismatchedKinds(Kind, Kind),
     UnknownIdentifierError(&'a str, Kind),
     InvalidNumberArgsError,
+    DuplicateDefinitionError(&'a str),
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,6 +41,9 @@ impl<'a> SprintError<'a> {
             }
             Self::InvalidNumberArgsError => {
                 String::from("Invalid number of arguments in primitive application")
+            }
+            Self::DuplicateDefinitionError(name) => {
+                format!("Duplicate definition for \"{}\"", name)
             }
         }
     }
@@ -98,7 +102,7 @@ impl<'a> Error<'a> {
     pub fn pretty(&self, original: &str) -> String {
         let line = self.line;
         format!(
-            "on line {}: \n\t{}",
+            "\nOn line {}: \n\t{}",
             line,
             print_code_location(original, line)
         )
