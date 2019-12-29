@@ -4,7 +4,6 @@ use nom::error::{ErrorKind, ParseError};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum SprintError<'a> {
-    None,
     TypeError(&'a str, Box<SprintError<'a>>),
     MismatchedKinds(Kind, Kind),
     UnknownIdentifierError(&'a str, Kind),
@@ -29,7 +28,8 @@ impl<'a> SprintError<'a> {
     pub fn pretty(self) -> String {
         match self {
             Self::TypeError(definition, mismatched_kinds) => format!(
-                "Type Error: {} in definition of \"{}\"",
+                "Type Error: From definition of \"{}\" {}\n\"{}\" defined",
+                definition,
                 mismatched_kinds.pretty(),
                 definition
             ),
@@ -42,7 +42,6 @@ impl<'a> SprintError<'a> {
             Self::InvalidNumberArgsError => {
                 String::from("Invalid number of arguments in primitive application")
             }
-            Self::None => String::from(""),
         }
     }
 }
@@ -100,7 +99,7 @@ impl<'a> Error<'a> {
     pub fn pretty(&self, original: &str) -> String {
         let line = self.line;
         format!(
-            "on line {}: \n{}",
+            "on line {}: \n\t{}",
             line,
             print_code_location(original, line)
         )

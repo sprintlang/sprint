@@ -27,11 +27,10 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
 
             if let Some(original) = self.variables.replace(variable) {
                 if let Err(e) = original.kind.unify(kind) {
-                    let def = self.definitions.get(name).unwrap();
-                    let span = def.expression.span;
+                    let sprint_error = SprintError::TypeError(name, e.sprint_error.unwrap().into());
                     return Err(CombinedError::from_sprint_error_and_span(
-                        span,
-                        SprintError::TypeError(name, e.sprint_error.unwrap().into()),
+                        self.definitions.get(name).unwrap().expression.span,
+                        sprint_error,
                     ));
                 }
             }
