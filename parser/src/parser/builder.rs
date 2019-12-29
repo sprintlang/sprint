@@ -19,6 +19,11 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, 
 
     for variable in &context.variables {
         if !context.definitions.contains_key(variable.name) {
+            if variable.name == "main" {
+                return Err(Err::Error(CombinedError::from_sprint_error(
+                    SprintError::UndefinedMainError,
+                )));
+            }
             return Err(Err::Error(CombinedError::from_sprint_error_and_span(
                 variable.span,
                 SprintError::UnknownIdentifierError(
@@ -136,11 +141,11 @@ pub fn map_args<'a>(
     match context {
         Err(_) => context,
         Ok(c) => {
-            let tmp = c.map(|e| {
+            let context = c.map(|e| {
                 let span = e.span;
                 Expression::new(ExpressionType::Application(e.into(), argument.into()), span)
             });
-            Ok(tmp)
+            Ok(context)
         }
     }
 }

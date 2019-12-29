@@ -9,6 +9,7 @@ pub enum SprintError<'a> {
     UnknownIdentifierError(&'a str, Kind),
     InvalidNumberArgsError,
     DuplicateDefinitionError(&'a str),
+    UndefinedMainError,
 }
 
 #[derive(Debug, PartialEq)]
@@ -44,6 +45,9 @@ impl<'a> SprintError<'a> {
             }
             Self::DuplicateDefinitionError(name) => {
                 format!("Duplicate definition for \"{}\"", name)
+            }
+            Self::UndefinedMainError => {
+                String::from("No valid definition of the \"main\" contract was found")
             }
         }
     }
@@ -101,17 +105,22 @@ impl<'a> Error<'a> {
 
     pub fn pretty(&self, original: &str) -> String {
         let line = self.line;
-        format!(
-            "\nOn line {}: \n\t{}",
-            line,
-            print_code_location(original, line)
-        )
+        let code = print_code_location(original, line);
+        if code.is_empty() {
+            code
+        } else {
+            format!("\nOn line {}: \n\t{}", line, code)
+        }
     }
 }
 
 pub fn print_code_location(input: &str, line: usize) -> String {
     let lines: std::vec::Vec<String> = input.lines().map(String::from).collect();
-    lines[line - 1].clone()
+    if lines.is_empty() {
+        "".to_string()
+    } else {
+        lines[line - 1].clone()
+    }
 }
 
 impl<'a> ParseError<Span<'a>> for CombinedError<'a> {
