@@ -171,7 +171,7 @@ fn visit_full<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) 
         // TODO: add action for emitting event.
         method.add_action(Assign::new(
             EVENT.clone(),
-            Expression::Expression("LibraAccount.new_event_handle<u64>()"),
+            Expression::Expression("LibraAccount.new_event_handle<u64>()".into()),
         ));
 
         for action in post_actions {

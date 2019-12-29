@@ -1,5 +1,8 @@
 use super::{
-    super::{expression::Address, expression::Expression, variable::Variable},
+    super::{
+        expression::{Address, Expression},
+        variable::{Variable, EVENT},
+    },
     Action,
 };
 use std::fmt::{self, Display, Formatter};
@@ -81,15 +84,26 @@ impl Display for Withdraw {
 }
 
 pub struct Emit<'a> {
-    emitted_data: &'a Expression,
+    emitted_data: &'a Expression<'a>,
 }
 
-impl Action for Emit {
+impl Action for Emit<'_> {
     fn dependencies(&self) -> &'static [&'static str] {
         &["0x0.LibraAccount"]
     }
 
     fn definitions(&self) -> Vec<&Variable> {
         vec![]
+    }
+}
+
+impl Display for Emit<'_> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "LibraAccount.emit_event<u64>(&mut {}, {});",
+            EVENT.identifier(),
+            self.emitted_data
+        )
     }
 }
