@@ -47,7 +47,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::super::{
-        error::{CombinedError, Error},
+        error::{Error, NomError},
         Span,
     };
     use super::*;
@@ -74,8 +74,8 @@ mod tests {
         match span(parser_span)(abd).unwrap_err() {
             Err::Error(error) | Err::Failure(error) => assert_eq!(
                 error,
-                CombinedError {
-                    nom_error: Some(Error {
+                Error {
+                    nom_error: Some(NomError {
                         line: 1,
                         column: 3,
                         input: &abd[2..],

@@ -2,7 +2,7 @@
 
 use super::{
     context::Context,
-    error::{CombinedError, SprintError},
+    error::{Error, SprintError},
     unify::Unify,
     Result, Span,
 };
@@ -76,7 +76,7 @@ pub fn and(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let (left, right) = arguments!(arguments, Kind::State, Kind::State);
     let left = left?;
     let right = right?;
-    let left_span = left.span;
+    let span = left.span;
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Spawn(right)).set_next(left);
@@ -84,15 +84,14 @@ pub fn and(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    // TODO: different span?
-    Ok(Expression::new(ExpressionType::State(state), left_span).into())
+    Ok(Expression::new(ExpressionType::State(state), span).into())
 }
 
 pub fn or(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let (left, right) = arguments!(arguments, Kind::State, Kind::State);
     let left = left?;
     let right = right?;
-    let left_span = left.span;
+    let span = left.span;
 
     let mut left_transition = Transition::default();
     left_transition
@@ -109,15 +108,14 @@ pub fn or(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
         .add_transition(left_transition)
         .add_transition(right_transition);
 
-    // TODO: different span?
-    Ok(Expression::new(ExpressionType::State(state), left_span).into())
+    Ok(Expression::new(ExpressionType::State(state), span).into())
 }
 
 pub fn scale(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let (scalar, next) = arguments!(arguments, Kind::Observable(Kind::Word.into()), Kind::State);
     let scalar = scalar?;
     let next = next?;
-    let next_span = next.span;
+    let span = next.span;
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Scale(scalar)).set_next(next);
@@ -125,13 +123,12 @@ pub fn scale(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    // TODO: different span?
-    Ok(Expression::new(ExpressionType::State(state), next_span).into())
+    Ok(Expression::new(ExpressionType::State(state), span).into())
 }
 
 pub fn anytime(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let next = arguments!(arguments, Kind::State)?;
-    let next_span = next.span;
+    let span = next.span;
 
     let mut transition = Transition::default();
     transition
@@ -141,15 +138,14 @@ pub fn anytime(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    // TODO: different span?
-    Ok(Expression::new(ExpressionType::State(state), next_span).into())
+    Ok(Expression::new(ExpressionType::State(state), span).into())
 }
 
 pub fn konst(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let value = arguments!(arguments, Kind::default())?;
-    let value_span = value.span;
-    // TODO: different span?
-    Ok(Expression::new(ExpressionType::Observable(value.into()), value_span).into())
+    let span = value.span;
+
+    Ok(Expression::new(ExpressionType::Observable(value.into()), span).into())
 }
 
 fn argument<'a>(
@@ -159,7 +155,7 @@ fn argument<'a>(
     let argument = match arguments.next() {
         Some(argument) => argument,
         None => {
-            return Err(Err::Error(CombinedError::from_sprint_error(
+            return Err(Err::Error(Error::from_sprint_error(
                 SprintError::InvalidNumberArgsError,
             )));
         }

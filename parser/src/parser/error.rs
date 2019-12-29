@@ -2,6 +2,20 @@ use super::Span;
 use crate::ast::Kind;
 use nom::error::{ErrorKind, ParseError};
 
+#[derive(Debug, PartialEq)]
+pub struct Error<'a> {
+    pub nom_error: Option<NomError<'a>>,
+    pub sprint_error: Option<SprintError<'a>>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct NomError<'a> {
+    pub line: usize,
+    pub column: usize,
+    pub input: &'a str,
+    pub kind: ErrorKind,
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum SprintError<'a> {
     TypeError(&'a str, Box<SprintError<'a>>),
@@ -12,18 +26,65 @@ pub enum SprintError<'a> {
     UndefinedMainError,
 }
 
-#[derive(Debug, PartialEq)]
-pub struct CombinedError<'a> {
-    pub nom_error: Option<Error<'a>>,
-    pub sprint_error: Option<SprintError<'a>>,
+impl<'a> Error<'a> {
+    pub fn pretty(&self, original: &str) -> String {
+        let nom_error = match &self.nom_error {
+            Some(err) => err.pretty(original),
+            None => String::from(""),
+        };
+        let sprint_error = match &self.sprint_error {
+            Some(err) => err.clone().pretty(),
+            None => String::from(""),
+        };
+        format!("{}{}\n", sprint_error, nom_error)
+    }
+
+    pub fn from_sprint_error(sprint_error: SprintError<'a>) -> Self {
+        Error {
+            nom_error: None,
+            sprint_error: Some(sprint_error),
+        }
+    }
+
+    pub fn from_sprint_error_and_error_kind(
+        input: Span<'a>,
+        kind: ErrorKind,
+        sprint_error: SprintError<'a>,
+    ) -> Self {
+        Error {
+            nom_error: Some(NomError::from_error_kind(input, kind)),
+            sprint_error: Some(sprint_error),
+        }
+    }
+
+    pub fn from_sprint_error_and_span(input: Span<'a>, sprint_error: SprintError<'a>) -> Self {
+        Error {
+            nom_error: Some(NomError::from_span(input)),
+            sprint_error: Some(sprint_error),
+        }
+    }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Error<'a> {
-    pub line: usize,
-    pub column: usize,
-    pub input: &'a str,
-    pub kind: ErrorKind,
+impl<'a> NomError<'a> {
+    fn from_span(input: Span<'a>) -> Self {
+        NomError {
+            line: input.line as usize,
+            column: input.get_column(),
+            input: input.fragment,
+            // nom ErrorKind does not allow Custom or Default ErrorKinds.
+            kind: ErrorKind::Tag,
+        }
+    }
+
+    pub fn pretty(&self, original: &str) -> String {
+        let line = self.line;
+        let code = print_code_location(original, line);
+        if code.is_empty() {
+            code
+        } else {
+            format!("\nOn line {}: \n\t{}", line, code)
+        }
+    }
 }
 
 impl<'a> SprintError<'a> {
@@ -53,80 +114,10 @@ impl<'a> SprintError<'a> {
     }
 }
 
-impl<'a> CombinedError<'a> {
-    pub fn pretty(&self, original: &str) -> String {
-        let nom_error = match &self.nom_error {
-            Some(err) => err.pretty(original),
-            None => String::from(""),
-        };
-        let sprint_error = match &self.sprint_error {
-            Some(err) => err.clone().pretty(),
-            None => String::from(""),
-        };
-        format!("{}{}\n", sprint_error, nom_error)
-    }
-
-    pub fn from_sprint_error(sprint_error: SprintError<'a>) -> Self {
-        CombinedError {
-            nom_error: None,
-            sprint_error: Some(sprint_error),
-        }
-    }
-
-    pub fn from_sprint_error_and_error_kind(
-        input: Span<'a>,
-        kind: ErrorKind,
-        sprint_error: SprintError<'a>,
-    ) -> Self {
-        CombinedError {
-            nom_error: Some(Error::from_error_kind(input, kind)),
-            sprint_error: Some(sprint_error),
-        }
-    }
-
-    pub fn from_sprint_error_and_span(input: Span<'a>, sprint_error: SprintError<'a>) -> Self {
-        CombinedError {
-            nom_error: Some(Error::from_span(input)),
-            sprint_error: Some(sprint_error),
-        }
-    }
-}
-
-impl<'a> Error<'a> {
-    fn from_span(input: Span<'a>) -> Self {
-        Error {
-            line: input.line as usize,
-            column: input.get_column(),
-            input: input.fragment,
-            // nom ErrorKind does not allow Custom or Default ErrorKinds.
-            kind: ErrorKind::Tag,
-        }
-    }
-
-    pub fn pretty(&self, original: &str) -> String {
-        let line = self.line;
-        let code = print_code_location(original, line);
-        if code.is_empty() {
-            code
-        } else {
-            format!("\nOn line {}: \n\t{}", line, code)
-        }
-    }
-}
-
-pub fn print_code_location(input: &str, line: usize) -> String {
-    let lines: std::vec::Vec<String> = input.lines().map(String::from).collect();
-    if lines.is_empty() {
-        "".to_string()
-    } else {
-        lines[line - 1].clone()
-    }
-}
-
-impl<'a> ParseError<Span<'a>> for CombinedError<'a> {
+impl<'a> ParseError<Span<'a>> for Error<'a> {
     fn from_error_kind(input: Span<'a>, kind: ErrorKind) -> Self {
-        CombinedError {
-            nom_error: Some(Error::from_error_kind(input, kind)),
+        Error {
+            nom_error: Some(NomError::from_error_kind(input, kind)),
             sprint_error: None,
         }
     }
@@ -136,9 +127,9 @@ impl<'a> ParseError<Span<'a>> for CombinedError<'a> {
     }
 }
 
-impl<'a> ParseError<Span<'a>> for Error<'a> {
+impl<'a> ParseError<Span<'a>> for NomError<'a> {
     fn from_error_kind(input: Span<'a>, kind: ErrorKind) -> Self {
-        Error {
+        NomError {
             line: input.line as usize,
             column: input.get_column(),
             input: input.fragment,
@@ -148,6 +139,16 @@ impl<'a> ParseError<Span<'a>> for Error<'a> {
 
     fn append(_: Span, _: ErrorKind, other: Self) -> Self {
         other
+    }
+}
+
+fn print_code_location(input: &str, line: usize) -> String {
+    let lines: std::vec::Vec<String> = input.lines().map(String::from).collect();
+    if lines.is_empty() {
+        "".to_string()
+    } else {
+        // -1 to compensate for offset between line and index numbering.
+        lines[line - 1].clone()
     }
 }
 
@@ -161,7 +162,7 @@ mod tests {
     fn error_from_span() {
         let original = LocatedSpan::new("foo bar");
         let (new, _) = original.take_split(3);
-        let error = Error::from_char(new, 'b');
+        let error = NomError::from_char(new, 'b');
 
         assert_eq!(error.line, 1);
         assert_eq!(error.column, 4);
