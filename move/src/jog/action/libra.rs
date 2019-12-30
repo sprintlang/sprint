@@ -84,7 +84,13 @@ impl Display for Withdraw {
 }
 
 pub struct Emit<'a> {
-    emitted_data: &'a Expression<'a>,
+    emitted_data: Expression<'a>,
+}
+
+impl<'a> Emit<'a> {
+    pub fn new(emitted_data: Expression<'a>) -> Self {
+        Emit { emitted_data }
+    }
 }
 
 impl Action for Emit<'_> {

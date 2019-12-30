@@ -6,7 +6,7 @@ use crate::{
             assert::Assert,
             assign::Assign,
             flip::Flip,
-            libra::Withdraw,
+            libra::{DestroyHandle, Emit, Withdraw},
             scale::Scale,
             spawn::{PushContext, Spawn},
             update_state::UpdateState,
@@ -173,6 +173,10 @@ fn visit_full<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) 
             EVENT.clone(),
             Expression::Expression("LibraAccount.new_event_handle<u64>()".into()),
         ));
+
+        method.add_action(Emit::new(Expression::Unsigned(next_id)));
+
+        method.add_action(DestroyHandle {});
 
         for action in post_actions {
             method.add_action(action);
