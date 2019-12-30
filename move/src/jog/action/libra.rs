@@ -107,3 +107,25 @@ impl Display for Emit<'_> {
         )
     }
 }
+
+pub struct DestroyHandle;
+
+impl Action for DestroyHandle {
+    fn dependencies(&self) -> &'static [&'static str] {
+        &["0x0.LibraAccount"]
+    }
+
+    fn definitions(&self) -> Vec<&Variable> {
+        vec![]
+    }
+}
+
+impl Display for DestroyHandle {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "LibraAccount.destroy_handle<u64>(move({}));",
+            EVENT.identifier()
+        )
+    }
+}
