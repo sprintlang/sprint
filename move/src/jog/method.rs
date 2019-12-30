@@ -1,8 +1,16 @@
-use super::{action::Action, expression::Expression, identifier::Identifier, variable::Variable};
+use super::{
+    action::{assert::Assert, assign::Assign, Action},
+    expression::Expression,
+    identifier::Identifier,
+    kind::Kind,
+    variable::{
+        Variable, CONTEXTS, CONTEXT_INDEX, CONTEXT_REF, CONTRACT_REF, OWNER, STACK, STACK_LENGTH,
+    },
+};
 use askama::Template;
 use std::collections::HashSet;
 
-#[derive(Template)]
+#[derive(Template, Debug)]
 #[template(path = "method.mvir", escape = "none")]
 pub struct Method<'a> {
     public: bool,
@@ -15,7 +23,7 @@ pub struct Method<'a> {
 
 impl<'a> Method<'a> {
     fn new(public: bool, identifier: Identifier<'a>) -> Self {
-        Method {
+        Self {
             public,
             identifier,
             arguments: Default::default(),
@@ -26,11 +34,80 @@ impl<'a> Method<'a> {
     }
 
     pub fn private(identifier: Identifier<'a>) -> Self {
-        Method::new(false, identifier)
+        Self::new(false, identifier)
     }
 
     pub fn public(identifier: Identifier<'a>) -> Self {
-        Method::new(true, identifier)
+        Self::new(true, identifier)
+    }
+
+    pub fn transition(from: usize, to: usize, arguments: &[Variable<'a>]) -> Self {
+        let mut method = Self::public(Identifier::Transition(to));
+
+        method.add_action(Assign::new(
+            CONTRACT_REF.clone(),
+            Expression::Expression(
+                format!("borrow_global_mut<T>(move({}))", OWNER.identifier()).into(),
+            ),
+        ));
+        method.set_acquires_resource();
+
+        method.add_action(Assign::new(
+            CONTEXTS.clone(),
+            Expression::Expression("&mut copy(contract_ref).contexts".into()),
+        ));
+
+        method.add_action(Assign::new(
+            CONTEXT_REF.clone(),
+            Expression::Expression(
+                format!(
+                    "Vector.borrow_mut<Self.Context>(copy({}), copy({}))",
+                    CONTEXTS.identifier(),
+                    CONTEXT_INDEX.identifier()
+                )
+                .into(),
+            ),
+        ));
+
+        method.add_action(Assign::new(
+            STACK_LENGTH.clone(),
+            Expression::Expression("Vector.length<u64>(&copy(context_ref).stack)".into()),
+        ));
+
+        for (i, argument) in arguments.iter().rev().enumerate() {
+            method.add_action(Assign::new(
+                argument.clone(),
+                Expression::Get(
+                    Kind::Unsigned,
+                    Expression::Expression("&copy(context_ref).stack".into()).into(),
+                    Expression::Subtract(
+                        Expression::Copied(
+                            Expression::Identifier(STACK_LENGTH.identifier().clone()).into(),
+                        )
+                        .into(),
+                        Expression::Unsigned(i + 1).into(),
+                    )
+                    .into(),
+                ),
+            ));
+        }
+
+        method.add_action(Assign::new(
+            STACK.clone(),
+            Expression::Expression("&mut copy(context_ref).stack".into()),
+        ));
+
+        method.add_argument(OWNER.clone());
+        method.add_argument(CONTEXT_INDEX.clone());
+
+        method.add_action(Assert::new(
+            Expression::Expression(
+                format!("*(&copy({}).state) == {}", CONTEXT_REF.identifier(), from).into(),
+            ),
+            1,
+        ));
+
+        method
     }
 
     pub fn dependencies(&self) -> Vec<&str> {

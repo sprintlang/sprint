@@ -7,8 +7,18 @@ pub enum Kind {
     Context,
     Contract,
     MutableReference(Box<Self>),
-    Vector(Box<Self>),
     Unsigned,
+    Vector(Box<Self>),
+}
+
+impl Kind {
+    pub fn inner(&self) -> &Self {
+        match self {
+            Self::MutableReference(inner) => inner.inner(),
+            Self::Vector(inner) => inner.inner(),
+            _ => self,
+        }
+    }
 }
 
 impl Display for Kind {
@@ -19,8 +29,8 @@ impl Display for Kind {
             Self::Context => write!(f, "Self.Context"),
             Self::Contract => write!(f, "Self.T"),
             Self::MutableReference(kind) => write!(f, "&mut {}", kind),
-            Self::Vector(kind) => write!(f, "Vector.T<{}>", kind),
             Self::Unsigned => write!(f, "u64"),
+            Self::Vector(kind) => write!(f, "Vector.T<{}>", kind),
         }
     }
 }

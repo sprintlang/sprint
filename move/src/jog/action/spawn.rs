@@ -1,23 +1,17 @@
 use super::{
-    super::{
-        expression::Address,
-        expression::Expression,
-        variable::{Variable, CONTEXTS},
-    },
+    super::{expression::Address, expression::Expression, variable::Variable},
     Action,
 };
-use std::{
-    fmt::{self, Display, Formatter},
-    rc::Rc,
-};
+use std::fmt::{self, Display, Formatter};
 
+#[derive(Debug)]
 pub struct Spawn<'a> {
-    context: Rc<Variable<'a>>,
+    context: Variable<'a>,
     root: Expression<'a>,
 }
 
 impl<'a> Spawn<'a> {
-    pub fn new(context: Rc<Variable<'a>>, root: Expression<'a>) -> Self {
+    pub fn new(context: Variable<'a>, root: Expression<'a>) -> Self {
         Spawn { context, root }
     }
 }
@@ -39,8 +33,8 @@ impl Display for Spawn<'_> {
             "{} = Context {{
                 state: {},
                 coinstore_index: *(&copy(context_ref).coinstore_index),
-                party: {},
-                counterparty: {},
+                party: *(&{}),
+                counterparty: *(&{}),
                 scale: *(&copy(context_ref).scale),
                 stack: Vector.empty<u64>(),
             }};",
@@ -48,37 +42,6 @@ impl Display for Spawn<'_> {
             self.root,
             Address::Party,
             Address::Counterparty,
-        )
-    }
-}
-
-pub struct PushContext<'a> {
-    context: Rc<Variable<'a>>,
-}
-
-impl<'a> PushContext<'a> {
-    pub fn new(context: Rc<Variable<'a>>) -> Self {
-        PushContext { context }
-    }
-}
-
-impl Action for PushContext<'_> {
-    fn dependencies(&self) -> &'static [&'static str] {
-        &[]
-    }
-
-    fn definitions(&self) -> Vec<&Variable> {
-        vec![&self.context]
-    }
-}
-
-impl Display for PushContext<'_> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        writeln!(
-            f,
-            "Vector.push_back<Self.Context>(copy({}), move({}));",
-            CONTEXTS.identifier(),
-            self.context.identifier()
         )
     }
 }

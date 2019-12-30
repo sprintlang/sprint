@@ -7,6 +7,8 @@ lazy_static! {
         Identifier::Raw("contexts"),
         Kind::MutableReference(Kind::Vector(Kind::Context.into()).into()),
     );
+    pub static ref CONTEXT_INDEX: Variable<'static> =
+        Variable::new(Identifier::Raw("context_index"), Kind::Unsigned);
     pub static ref CONTEXT_REF: Variable<'static> = Variable::new(
         Identifier::Raw("context_ref"),
         Kind::MutableReference(Kind::Context.into()),
@@ -17,6 +19,12 @@ lazy_static! {
     );
     pub static ref OWNER: Variable<'static> =
         Variable::new(Identifier::Raw("owner"), Kind::Address);
+    pub static ref STACK: Variable<'static> = Variable::new(
+        Identifier::Raw("stack"),
+        Kind::MutableReference(Kind::Vector(Kind::Unsigned.into()).into()),
+    );
+    pub static ref STACK_LENGTH: Variable<'static> =
+        Variable::new(Identifier::Raw("stack_length"), Kind::Unsigned,);
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
@@ -32,6 +40,10 @@ impl<'a> Variable<'a> {
 
     pub fn identifier(&self) -> &Identifier<'a> {
         &self.identifier
+    }
+
+    pub fn kind(&self) -> &Kind {
+        &self.kind
     }
 }
 

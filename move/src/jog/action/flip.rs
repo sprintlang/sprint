@@ -6,7 +6,7 @@ use std::fmt::{self, Display, Formatter};
 
 static FLIP_STORE: Variable<'static> = Variable::new(Identifier::Raw("flip_store"), Kind::Address);
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Flip;
 
 impl Action for Flip {
@@ -21,11 +21,16 @@ impl Action for Flip {
 
 impl Display for Flip {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{} = {};", FLIP_STORE.identifier(), Address::Party)?;
-        write!(f, "{} = {};", Address::Party, Address::Counterparty,)?;
-        write!(
+        writeln!(f, "{} = *(&{});", FLIP_STORE.identifier(), Address::Party)?;
+        writeln!(
             f,
-            "{} = {};",
+            "*(&mut {}) = *(&{});",
+            Address::Party,
+            Address::Counterparty,
+        )?;
+        writeln!(
+            f,
+            "*(&mut {}) = move({});",
             Address::Counterparty,
             FLIP_STORE.identifier()
         )

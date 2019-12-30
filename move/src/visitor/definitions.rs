@@ -12,33 +12,39 @@ pub fn visit<'a>(definitions: &[ast::Definition<'a>]) -> Contract<'a> {
     let mut context = Context::new(definitions.clone());
 
     for definition in definitions {
-        if definition.variable.name == "main" {
-            context.function_context.take();
-            let state = expression::visit(&mut context, &definition.expression)
+        let mut expression = &definition.expression;
+        let mut arguments = Vec::new();
+
+        while let ast::Expression::Abstraction(a, e) = expression {
+            expression = e;
+            arguments.push(Variable::new(Identifier::Prefixed(a.name), Kind::Unsigned));
+        }
+
+        if expression::results_in_state(expression.kind()) {
+            context
+                .function_context
+                .replace(FunctionContext::new(definition.variable.name, arguments));
+
+            let state = expression::visit(&mut context, expression)
                 .try_into()
                 .unwrap();
-            context.contract.set_initial_state(state);
-        } else {
-            let mut expression = &definition.expression;
-            let mut arguments = Vec::new();
+            let key = expression as *const _;
 
-            while let ast::Expression::Abstraction(a, e) = expression {
-                expression = e;
-                arguments.push(Variable::new(Identifier::Prefixed(a.name), Kind::Unsigned));
-            }
-
-            if *expression.kind() == ast::Kind::State {
-                context
-                    .function_context
-                    .replace(FunctionContext::new(arguments, definition.variable.name));
-                expression::visit(&mut context, expression);
+            if let Some(s) = context.functions.get(&key) {
+                s.borrow_mut().replace(state);
             } else {
-                let mut method = Method::private(Identifier::Prefixed(definition.variable.name));
-
-                method.set_arguments(arguments);
-                method.set_result(expression::visit(&mut context, expression));
-                context.contract.add_method(method);
+                context.functions.insert(key, Rc::new(Some(state).into()));
             }
+
+            if definition.variable.name == "main" {
+                context.contract.set_initial_state(state);
+            }
+        } else {
+            let mut method = Method::private(Identifier::Prefixed(definition.variable.name));
+
+            method.set_arguments(arguments);
+            method.set_result(expression::visit(&mut context, expression));
+            context.contract.add_method(method);
         }
     }
 

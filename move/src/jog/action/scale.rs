@@ -4,6 +4,7 @@ use super::{
 };
 use std::fmt::{self, Display, Formatter};
 
+#[derive(Debug)]
 pub struct Scale<'a> {
     scalar: Expression<'a>,
 }

@@ -1,13 +1,18 @@
-use crate::jog::{action::Action, expression::Expression, variable::Variable};
+use crate::jog::{
+    action::Action,
+    expression::Expression,
+    variable::{Variable, STACK},
+};
 use std::fmt::{self, Display, Formatter};
 
+#[derive(Debug)]
 pub struct UpdateState<'a> {
     to: Expression<'a>,
 }
 
 impl<'a> UpdateState<'a> {
     pub fn new(to: Expression<'a>) -> Self {
-        UpdateState { to }
+        Self { to }
     }
 }
 
@@ -23,6 +28,7 @@ impl Action for UpdateState<'_> {
 
 impl Display for UpdateState<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        writeln!(f, "_ = move({});", STACK.identifier())?;
         writeln!(f, "*(&mut move(context_ref).state) = {};", self.to)
     }
 }

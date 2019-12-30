@@ -40,7 +40,7 @@ pub fn one() -> Context<'static, Expression<'static>> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    definition("one", vec![], Expression::State(State::default()).into()).unwrap()
+    definition("one", vec![], Expression::State(state).into()).unwrap()
 }
 
 pub fn give() -> Context<'static, Expression<'static>> {

@@ -68,6 +68,23 @@ module Contract {
 
     {% endfor -%}
 
+    clone_stack(original: &Vector.T<u64>): Vector.T<u64> {
+        let i: u64;
+        let length: u64;
+        let new: Vector.T<u64>;
+
+        i = 0;
+        length = Vector.length<u64>(copy(original));
+        new = Vector.empty<u64>();
+
+        while (copy(i) < copy(length)) {
+            Vector.push_back<u64>(&mut new, Vector.get<u64>(copy(original), copy(i)));
+            i = copy(i) + 1;
+        }
+
+        return move(new);
+    }
+
     // TODO: figure out destroy, requires destroying all contexts as well.
     // public destroy(contract: Self.T) {}
 }

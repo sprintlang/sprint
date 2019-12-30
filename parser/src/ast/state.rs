@@ -14,13 +14,27 @@ impl<'a> State<'a> {
         self.transitions.push(transition);
         self
     }
+
+    pub fn is_terminal(&self) -> bool {
+        self.transitions.is_empty()
+    }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Transition<'a> {
     conditions: Vec<Expression<'a>>,
     effects: Vec<Effect<'a>>,
-    next: Option<Expression<'a>>,
+    next: Expression<'a>,
+}
+
+impl Default for Transition<'_> {
+    fn default() -> Self {
+        Self {
+            conditions: Default::default(),
+            effects: Default::default(),
+            next: Expression::State(State::default()),
+        }
+    }
 }
 
 impl<'a> Transition<'a> {
@@ -42,12 +56,12 @@ impl<'a> Transition<'a> {
         self
     }
 
-    pub fn next(&self) -> Option<&Expression<'a>> {
-        self.next.as_ref()
+    pub fn next(&self) -> &Expression<'a> {
+        &self.next
     }
 
     pub fn set_next(&mut self, next: Expression<'a>) -> &mut Self {
-        self.next = Some(next);
+        self.next = next;
         self
     }
 }

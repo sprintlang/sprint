@@ -1,16 +1,26 @@
-use super::{call::Call, identifier::Identifier};
+use super::{call::Call, identifier::Identifier, kind::Kind};
 use std::{
     borrow::Cow,
+    cell::RefCell,
     convert::TryFrom,
     fmt::{self, Display, Formatter},
+    rc::Rc,
 };
 
 #[derive(Clone, Debug)]
 pub enum Expression<'a> {
+    Add(Box<Self>, Box<Self>),
     Call(Call<'a>),
+    Copied(Box<Self>),
     Expression(Cow<'static, str>),
+    Get(Kind, Box<Self>, Box<Self>),
     Identifier(Identifier<'a>),
-    MovedMutableReference(Identifier<'a>),
+    Length(Kind, Box<Self>),
+    Moved(Box<Self>),
+    MutableReference(Box<Self>),
+    Reference(Box<Self>),
+    State(Rc<RefCell<Option<usize>>>),
+    Subtract(Box<Self>, Box<Self>),
     Unsigned(usize),
 }
 
@@ -23,10 +33,18 @@ impl Default for Expression<'_> {
 impl Display for Expression<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
+            Self::Add(l, r) => write!(f, "{} + {}", l, r),
             Self::Call(c) => c.fmt(f),
+            Self::Copied(e) => write!(f, "copy({})", e),
             Self::Expression(e) => e.fmt(f),
+            Self::Get(k, v, i) => write!(f, "Vector.get<{}>({}, {})", k, v, i),
             Self::Identifier(i) => i.fmt(f),
-            Self::MovedMutableReference(i) => write!(f, "&mut move({})", i),
+            Self::Length(k, v) => write!(f, "Vector.length<{}>({})", k, v),
+            Self::Moved(e) => write!(f, "move({})", e),
+            Self::MutableReference(e) => write!(f, "&mut {}", e),
+            Self::Reference(e) => write!(f, "&{}", e),
+            Self::State(u) => u.borrow().unwrap().fmt(f),
+            Self::Subtract(l, r) => write!(f, "{} - {}", l, r),
             Self::Unsigned(u) => u.fmt(f),
         }
     }
@@ -62,6 +80,7 @@ impl<'a> TryFrom<Expression<'a>> for usize {
     }
 }
 
+#[derive(Debug)]
 pub enum Address {
     Party,
     Counterparty,
@@ -70,8 +89,8 @@ pub enum Address {
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Address::Party => write!(f, "*(&copy(context_ref).party)"),
-            Address::Counterparty => write!(f, "*(&copy(context_ref).counterparty)"),
+            Address::Party => write!(f, "copy(context_ref).party"),
+            Address::Counterparty => write!(f, "copy(context_ref).counterparty"),
         }
     }
 }
