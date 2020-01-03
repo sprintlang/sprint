@@ -33,8 +33,12 @@ pub fn compile<'a>(args: &'a CompileArgs) -> Result<Cow<'a, Path>, Box<dyn Error
         format!("Unable to parse file `{}`", source_path.display())
     })?;
 
-    if verbose {
-        println!("{:#?}", ast);
+    if args.verbose {
+        for definition in &ast {
+            let name = definition.variable.name;
+            println!("{} :: {}", name, definition.variable.kind);
+            println!("{} = {:#?}", name, definition.expression);
+        }
     }
 
     if !args.check {
@@ -69,7 +73,7 @@ fn check_args(args: &CompileArgs) -> Result<(&Path, Cow<Path>), String> {
         }
     }
 
-    let output = create_output_path(source, output)?;
+    let output = create_output_path(&args)?;
 
     Ok((source, output))
 }
@@ -91,7 +95,7 @@ fn create_output_path(args: &CompileArgs) -> Result<Cow<Path>, String> {
         None => {
             let mut output = PathBuf::new();
 
-            output.push(source_path.file_stem().unwrap());
+            output.push(args.source_path.file_stem().unwrap());
             output.set_extension(MVIR_EXTENSION);
 
             Ok(output.into())
@@ -138,7 +142,7 @@ mod tests {
         };
 
         assert_eq!(
-            create_output_path(&PathBuf::from("test.sprint"), &None).unwrap(),
+            create_output_path(&args).unwrap(),
             PathBuf::from("test.mvir")
         );
     }
@@ -153,11 +157,7 @@ mod tests {
         };
 
         assert_eq!(
-            create_output_path(
-                &PathBuf::from("test.sprint"),
-                &Some(PathBuf::from("output.mvir"))
-            )
-            .unwrap(),
+            create_output_path(&args).unwrap(),
             PathBuf::from("output.mvir")
         );
     }
