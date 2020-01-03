@@ -1,8 +1,8 @@
 use functional_tests::{
-    checker::check,
+    checker::*,
     config::global::Config as GlobalConfig,
     evaluator::eval,
-    utils::{build_transactions, split_input},
+    preprocessor::{build_transactions, split_input},
 };
 use sprint_move::generate;
 use sprint_parser::parser::contract;
