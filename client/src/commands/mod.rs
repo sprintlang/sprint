@@ -2,14 +2,18 @@ mod account;
 mod create;
 mod deploy;
 mod deposit;
+mod dev_commands;
 mod events;
+mod query;
 mod transition;
 
 pub use self::account::AccountCommand;
 pub use self::create::CreateCommand;
 pub use self::deploy::DeployCommand;
 pub use self::deposit::DepositCommand;
+pub use self::dev_commands::DevCommand;
 pub use self::events::EventsCommand;
+pub use self::query::QueryCommand;
 pub use self::transition::TransitionCommand;
 
 use client::client_proxy::ClientProxy;

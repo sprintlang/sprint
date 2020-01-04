@@ -1,0 +1,39 @@
+module EventTracker {
+    import 0x0.LibraAccount;
+
+    struct MyEvent {
+        state: u64,
+    }
+
+    resource T {
+        // my_events_count to access
+        my_events: LibraAccount.EventHandle<Self.MyEvent>,
+    }
+
+    public create() {
+        let event_tracker: Self.T;
+
+        event_tracker = T {
+            my_events: LibraAccount.new_event_handle<Self.MyEvent>(),
+        };
+
+        move_to_sender<T>(move(event_tracker));
+
+        return;
+    }
+
+    public emit_event() acquires T {
+        let event_tracker_ref: &mut Self.T;
+
+        event_tracker_ref = borrow_global_mut<T>(get_txn_sender());
+
+        LibraAccount.emit_event<Self.MyEvent>(
+            &mut move(event_tracker_ref).my_events,
+            MyEvent {
+                state: 10,
+            },
+        );
+
+        return;
+    }
+}

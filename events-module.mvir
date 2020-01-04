@@ -1,10 +1,11 @@
-module M {
-    import 0x0.LibraAccount;
+module Events {
+   resource MyEvent {
+        state: u64,
+    }
 
-    struct Event {}
-
-    public emit_event(handle: &mut LibraAccount.EventHandle<Self.Event>) {
-        LibraAccount.emit_event<Self.Event>(move(handle), Event{});
-        return;
+    public my_event(state: u64): Self.MyEvent {
+        return MyEvent {
+                state: move(state),
+            };
     }
 }

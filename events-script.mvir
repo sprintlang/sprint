@@ -1,12 +1,8 @@
 import 0x0.LibraAccount;
-import {{sender}}.M;
+import {{sender}}.EventTracker;
 
 main() {
-    let handle: LibraAccount.EventHandle<M.Event>;
-
-    handle = LibraAccount.new_event_handle<M.Event>();
-    M.emit_event(&mut handle);
-    LibraAccount.destroy_handle<M.Event>(move(handle));
-
+    EventTracker.create();
+    EventTracker.emit_event();
     return;
 }
