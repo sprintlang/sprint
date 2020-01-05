@@ -1,5 +1,8 @@
 use super::{
-    super::{expression::Address, variable::Variable},
+    super::{
+        expression::{Address, Expression},
+        variable::{Variable, EVENT},
+    },
     Action,
 };
 use std::fmt::{self, Display, Formatter};
@@ -76,6 +79,59 @@ impl Display for Withdraw {
                 )
             );",
             self.payee,
+        )
+    }
+}
+
+pub struct Emit<'a> {
+    emitted_data: Expression<'a>,
+}
+
+impl<'a> Emit<'a> {
+    pub fn new(emitted_data: Expression<'a>) -> Self {
+        Emit { emitted_data }
+    }
+}
+
+impl Action for Emit<'_> {
+    fn dependencies(&self) -> &'static [&'static str] {
+        &["0x0.LibraAccount"]
+    }
+
+    fn definitions(&self) -> Vec<&Variable> {
+        vec![]
+    }
+}
+
+impl Display for Emit<'_> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "LibraAccount.emit_event<u64>(&mut {}, {});",
+            EVENT.identifier(),
+            self.emitted_data
+        )
+    }
+}
+
+pub struct DestroyHandle;
+
+impl Action for DestroyHandle {
+    fn dependencies(&self) -> &'static [&'static str] {
+        &["0x0.LibraAccount"]
+    }
+
+    fn definitions(&self) -> Vec<&Variable> {
+        vec![]
+    }
+}
+
+impl Display for DestroyHandle {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "LibraAccount.destroy_handle<u64>(move({}));",
+            EVENT.identifier()
         )
     }
 }

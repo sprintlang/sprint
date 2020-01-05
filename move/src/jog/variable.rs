@@ -17,6 +17,8 @@ lazy_static! {
     );
     pub static ref OWNER: Variable<'static> =
         Variable::new(Identifier::Raw("owner"), Kind::Address);
+    pub static ref EVENT: Variable<'static> =
+        Variable::new(Identifier::Raw("event"), Kind::EventHandle);
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]

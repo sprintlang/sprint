@@ -7,6 +7,7 @@ pub enum Kind {
     Context,
     Contexts,
     Contract,
+    EventHandle,
     MutableReference(Box<Self>),
     Unsigned,
 }
@@ -19,6 +20,7 @@ impl Display for Kind {
             Self::Context => write!(f, "Self.Context"),
             Self::Contexts => write!(f, "Vector.T<Self.Context>"),
             Self::Contract => write!(f, "Self.T"),
+            Self::EventHandle => write!(f, "LibraAccount.EventHandle<u64>"),
             Self::MutableReference(kind) => write!(f, "&mut {}", kind),
             Self::Unsigned => write!(f, "u64"),
         }

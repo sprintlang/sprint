@@ -81,7 +81,7 @@ fn test(module: impl Display, path: &Path) {
     let mut file = File::create(&generated_file).unwrap();
     file.write_all(input.as_bytes()).unwrap();
 
-    let lines: Vec<String> = input.lines().map(|line| line.to_string()).collect();
+    let lines: Vec<String> = input.lines().map(ToString::to_string).collect();
 
     let (config, directives, transactions) = split_input(&lines).unwrap();
     let config = GlobalConfig::build(&config).unwrap();
@@ -97,8 +97,8 @@ fn test(module: impl Display, path: &Path) {
     };
 
     // Set up colored output stream for error rendering.
-    let bufwtr = BufferWriter::stdout(ColorChoice::Auto);
-    let mut output = bufwtr.buffer();
+    let writer = BufferWriter::stdout(ColorChoice::Auto);
+    let mut output = writer.buffer();
 
     // Helpers for directives and matches.
     macro_rules! print_directive {
@@ -247,7 +247,7 @@ fn test(module: impl Display, path: &Path) {
         }
     }
     writeln!(output).unwrap();
-    bufwtr.print(&output).unwrap();
+    writer.print(&output).unwrap();
 
     panic!("test failed")
 }
