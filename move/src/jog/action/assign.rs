@@ -4,6 +4,7 @@ use super::{
 };
 use std::fmt::{self, Display, Formatter};
 
+#[derive(Debug)]
 pub struct Assign<'a> {
     variable: Variable<'a>,
     value: Expression<'a>,

@@ -43,7 +43,7 @@ main() {
 
   initial_balance = LibraAccount.balance({{bob}});
 
-  Contract.transition_1_0({{alice}}, 0);
+  Contract.transition_2({{alice}}, 0);
 
   assert(move(initial_balance) + 1 == LibraAccount.balance({{bob}}), 1);
 

@@ -9,6 +9,7 @@ use std::fmt::{self, Display, Formatter};
 
 const DEPENDENCIES: &[&str] = &["0x0.LibraAccount", "0x0.LibraCoin"];
 
+#[derive(Debug)]
 pub struct Deposit {
     amount: u64,
 }
@@ -44,6 +45,7 @@ impl Display for Deposit {
     }
 }
 
+#[derive(Debug)]
 pub struct Withdraw {
     payee: Address,
 }
@@ -69,7 +71,7 @@ impl Display for Withdraw {
         write!(
             f,
             "LibraAccount.deposit(
-                {},
+                *(&{}),
                 LibraCoin.withdraw(
                     Vector.borrow_mut<LibraCoin.T>(
                         &mut copy(contract_ref).coinstores,

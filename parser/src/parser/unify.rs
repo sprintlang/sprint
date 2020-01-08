@@ -15,10 +15,10 @@ impl<'a, T, U> Unify<Context<'a, U>> for &mut Context<'a, T> {
             }
         }
 
-        for variable in other.variables {
+        for (variable, count) in other.variables {
             let kind = variable.kind.clone();
 
-            if let Some(original) = self.variables.replace(variable) {
+            if let Some(original) = self.variables.replace(variable, count) {
                 original.kind.unify(kind);
             }
         }

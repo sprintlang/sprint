@@ -24,7 +24,7 @@ impl<'a> Call<'a> {
 
 impl Display for Call<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{}(", self.name)?;
+        write!(f, "Self.{}(", self.name)?;
 
         let mut arguments = self.arguments.iter();
 

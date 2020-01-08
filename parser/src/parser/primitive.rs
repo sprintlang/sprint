@@ -1,22 +1,15 @@
 #![allow(unused_parens)]
 
-use super::{context::Context, unify::Unify};
+use super::{builder::definition, context::Context, unify::Unify};
 use crate::ast::{
     state::{Effect, State, Transition},
-    {Expression, Kind, Observable},
+    {Expression, Kind, Observable, Variable},
 };
 use phf::phf_map;
 
 type Primitive = fn(Vec<Expression>) -> Context<Expression>;
 
 pub static PRIMITIVES: phf::Map<&'static str, Primitive> = phf_map! {
-    "zero" => zero,
-    "one" => one,
-    "give" => give,
-    "and" => and,
-    "or" => or,
-    "scale" => scale,
-    "anytime" => anytime,
     "konst" => konst,
 };
 
@@ -36,25 +29,22 @@ macro_rules! arguments {
     };
 }
 
-pub fn zero(arguments: Vec<Expression>) -> Context<Expression> {
-    arguments!(arguments);
-    Expression::State(State::default()).into()
+pub fn zero() -> Context<'static, Expression<'static>> {
+    definition("zero", vec![], Expression::State(State::default()).into()).unwrap()
 }
 
-pub fn one(arguments: Vec<Expression>) -> Context<Expression> {
-    arguments!(arguments);
-
+pub fn one() -> Context<'static, Expression<'static>> {
     let mut transition = Transition::default();
     transition.add_effect(Effect::Withdraw);
 
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    definition("one", vec![], Expression::State(state).into()).unwrap()
 }
 
-pub fn give(arguments: Vec<Expression>) -> Context<Expression> {
-    let next = arguments!(arguments, Kind::State);
+pub fn give() -> Context<'static, Expression<'static>> {
+    let next = Expression::Variable(Variable::new("next", Kind::State.into()));
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Flip).set_next(next);
@@ -62,11 +52,12 @@ pub fn give(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    definition("give", vec!["next"], Expression::State(state).into()).unwrap()
 }
 
-pub fn and(arguments: Vec<Expression>) -> Context<Expression> {
-    let (left, right) = arguments!(arguments, Kind::State, Kind::State);
+pub fn and() -> Context<'static, Expression<'static>> {
+    let left = Expression::Variable(Variable::new("left", Kind::State.into()));
+    let right = Expression::Variable(Variable::new("right", Kind::State.into()));
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Spawn(right)).set_next(left);
@@ -74,11 +65,17 @@ pub fn and(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    definition(
+        "and",
+        vec!["left", "right"],
+        Expression::State(state).into(),
+    )
+    .unwrap()
 }
 
-pub fn or(arguments: Vec<Expression>) -> Context<Expression> {
-    let (left, right) = arguments!(arguments, Kind::State, Kind::State);
+pub fn or() -> Context<'static, Expression<'static>> {
+    let left = Expression::Variable(Variable::new("left", Kind::State.into()));
+    let right = Expression::Variable(Variable::new("right", Kind::State.into()));
 
     let mut left_transition = Transition::default();
     left_transition
@@ -95,11 +92,15 @@ pub fn or(arguments: Vec<Expression>) -> Context<Expression> {
         .add_transition(left_transition)
         .add_transition(right_transition);
 
-    Expression::State(state).into()
+    definition("or", vec!["left", "right"], Expression::State(state).into()).unwrap()
 }
 
-pub fn scale(arguments: Vec<Expression>) -> Context<Expression> {
-    let (scalar, next) = arguments!(arguments, Kind::Observable(Kind::Word.into()), Kind::State);
+pub fn scale() -> Context<'static, Expression<'static>> {
+    let scalar = Expression::Variable(Variable::new(
+        "scalar",
+        Kind::Observable(Kind::Word.into()).into(),
+    ));
+    let next = Expression::Variable(Variable::new("next", Kind::State.into()));
 
     let mut transition = Transition::default();
     transition.add_effect(Effect::Scale(scalar)).set_next(next);
@@ -107,11 +108,16 @@ pub fn scale(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    definition(
+        "scale",
+        vec!["scalar", "next"],
+        Expression::State(state).into(),
+    )
+    .unwrap()
 }
 
-pub fn anytime(arguments: Vec<Expression>) -> Context<Expression> {
-    let next = arguments!(arguments, Kind::State);
+pub fn anytime() -> Context<'static, Expression<'static>> {
+    let next = Expression::Variable(Variable::new("next", Kind::State.into()));
 
     let mut transition = Transition::default();
     transition
@@ -121,7 +127,7 @@ pub fn anytime(arguments: Vec<Expression>) -> Context<Expression> {
     let mut state = State::default();
     state.add_transition(transition);
 
-    Expression::State(state).into()
+    definition("anytime", vec!["next"], Expression::State(state).into()).unwrap()
 }
 
 pub fn konst(arguments: Vec<Expression>) -> Context<Expression> {

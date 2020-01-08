@@ -8,7 +8,7 @@ pub enum Identifier<'a> {
     Raw(&'a str),
     Prefixed(&'a str),
     Spawn(usize),
-    Transition(usize, usize),
+    Transition(usize),
     AbstractTransition(&'a str, usize, usize),
 }
 
@@ -18,7 +18,7 @@ impl Display for Identifier<'_> {
             Self::Raw(name) => name.fmt(f),
             Self::Prefixed(name) => write!(f, "{}_{}", PREFIX, name),
             Self::Spawn(id) => write!(f, "{}_{}", SPAWN, id),
-            Self::Transition(from, to) => write!(f, "transition_{}_{}", from, to),
+            Self::Transition(num) => write!(f, "transition_{}", num),
             Self::AbstractTransition(name, from, to) => {
                 write!(f, "{}_{}_{}_{}", PREFIX, name, from, to)
             }

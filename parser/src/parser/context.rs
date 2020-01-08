@@ -1,11 +1,14 @@
-use crate::ast::{Definition, Variable};
-use std::collections::{HashMap, HashSet};
+use crate::{
+    ast::{Definition, Variable},
+    hash_count::HashCount,
+};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Context<'a, T> {
     inner: T,
     pub definitions: HashMap<&'a str, Definition<'a>>,
-    pub variables: HashSet<Variable<'a>>,
+    pub variables: HashCount<Variable<'a>>,
 }
 
 impl<T> From<T> for Context<'_, T> {

@@ -1,8 +1,21 @@
-use super::{context::Context, primitive::PRIMITIVES, unify::Unify, Result};
+use super::{
+    context::Context,
+    primitive::{self, PRIMITIVES},
+    unify::Unify,
+    Result,
+};
 use crate::ast::{Definition, Expression, Kind, Variable};
 
 pub fn program<'a>(definitions: Vec<Context<'a, Expression>>) -> Result<'a, Context<'a, ()>> {
     let mut context = Context::from(());
+
+    context.unify(primitive::zero());
+    context.unify(primitive::one());
+    context.unify(primitive::give());
+    context.unify(primitive::and());
+    context.unify(primitive::or());
+    context.unify(primitive::scale());
+    context.unify(primitive::anytime());
 
     context = definitions
         .into_iter()
@@ -15,7 +28,7 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression>>) -> Result<'a, Cont
         .unify(signature("main", Kind::State).unwrap())
         .expect("main function is not a contract");
 
-    for variable in &context.variables {
+    for (variable, _) in &context.variables {
         assert!(
             context.definitions.contains_key(variable.name),
             "no definition given for `{} :: {}`",
@@ -31,7 +44,7 @@ pub fn signature(identifier: &str, kind: Kind) -> Result<Context<Expression>> {
     let variable = Variable::new(identifier, kind.into());
 
     let mut context = Context::from(Expression::Variable(variable.clone()));
-    context.variables.insert(variable);
+    context.variables.insert_without_increment(variable);
 
     Ok(context)
 }

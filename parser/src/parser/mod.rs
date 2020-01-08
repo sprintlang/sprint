@@ -23,7 +23,16 @@ type IResult<'a, I, O> = nom::IResult<I, O, Error<'a>>;
 
 pub fn contract<'a>(input: &'a str) -> result::Result<Definitions<'a>, Error> {
     match span(all_consuming(complete(program)))(input) {
-        Ok((_, context)) => Ok(context.definitions.into_iter().map(|(_, d)| d).collect()),
+        Ok((_, context)) => {
+            let variables = &context.variables;
+            Ok(context
+                .definitions
+                .into_iter()
+                .map(|(_, d)| d)
+                // TODO: giving "main" an initial count of 1 would be nicer.
+                .filter(|d| d.variable.name == "main" || variables.count(&d.variable) > 1)
+                .collect())
+        }
         Err(nom::Err::Error(error)) | Err(nom::Err::Failure(error)) => Err(error),
         _ => unreachable!(),
     }

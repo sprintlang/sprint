@@ -4,7 +4,7 @@ use super::{
 };
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Assert<'a> {
     predicate: Expression<'a>,
     code: u64,
