@@ -2,21 +2,20 @@ use super::{definitions::TERMINAL_ID, expression, Context};
 use crate::{
     jog::{
         action::{
-            self,
             assert::Assert,
             assign::Assign,
             flip::Flip,
             libra::{DestroyHandle, Emit, Withdraw},
+            push::Push,
             scale::Scale,
-            spawn::{PushContext, Spawn},
-            assert::Assert, flip::Flip, libra::Withdraw, push::Push, scale::Scale, spawn::Spawn,
+            spawn::Spawn,
             update_state::UpdateState,
         },
         expression::{Address, Expression},
         identifier::Identifier,
         kind::Kind,
         method::Method,
-        variable::{Variable, CONTEXTS, CONTEXT_REF, CONTRACT_REF, EVENT, OWNER},
+        variable::{Variable, CONTEXTS, EVENT},
     },
     numbers::Numbers,
 };
@@ -88,7 +87,7 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
             }
         }
 
-        method.add_action(UpdateState::new(to_state));
+        method.add_action(UpdateState::new(to_state.clone()));
 
         // TODO: add action for emitting event.
         method.add_action(Assign::new(
@@ -96,9 +95,9 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
             Expression::Expression("LibraAccount.new_event_handle<u64>()".into()),
         ));
 
-        method.add_action(Emit::new(Expression::Unsigned(next_id)));
+        method.add_action(Emit::new(to_state));
 
-        method.add_action(DestroyHandle {});
+        method.add_action(DestroyHandle);
 
         for action in post_actions {
             method.add_action(action);

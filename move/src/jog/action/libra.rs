@@ -85,6 +85,7 @@ impl Display for Withdraw {
     }
 }
 
+#[derive(Debug)]
 pub struct Emit<'a> {
     emitted_data: Expression<'a>,
 }
@@ -116,6 +117,7 @@ impl Display for Emit<'_> {
     }
 }
 
+#[derive(Debug)]
 pub struct DestroyHandle;
 
 impl Action for DestroyHandle {

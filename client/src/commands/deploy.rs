@@ -25,7 +25,7 @@ impl DeployCommand {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "{}", create_contract.render().unwrap()).ok();
         let file_path = file.path().to_str().unwrap();
-        println!("Sucessfully generated transaction code!");
+        println!("Successfully generated transaction code!");
 
         println!("Compiling sprint program...");
 
@@ -95,6 +95,13 @@ impl Command for DeployCommand {
 
         let module_name = "Contract";
 
-        self.execute_create_transaction(client, sender, module_name);
+        let author = hex::encode(
+            client
+                .get_account_address_from_parameter(sender)
+                .unwrap()
+                .to_vec(),
+        );
+
+        self.execute_create_transaction(client, &author, module_name);
     }
 }

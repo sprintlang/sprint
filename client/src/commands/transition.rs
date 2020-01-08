@@ -13,7 +13,7 @@ impl Command for TransitionCommand {
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<sender_account_address>|<sender_account_ref_id> <author_account_address>|<author_account_ref_id> <owner_account_address>|<owner_account_ref_id> <module_name> <context_id> <from_state> <to_state>"
+        "<author_account_address> <module_name> <context_id> <to_state>"
     }
 
     fn get_description(&self) -> &'static str {
@@ -22,7 +22,7 @@ impl Command for TransitionCommand {
 
     #[allow(clippy::needless_return)]
     fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
-        if params.len() != 8 {
+        if params.len() != 5 {
             println!("Invalid number of arguments");
             println!("Usage: {} {}", params[0], self.get_params_help());
             return;
@@ -34,24 +34,16 @@ impl Command for TransitionCommand {
 
         let author = hex::encode(
             client
-                .get_account_address_from_parameter(params[2])
-                .unwrap()
-                .to_vec(),
-        );
-        let owner = hex::encode(
-            client
-                .get_account_address_from_parameter(params[3])
+                .get_account_address_from_parameter(params[1])
                 .unwrap()
                 .to_vec(),
         );
         // TODO: Add proper error handling if any of the addresses are invalid.
         let move_state = MoveState {
             author: format!("0x{}", author),
-            module: params[4].into(),
-            owner: format!("0x{}", owner),
-            context_id: params[5].parse().unwrap(),
-            from_state: params[6].parse().unwrap(), // TODO: Make this implicit, fetch it from context
-            to_state: params[7].parse().unwrap(),
+            module: params[2].into(),
+            context_id: params[3].parse().unwrap(),
+            to_state: params[4].parse().unwrap(),
         };
 
         // Create a file inside of `std::env::temp_dir()`.

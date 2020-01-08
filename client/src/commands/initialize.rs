@@ -42,13 +42,13 @@ impl Command for InitializeCommand {
         );
         let party = hex::encode(
             client
-                .get_account_address_from_parameter(params[2])
+                .get_account_address_from_parameter(params[3])
                 .unwrap()
                 .to_vec(),
         );
         let counterparty = hex::encode(
             client
-                .get_account_address_from_parameter(params[3])
+                .get_account_address_from_parameter(params[4])
                 .unwrap()
                 .to_vec(),
         );
@@ -64,7 +64,7 @@ impl Command for InitializeCommand {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "{}", initialize_contract.render().unwrap()).ok();
         let file_path = file.path().to_str().unwrap();
-        println!("Sucessfully generated transaction code!");
+        println!("Successfully generated transaction code!");
 
         println!("Compiling sprint program...");
 
