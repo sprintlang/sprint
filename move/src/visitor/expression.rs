@@ -16,7 +16,7 @@ pub(super) fn visit<'a>(
     expression: &ast::Expression<'a>,
 ) -> Expression<'a> {
     match expression {
-        ast::Expression::Abstraction(_, r) => visit_abstraction(context, r),
+        ast::Expression::Abstraction(_, _) => unreachable!("use visit_abstraction instead"),
         ast::Expression::Application(f, a) => visit_application(context, f, a),
         ast::Expression::Boolean(_) => unimplemented!(),
         ast::Expression::Class(c) => visit_class(context, c),
@@ -27,7 +27,7 @@ pub(super) fn visit<'a>(
     }
 }
 
-fn visit_abstraction<'a>(
+pub(super) fn visit_abstraction<'a>(
     context: &mut Context<'a, '_>,
     mut expression: &ast::Expression<'a>,
 ) -> Expression<'a> {

@@ -23,13 +23,13 @@ pub(super) fn visit<'a>(
         ast::Expression::Application(f, a) => visit_application(context, f, a),
         ast::Expression::Variable(v) => vec![Push::with_length(
             STACK.clone(),
-            expression::visit(
-                context,
-                match context.definitions.get(v.name) {
-                    Some(definition) => &definition.expression,
-                    None => expression,
-                },
-            ),
+            match context.definitions.get(v.name) {
+                Some(definition) => {
+                    let definition = definition.clone();
+                    expression::visit_abstraction(context, &definition.expression)
+                }
+                None => expression::visit(context, expression),
+            },
             STACK_LENGTH.clone(),
         )],
         ast::Expression::State(_) => unimplemented!("state arguments cannot be inlined"),

@@ -1,6 +1,7 @@
 pub mod assert;
 pub mod assign;
 pub mod call;
+pub mod drop;
 pub mod flip;
 pub mod libra;
 pub mod push;

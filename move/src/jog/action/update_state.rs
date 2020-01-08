@@ -1,7 +1,7 @@
 use crate::jog::{
-    action::Action,
+    action::{drop::DROP_STACK, Action},
     expression::Expression,
-    variable::{Variable, STACK},
+    variable::Variable,
 };
 use std::fmt::{self, Display, Formatter};
 
@@ -28,7 +28,7 @@ impl Action for UpdateState<'_> {
 
 impl Display for UpdateState<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        writeln!(f, "_ = move({});", STACK.identifier())?;
+        DROP_STACK.fmt(f)?;
         writeln!(f, "*(&mut move(context_ref).state) = {};", self.to)
     }
 }
