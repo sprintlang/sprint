@@ -1,67 +1,68 @@
 use super::{publish, Command, PublishType};
 use askama::Template;
 use client::client_proxy::ClientProxy;
-use sprint_move::script::CreateContract;
+use sprint_move::script::InitializeContract;
 use std::fs;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
-pub struct CreateCommand {}
+pub struct InitializeCommand {}
 
-impl Command for CreateCommand {
+impl Command for InitializeCommand {
     fn get_aliases(&self) -> Vec<&'static str> {
-        vec!["create", "c"]
+        vec!["initialize", "i"]
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<sender_account_address>|<sender_account_ref_id> <author_account_address>|<author_account_ref_id> <module_name> <party> <counterparty>"
+        "<author_account_address>|<author_account_ref_id> <module_name> <party> <counterparty>"
     }
 
     fn get_description(&self) -> &'static str {
-        "Create and initalize a new instance of a deployed contract."
+        "Initalize a new instance of a deployed contract between two parties."
     }
 
     #[allow(clippy::needless_return)]
     fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
-        if params.len() != 6 {
+        if params.len() != 5 {
             println!("Invalid number of arguments");
             println!("Usage: {} {}", params[0], self.get_params_help());
             return;
         }
 
-        let sender = params[1];
+        // TODO: Allow for client to chose the address which executes the transaction
+        let sender = "0";
 
         println!("Generating transaction code...");
         // TODO: Add proper error handling if any of these are invalid.
         let author = hex::encode(
             client
-                .get_account_address_from_parameter(params[2])
+                .get_account_address_from_parameter(params[1])
                 .unwrap()
                 .to_vec(),
         );
         let party = hex::encode(
             client
-                .get_account_address_from_parameter(params[4])
+                .get_account_address_from_parameter(params[2])
                 .unwrap()
                 .to_vec(),
         );
         let counterparty = hex::encode(
             client
-                .get_account_address_from_parameter(params[5])
+                .get_account_address_from_parameter(params[3])
                 .unwrap()
                 .to_vec(),
         );
 
-        let move_state = CreateContract {
+        let initialize_contract = InitializeContract {
             author: format!("0x{}", author),
-            module: params[3].into(),
+            module: params[2].into(),
             party: format!("0x{}", party),
             counterparty: format!("0x{}", counterparty),
         };
 
         // Create a file inside of `std::env::temp_dir()`.
         let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "{}", move_state.render().unwrap()).ok();
+        writeln!(file, "{}", initialize_contract.render().unwrap()).ok();
         let file_path = file.path().to_str().unwrap();
         println!("Sucessfully generated transaction code!");
 

@@ -1,9 +1,45 @@
 use super::{publish, Command, PublishType};
+use askama::Template;
 use client::client_proxy::ClientProxy;
+use sprint_move::script::CreateContract;
 use std::fs;
+use std::io::Write;
 use std::path::PathBuf;
+use tempfile::NamedTempFile;
 
 pub struct DeployCommand {}
+
+impl DeployCommand {
+    fn execute_create_transaction(&self, client: &mut ClientProxy, author: &str, module: &str) {
+        println!("Generating create transaction code to initialize published module...");
+
+        let create_contract = CreateContract {
+            author: format!("0x{}", author),
+            module: module.into(),
+        };
+
+        // TODO: Allow for client to chose the address which executes the transaction
+        let sender = "0";
+
+        // Create a file inside of `std::env::temp_dir()`.
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "{}", create_contract.render().unwrap()).ok();
+        let file_path = file.path().to_str().unwrap();
+        println!("Sucessfully generated transaction code!");
+
+        println!("Compiling sprint program...");
+
+        let move_code_path = fs::canonicalize(&file_path).unwrap();
+        let move_code_path = move_code_path.to_str().unwrap();
+
+        let contents =
+            fs::read_to_string(move_code_path).expect("Something went wrong reading the file");
+
+        println!("File contents:\n{}", contents);
+
+        publish(client, sender, &move_code_path, PublishType::Script);
+    }
+}
 
 impl Command for DeployCommand {
     fn get_aliases(&self) -> Vec<&'static str> {
@@ -56,5 +92,9 @@ impl Command for DeployCommand {
         let move_code_path = move_code_path.to_str().unwrap();
 
         publish(client, sender, &move_code_path, PublishType::Module);
+
+        let module_name = "Contract";
+
+        self.execute_create_transaction(client, sender, module_name);
     }
 }

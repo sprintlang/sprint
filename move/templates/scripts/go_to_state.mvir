@@ -1,7 +1,7 @@
 import {{author}}.{{module}};
 
 main() {
-    {{module}}.transition_{{from_state}}_{{to_state}}({{owner}}, {{context_id}});
+    {{module}}.transition_{{to_state}}({{author}}, {{context_id}});
 
     return;
 }

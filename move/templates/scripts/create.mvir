@@ -2,7 +2,6 @@ import {{author}}.{{module}};
 
 main() {
     {{module}}.create();
-    {{module}}.initialize({{"{{sender}}"}}, {{party}}, {{counterparty}});
 
     return;
 }

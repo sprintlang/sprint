@@ -1,8 +1,8 @@
 mod commands;
 
 use self::commands::{
-    AccountCommand, Command, CreateCommand, DeployCommand, DepositCommand, DevCommand,
-    EventsCommand, QueryCommand, TransitionCommand,
+    AccountCommand, Command, DeployCommand, DepositCommand, DevCommand, EventsCommand,
+    InitializeCommand, QueryCommand, TransitionCommand,
 };
 use chrono::prelude::{SecondsFormat, Utc};
 use client::{client_proxy::ClientProxy, commands::*};
@@ -144,7 +144,7 @@ fn get_commands() -> Commands {
         // Arc::new(QueryCommand {}),
         // Arc::new(TransferCommand {}),
         Arc::new(DeployCommand {}),
-        Arc::new(CreateCommand {}),
+        Arc::new(InitializeCommand {}),
         Arc::new(DepositCommand {}),
         Arc::new(TransitionCommand {}),
         Arc::new(QueryCommand {}),

@@ -5,6 +5,4 @@ use askama::Template;
 pub struct CreateContract {
     pub author: String,
     pub module: String,
-    pub party: String,
-    pub counterparty: String,
 }
