@@ -28,7 +28,7 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression>>) -> Result<'a, Cont
         .unify(signature("main", Kind::State).unwrap())
         .expect("main function is not a contract");
 
-    for variable in &context.variables {
+    for (variable, _) in &context.variables {
         assert!(
             context.definitions.contains_key(variable.name),
             "no definition given for `{} :: {}`",
@@ -44,7 +44,7 @@ pub fn signature(identifier: &str, kind: Kind) -> Result<Context<Expression>> {
     let variable = Variable::new(identifier, kind.into());
 
     let mut context = Context::from(Expression::Variable(variable.clone()));
-    context.variables.insert(variable);
+    context.variables.insert_without_increment(variable);
 
     Ok(context)
 }
