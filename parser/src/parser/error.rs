@@ -47,20 +47,29 @@ impl<'a> Error<'a> {
     }
 
     pub fn from_sprint_error_and_error_kind(
-        input: Span<'a>,
+        input: Option<Span<'a>>,
         kind: ErrorKind,
         sprint_error: SprintError<'a>,
     ) -> Self {
-        Error {
-            nom_error: Some(NomError::from_error_kind(input, kind)),
-            sprint_error: Some(sprint_error),
+        match input {
+            Some(span) => Error {
+                nom_error: Some(NomError::from_error_kind(span, kind)),
+                sprint_error: Some(sprint_error),
+            },
+            None => Error::from_sprint_error(sprint_error),
         }
     }
 
-    pub fn from_sprint_error_and_span(input: Span<'a>, sprint_error: SprintError<'a>) -> Self {
-        Error {
-            nom_error: Some(NomError::from_span(input)),
-            sprint_error: Some(sprint_error),
+    pub fn from_sprint_error_and_span(
+        input: Option<Span<'a>>,
+        sprint_error: SprintError<'a>,
+    ) -> Self {
+        match input {
+            Some(span) => Error {
+                nom_error: Some(NomError::from_span(span)),
+                sprint_error: Some(sprint_error),
+            },
+            None => Error::from_sprint_error(sprint_error),
         }
     }
 }

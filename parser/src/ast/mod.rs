@@ -34,11 +34,11 @@ impl<'a> Definition<'a> {
 #[derive(Debug, Clone)]
 pub struct Expression<'a> {
     pub expression: ExpressionType<'a>,
-    pub span: Span<'a>,
+    pub span: Option<Span<'a>>,
 }
 
 impl<'a> Expression<'a> {
-    pub fn new(expression: ExpressionType<'a>, span: Span<'a>) -> Self {
+    pub fn new(expression: ExpressionType<'a>, span: Option<Span<'a>>) -> Self {
         Self { expression, span }
     }
 }
@@ -138,11 +138,11 @@ impl From<u64> for ExpressionType<'_> {
 pub struct Variable<'a> {
     pub name: &'a str,
     pub kind: Rc<Kind>,
-    pub span: Span<'a>,
+    pub span: Option<Span<'a>>,
 }
 
 impl<'a> Variable<'a> {
-    pub fn new(name: &'a str, kind: Rc<Kind>, span: Span<'a>) -> Self {
+    pub fn new(name: &'a str, kind: Rc<Kind>, span: Option<Span<'a>>) -> Self {
         Variable { name, kind, span }
     }
 }
@@ -184,35 +184,26 @@ mod tests {
         // one x y = true
         let one = Expression::new(
             ExpressionType::Abstraction(
-                Variable::new("x", Kind::Word.into(), Span::new("x")),
+                Variable::new("x", Kind::Word.into(), None),
                 Expression::new(
                     ExpressionType::Abstraction(
-                        Variable::new("y", Kind::Word.into(), Span::new("y")),
-                        Expression::new(ExpressionType::Boolean(true), Span::new("")).into(),
+                        Variable::new("y", Kind::Word.into(), None),
+                        Expression::new(ExpressionType::Boolean(true), None).into(),
                     ),
-                    Span::new(""),
+                    None,
                 )
                 .into(),
             ),
-            Span::new(""),
+            None,
         );
-
-        // let one = ExpressionType::Abstraction(
-        //     Argument::new("x", Kind::Word.into()).into(),
-        //     ExpressionType::Abstraction(
-        //         Argument::new("y", Kind::Word.into()).into(),
-        //         ExpressionType::Boolean(true).into(),
-        //     )
-        //     .into(),
-        // );
 
         // two = one 42
         let two = Expression::new(
             ExpressionType::Application(
                 one.into(),
-                Expression::new(ExpressionType::Word(42), Span::new("")).into(),
+                Expression::new(ExpressionType::Word(42), None).into(),
             ),
-            Span::new(""),
+            None,
         );
 
         // two :: Word -> Boolean
@@ -225,9 +216,9 @@ mod tests {
         let three = Expression::new(
             ExpressionType::Application(
                 two.into(),
-                Expression::new(ExpressionType::Word(29), Span::new("")).into(),
+                Expression::new(ExpressionType::Word(29), None).into(),
             ),
-            Span::new(""),
+            None,
         );
 
         // three :: Boolean

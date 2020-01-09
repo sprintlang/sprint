@@ -83,13 +83,17 @@ pub fn term(input: Span) -> IResult<Span, Context<Expression>> {
             builder::application(identifier, Vec::new())
         }),
         map(tag("True"), |span: Span| {
-            Expression::new(ExpressionType::from(true), span).into()
+            Expression::new(ExpressionType::from(true), Some(span)).into()
         }),
         map(tag("False"), |span: Span| {
-            Expression::new(ExpressionType::from(false), span).into()
+            Expression::new(ExpressionType::from(false), Some(span)).into()
         }),
         map(digit1, |n: Span| {
-            Expression::new(ExpressionType::from(n.fragment.parse::<u64>().unwrap()), n).into()
+            Expression::new(
+                ExpressionType::from(n.fragment.parse::<u64>().unwrap()),
+                Some(n),
+            )
+            .into()
         }),
     ))(input)
 }

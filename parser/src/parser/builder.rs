@@ -51,11 +51,11 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, 
 }
 
 pub fn signature(identifier: Span, kind: Kind) -> Result<Context<Expression>> {
-    let variable = Variable::new(identifier.fragment, kind.into(), identifier);
+    let variable = Variable::new(identifier.fragment, kind.into(), Some(identifier));
 
     let mut context = Context::from(Expression::new(
         ExpressionType::Variable(variable.clone()),
-        identifier,
+        Some(identifier),
     ));
     context.variables.insert_without_increment(variable);
 
@@ -68,7 +68,7 @@ pub fn definition<'a>(
     mut expression: Context<'a, Expression<'a>>,
 ) -> Result<'a, Context<'a, Expression<'a>>> {
     for argument in arguments.iter().rev() {
-        let argument = Variable::new(argument.fragment, Default::default(), *argument);
+        let argument = Variable::new(argument.fragment, Default::default(), Some(*argument));
         let argument = expression.variables.take(&argument).unwrap_or(argument);
 
         expression = expression.map(|expression| {
@@ -83,12 +83,12 @@ pub fn definition<'a>(
     let variable = Variable::new(
         identifier.fragment,
         definition.expression.kind(),
-        identifier,
+        Some(identifier),
     );
 
     let mut context = Context::from(Expression::new(
         ExpressionType::Variable(variable.clone()),
-        identifier,
+        Some(identifier),
     ));
 
     let definition = Definition::new(variable.clone(), definition);
@@ -118,11 +118,11 @@ pub fn application<'a>(
                 .fold(Kind::default(), |kind, argument| {
                     Kind::Abstraction(argument.expression.kind(), kind.into())
                 });
-            let variable = Variable::new(identifier.fragment, kind.into(), identifier);
+            let variable = Variable::new(identifier.fragment, kind.into(), Some(identifier));
 
             let mut context = Context::from(Expression::new(
                 ExpressionType::Variable(variable.clone()),
-                identifier,
+                Some(identifier),
             ));
             context.variables.insert(variable);
             arguments

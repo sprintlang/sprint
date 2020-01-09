@@ -1,4 +1,4 @@
-use super::{Expression, ExpressionType, Span};
+use super::{Expression, ExpressionType};
 
 #[derive(Default, Debug, Clone)]
 pub struct State<'a> {
@@ -32,7 +32,7 @@ impl Default for Transition<'_> {
         Self {
             conditions: Default::default(),
             effects: Default::default(),
-            next: Expression::new(ExpressionType::from(State::default()), Span::new("")),
+            next: Expression::new(ExpressionType::from(State::default()), None),
         }
     }
 }

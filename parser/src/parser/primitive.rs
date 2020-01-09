@@ -36,7 +36,7 @@ pub fn zero() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("zero"),
         vec![],
-        Expression::new(ExpressionType::State(State::default()), Span::new("")).into(),
+        Expression::new(ExpressionType::State(State::default()), None).into(),
     )
 }
 
@@ -50,14 +50,14 @@ pub fn one() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("one"),
         vec![],
-        Expression::new(ExpressionType::from(state), Span::new("")).into(),
+        Expression::new(ExpressionType::from(state), None).into(),
     )
 }
 
 pub fn give() -> Result<'static, Context<'static, Expression<'static>>> {
     let next = Expression::new(
-        ExpressionType::from(Variable::new("next", Kind::State.into(), Span::new(""))),
-        Span::new(""),
+        ExpressionType::from(Variable::new("next", Kind::State.into(), None)),
+        None,
     );
 
     let mut transition = Transition::default();
@@ -69,19 +69,19 @@ pub fn give() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("give"),
         vec![Span::new("next")],
-        Expression::new(ExpressionType::from(state), Span::new("")).into(),
+        Expression::new(ExpressionType::from(state), None).into(),
     )
 }
 
 pub fn and() -> Result<'static, Context<'static, Expression<'static>>> {
     let left = Expression::new(
-        ExpressionType::from(Variable::new("left", Kind::State.into(), Span::new(""))),
-        Span::new(""),
+        ExpressionType::from(Variable::new("left", Kind::State.into(), None)),
+        None,
     );
 
     let right = Expression::new(
-        ExpressionType::from(Variable::new("right", Kind::State.into(), Span::new(""))),
-        Span::new(""),
+        ExpressionType::from(Variable::new("right", Kind::State.into(), None)),
+        None,
     );
 
     let mut transition = Transition::default();
@@ -93,18 +93,18 @@ pub fn and() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("and"),
         vec![Span::new("left"), Span::new("right")],
-        Expression::new(ExpressionType::from(state), Span::new("")).into(),
+        Expression::new(ExpressionType::from(state), None).into(),
     )
 }
 
 pub fn or() -> Result<'static, Context<'static, Expression<'static>>> {
     let left = Expression::new(
-        ExpressionType::from(Variable::new("left", Kind::State.into(), Span::new(""))),
-        Span::new(""),
+        ExpressionType::from(Variable::new("left", Kind::State.into(), None)),
+        None,
     );
     let right = Expression::new(
-        ExpressionType::from(Variable::new("right", Kind::State.into(), Span::new(""))),
-        Span::new(""),
+        ExpressionType::from(Variable::new("right", Kind::State.into(), None)),
+        None,
     );
 
     let mut left_transition = Transition::default();
@@ -124,7 +124,7 @@ pub fn or() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("or"),
         vec![Span::new("left"), Span::new("right")],
-        Expression::new(ExpressionType::from(state), Span::new("")).into(),
+        Expression::new(ExpressionType::from(state), None).into(),
     )
 }
 
@@ -133,14 +133,14 @@ pub fn scale() -> Result<'static, Context<'static, Expression<'static>>> {
         ExpressionType::from(Variable::new(
             "scalar",
             Kind::Observable(Kind::Word.into()).into(),
-            Span::new(""),
+            None,
         )),
-        Span::new(""),
+        None,
     );
 
     let next = Expression::new(
-        ExpressionType::from(Variable::new("next", Kind::State.into(), Span::new(""))),
-        Span::new(""),
+        ExpressionType::from(Variable::new("next", Kind::State.into(), None)),
+        None,
     );
 
     let mut transition = Transition::default();
@@ -152,14 +152,14 @@ pub fn scale() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("scale"),
         vec![Span::new("scalar"), Span::new("next")],
-        Expression::new(ExpressionType::from(state), Span::new("")).into(),
+        Expression::new(ExpressionType::from(state), None).into(),
     )
 }
 
 pub fn anytime() -> Result<'static, Context<'static, Expression<'static>>> {
     let next = Expression::new(
-        ExpressionType::from(Variable::new("next", Kind::State.into(), Span::new(""))),
-        Span::new(""),
+        ExpressionType::from(Variable::new("next", Kind::State.into(), None)),
+        None,
     );
 
     let mut transition = Transition::default();
@@ -173,7 +173,7 @@ pub fn anytime() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("anytime"),
         vec![Span::new("next")],
-        Expression::new(ExpressionType::from(state), Span::new("")).into(),
+        Expression::new(ExpressionType::from(state), None).into(),
     )
 }
 
