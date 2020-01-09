@@ -27,19 +27,14 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
         return TERMINAL_ID;
     }
 
-    let id = context.numbers.next().unwrap();
+    let from = context.numbers.next().unwrap();
 
     for transition in state.transitions() {
-        let to_state = expression::visit(context, transition.next());
-        let mut method = Method::transition(
-            id,
-            context.numbers.next().unwrap(),
-            context
-                .function_context
-                .as_ref()
-                .map(|c| &c.arguments)
-                .unwrap_or(&Vec::new()),
-        );
+        let to = expression::visit(context, transition.next());
+
+        let function_context = context.function_context.as_ref().unwrap();
+        let mut method =
+            Method::transition(function_context.name, &function_context.arguments, from);
 
         for condition in transition.conditions() {
             method.add_action(Assert::new(expression::visit(context, condition), 0));
@@ -87,16 +82,15 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
             }
         }
 
-        method.add_action(UpdateState::new(to_state.clone()));
+        method.add_action(UpdateState::new(to.clone()));
 
-        // TODO: add action for emitting event.
         method.add_action(Assign::new(
             EVENT.clone(),
             Expression::Expression("LibraAccount.new_event_handle<u64>()".into()),
         ));
 
-        method.add_action(Emit::new(to_state));
-
+        // TODO: perform this for all transition methods.
+        method.add_action(Emit::new(to));
         method.add_action(DestroyHandle);
 
         for action in post_actions {
@@ -106,5 +100,5 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
         context.contract.add_method(method);
     }
 
-    id
+    from
 }

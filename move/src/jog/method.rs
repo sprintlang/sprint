@@ -41,8 +41,8 @@ impl<'a> Method<'a> {
         Self::new(true, identifier)
     }
 
-    pub fn transition(from: usize, to: usize, arguments: &[Variable<'a>]) -> Self {
-        let mut method = Self::public(Identifier::Transition(to));
+    pub fn transition(name: &'a str, arguments: &[Variable<'a>], from: usize) -> Self {
+        let mut method = Self::public(Identifier::Transition(name));
 
         method.add_action(Assign::new(
             CONTRACT_REF.clone(),

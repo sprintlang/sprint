@@ -113,15 +113,9 @@ fn visit_variable<'a>(
                 let from = context.numbers.next().unwrap();
                 let to = visit_abstraction(context, &definition.expression);
 
-                let mut method = Method::transition(
-                    from,
-                    context.numbers.next().unwrap(),
-                    context
-                        .function_context
-                        .as_ref()
-                        .map(|c| &c.arguments)
-                        .unwrap_or(&Vec::new()),
-                );
+                let function_context = context.function_context.as_ref().unwrap();
+                let mut method =
+                    Method::transition(function_context.name, &function_context.arguments, from);
 
                 let stacks = arguments.map(|argument| argument::visit(context, argument));
 

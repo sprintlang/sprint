@@ -7,7 +7,6 @@ pub mod libra;
 pub mod push;
 pub mod scale;
 pub mod spawn;
-pub mod update_stack;
 pub mod update_state;
 
 use super::variable::Variable;

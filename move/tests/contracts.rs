@@ -269,6 +269,14 @@ fn generated_one() {
 }
 
 #[test]
+fn generated_scale() {
+    let suite = Path::new("tests/suites/scale.test.mvir");
+    let contract = contract("main = scale (konst 5) one").unwrap();
+
+    test(generate(&contract), suite);
+}
+
+#[test]
 fn generated_one_and_one() {
     let suite = Path::new("tests/suites/one_and_one.test.mvir");
     let contract = contract("main = and one one").unwrap();
