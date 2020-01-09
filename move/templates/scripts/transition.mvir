@@ -1,0 +1,8 @@
+import {{author}}.{{module}};
+
+main() {
+    {%for function_name in function_names%}
+    {{module}}.transition_{{function_name}}({{author}}, {{context_id}});
+    {%endfor%}
+    return;
+}

@@ -1,6 +1,6 @@
 use super::{publish, Command, PublishType};
 use client::client_proxy::ClientProxy;
-use sprint_move::script::MoveState;
+use sprint_move::script::Transition;
 use std::fs;
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -13,7 +13,7 @@ impl Command for TransitionCommand {
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<author> <module_name> <context_id> <to_state...>"
+        "<author> <module_name> <context_id> <function_name...>"
     }
 
     fn get_description(&self) -> &'static str {
@@ -39,12 +39,11 @@ impl Command for TransitionCommand {
                 .to_vec(),
         );
 
-        // TODO: Add proper error handling if any of the addresses are invalid.
-        let move_state = MoveState {
+        let move_state = Transition {
             author: format!("0x{}", author),
             module: params[2].into(),
             context_id: params[3].parse().unwrap(),
-            to_states: &params[4..params.len()],
+            function_names: &params[4..params.len()],
         };
 
         // Create a file inside of `std::env::temp_dir()`.

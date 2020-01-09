@@ -1,8 +1,0 @@
-import {{author}}.{{module}};
-
-main() {
-    {%for to_state in to_states%}
-    {{module}}.transition_{{to_state}}({{author}}, {{context_id}});
-    {%endfor%}
-    return;
-}
