@@ -1,6 +1,6 @@
-use super::Expression;
+use super::{Expression, ExpressionType, Span};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct State<'a> {
     transitions: Vec<Transition<'a>>,
 }
@@ -20,7 +20,7 @@ impl<'a> State<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Transition<'a> {
     conditions: Vec<Expression<'a>>,
     effects: Vec<Effect<'a>>,
@@ -32,7 +32,7 @@ impl Default for Transition<'_> {
         Self {
             conditions: Default::default(),
             effects: Default::default(),
-            next: Expression::State(State::default()),
+            next: Expression::new(ExpressionType::from(State::default()), Span::new("")),
         }
     }
 }
@@ -66,7 +66,7 @@ impl<'a> Transition<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Effect<'a> {
     Flip,
     Scale(Expression<'a>),

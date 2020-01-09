@@ -1,36 +1,47 @@
-use super::context::Context;
+use super::{
+    context::Context,
+    error::{Error, SprintError},
+};
 use crate::ast::Kind;
 use std::rc::Rc;
 
-pub trait Unify<O = Self> {
-    fn unify(self, other: O) -> Option<()>;
+pub trait Unify<'a, O = Self> {
+    fn unify(self, other: O) -> Result<(), Error<'a>>;
 }
 
-impl<'a, T, U> Unify<Context<'a, U>> for &mut Context<'a, T> {
-    fn unify(self, other: Context<'a, U>) -> Option<()> {
-        for (name, definition) in other.definitions {
-            if self.definitions.insert(name, definition).is_some() {
+impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
+    fn unify(self, other: Context<'a, U>) -> Result<(), Error<'a>> {
+        for (name, definition) in &other.definitions {
+            if self.definitions.insert(name, definition.clone()).is_some() {
                 // There is a duplicate definition.
-                return None;
+                return Err(Error::from_sprint_error_and_span(
+                    definition.expression.span,
+                    SprintError::DuplicateDefinitionError(name),
+                ));
             }
         }
 
         for (variable, count) in other.variables {
-            let kind = variable.kind.clone();
-
-            if let Some(original) = self.variables.replace(variable, count) {
-                original.kind.unify(kind);
+            if let Some(original) = self.variables.replace(variable.clone(), count) {
+                if let Err(e) = original.kind.unify(variable.kind.clone()) {
+                    let sprint_error =
+                        SprintError::TypeError(variable.name, e.sprint_error.unwrap().into());
+                    return Err(Error::from_sprint_error_and_span(
+                        variable.span,
+                        sprint_error,
+                    ));
+                }
             }
         }
 
-        Some(())
+        Ok(())
     }
 }
 
-impl Unify for Rc<Kind> {
-    fn unify(self, other: Self) -> Option<()> {
-        let this = Kind::simplify(self);
-        let other = Kind::simplify(other);
+impl<'a> Unify<'a> for Rc<Kind> {
+    fn unify(self, other: Self) -> Result<(), Error<'a>> {
+        let mut this = Kind::simplify(self);
+        let mut other = Kind::simplify(other);
 
         match (this.as_ref(), other.as_ref()) {
             (Kind::Abstraction(this_from, this_to), Kind::Abstraction(other_from, other_to)) => {
@@ -48,9 +59,14 @@ impl Unify for Rc<Kind> {
             }
             (_, Kind::Unresolved(_)) => other.unify(this)?,
             (Kind::Word, Kind::Word) => {}
-            _ => None?,
+            _ => {
+                return Err(Error::from_sprint_error(SprintError::MismatchedKinds(
+                    Rc::make_mut(&mut this).clone(),
+                    Rc::make_mut(&mut other).clone(),
+                )))
+            }
         }
 
-        Some(())
+        Ok(())
     }
 }

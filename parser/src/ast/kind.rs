@@ -5,7 +5,7 @@ use std::{
     rc::Rc,
 };
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub enum Kind {
     Abstraction(Rc<Self>, Rc<Self>),
     Boolean,

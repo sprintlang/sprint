@@ -46,7 +46,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::super::{error::Error, Span};
+    use super::super::{
+        error::{Error, NomError},
+        Span,
+    };
     use super::*;
     use nom::{
         bytes::complete::tag, character::complete::char, error::ErrorKind, sequence::tuple, Err,
@@ -72,10 +75,13 @@ mod tests {
             Err::Error(error) | Err::Failure(error) => assert_eq!(
                 error,
                 Error {
-                    line: 1,
-                    column: 3,
-                    input: &abd[2..],
-                    kind: ErrorKind::Char,
+                    nom_error: Some(NomError {
+                        line: 1,
+                        column: 3,
+                        input: &abd[2..],
+                        kind: ErrorKind::Char,
+                    }),
+                    sprint_error: None,
                 }
             ),
             _ => unreachable!(),

@@ -16,14 +16,38 @@ pub(super) fn visit<'a>(
     expression: &ast::Expression<'a>,
 ) -> Expression<'a> {
     match expression {
-        ast::Expression::Abstraction(_, _) => unreachable!("use visit_abstraction instead"),
-        ast::Expression::Application(f, a) => visit_application(context, f, a),
-        ast::Expression::Boolean(_) => unimplemented!(),
-        ast::Expression::Class(c) => visit_class(context, c),
-        ast::Expression::Observable(o) => visit_observable(context, o),
-        ast::Expression::State(s) => visit_state(context, s),
-        ast::Expression::Variable(v) => visit_variable(context, v, Vec::new()),
-        ast::Expression::Word(w) => Expression::Expression(w.to_string().into()),
+        ast::Expression {
+            expression: ast::ExpressionType::Abstraction(_, _),
+            ..
+        } => unreachable!("use visit_abstraction instead"),
+        ast::Expression {
+            expression: ast::ExpressionType::Application(f, a),
+            ..
+        } => visit_application(context, f, a),
+        ast::Expression {
+            expression: ast::ExpressionType::Boolean(_),
+            ..
+        } => unimplemented!(),
+        ast::Expression {
+            expression: ast::ExpressionType::Class(c),
+            ..
+        } => visit_class(context, c),
+        ast::Expression {
+            expression: ast::ExpressionType::Observable(o),
+            ..
+        } => visit_observable(context, o),
+        ast::Expression {
+            expression: ast::ExpressionType::State(s),
+            ..
+        } => visit_state(context, s),
+        ast::Expression {
+            expression: ast::ExpressionType::Variable(v),
+            ..
+        } => visit_variable(context, v, Vec::new()),
+        ast::Expression {
+            expression: ast::ExpressionType::Word(w),
+            ..
+        } => Expression::Expression(w.to_string().into()),
     }
 }
 
@@ -31,7 +55,11 @@ pub(super) fn visit_abstraction<'a>(
     context: &mut Context<'a, '_>,
     mut expression: &ast::Expression<'a>,
 ) -> Expression<'a> {
-    while let ast::Expression::Abstraction(_, e) = expression {
+    while let ast::Expression {
+        expression: ast::ExpressionType::Abstraction(_, e),
+        ..
+    } = expression
+    {
         expression = e;
     }
 
@@ -57,13 +85,20 @@ fn visit_application<'a>(
 ) -> Expression<'a> {
     let mut arguments = vec![argument];
 
-    while let ast::Expression::Application(e, argument) = abstraction {
+    while let ast::Expression {
+        expression: ast::ExpressionType::Application(e, argument),
+        ..
+    } = abstraction
+    {
         abstraction = e;
         arguments.push(argument);
     }
 
     match abstraction {
-        ast::Expression::Variable(v) => visit_variable(context, v, arguments),
+        ast::Expression {
+            expression: ast::ExpressionType::Variable(v),
+            ..
+        } => visit_variable(context, v, arguments),
         _ => unreachable!(),
     }
 }

@@ -15,7 +15,7 @@ use nom::{
 use nom_locate::LocatedSpan;
 use std::result;
 
-type Span<'a> = LocatedSpan<&'a str>;
+pub type Span<'a> = LocatedSpan<&'a str>;
 
 type Result<'a, T> = result::Result<T, Err<Error<'a>>>;
 
