@@ -14,7 +14,7 @@ impl Command for InitializeCommand {
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<author_account_address>|<author_account_ref_id> <module_name> <party> <counterparty>"
+        "<author> <module_name> <party> <counterparty>"
     }
 
     fn get_description(&self) -> &'static str {

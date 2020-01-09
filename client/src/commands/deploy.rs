@@ -10,16 +10,19 @@ use tempfile::NamedTempFile;
 pub struct DeployCommand {}
 
 impl DeployCommand {
-    fn execute_create_transaction(&self, client: &mut ClientProxy, author: &str, module: &str) {
+    fn execute_create_transaction(
+        &self,
+        client: &mut ClientProxy,
+        sender: &str,
+        author: &str,
+        module: &str,
+    ) {
         println!("Generating create transaction code to initialize published module...");
 
         let create_contract = CreateContract {
             author: format!("0x{}", author),
             module: module.into(),
         };
-
-        // TODO: Allow for client to chose the address which executes the transaction
-        let sender = "0";
 
         // Create a file inside of `std::env::temp_dir()`.
         let mut file = NamedTempFile::new().unwrap();
@@ -47,7 +50,7 @@ impl Command for DeployCommand {
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<sender_account_address>|<sender_account_ref_id> <file_path>"
+        "<sender> <file_path> <module_name = Contract>"
     }
 
     fn get_description(&self) -> &'static str {
@@ -73,7 +76,7 @@ impl Command for DeployCommand {
         let args = sprintc::CompileArgs {
             source_path,
             output_path: None,
-            verbose: true,
+            verbose: false,
             check: false,
         };
         match sprintc::compile(&args) {
@@ -102,6 +105,6 @@ impl Command for DeployCommand {
                 .to_vec(),
         );
 
-        self.execute_create_transaction(client, &author, module_name);
+        self.execute_create_transaction(client, sender, &author, module_name);
     }
 }

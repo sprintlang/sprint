@@ -14,7 +14,7 @@ impl Command for DepositCommand {
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<sender> <author> <module_name> <owner>"
+        "<author> <module_name> <depositer> <amount>"
     }
 
     fn get_description(&self) -> &'static str {
@@ -29,27 +29,20 @@ impl Command for DepositCommand {
             return;
         }
 
-        let sender = params[1];
-
         println!("Generating transaction code...");
         // TODO: Add proper error handling if any of these are invalid.
         let author = hex::encode(
             client
-                .get_account_address_from_parameter(params[2])
-                .unwrap()
-                .to_vec(),
-        );
-        let owner = hex::encode(
-            client
-                .get_account_address_from_parameter(params[4])
+                .get_account_address_from_parameter(params[1])
                 .unwrap()
                 .to_vec(),
         );
 
         let deposit = Deposit {
             author: format!("0x{}", author),
-            module: params[3].into(),
-            owner: format!("0x{}", owner),
+            module: params[2].into(),
+            amount: params[4].into(),
+            coin_store_index: 0, // TODO: Unhard code this
         };
 
         // Create a file inside of `std::env::temp_dir()`.
@@ -68,6 +61,6 @@ impl Command for DepositCommand {
 
         println!("File contents:\n{}", contents);
 
-        publish(client, sender, &move_code_path, PublishType::Script);
+        publish(client, params[3], &move_code_path, PublishType::Script);
     }
 }

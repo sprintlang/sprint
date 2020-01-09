@@ -13,7 +13,7 @@ impl Command for TransitionCommand {
     }
 
     fn get_params_help(&self) -> &'static str {
-        "<author_account_address> <module_name> <context_id> <to_state>"
+        "<author> <module_name> <context_id> <to_state...>"
     }
 
     fn get_description(&self) -> &'static str {
@@ -22,7 +22,7 @@ impl Command for TransitionCommand {
 
     #[allow(clippy::needless_return)]
     fn execute(&self, client: &mut ClientProxy, params: &[&str]) {
-        if params.len() != 5 {
+        if params.len() < 5 {
             println!("Invalid number of arguments");
             println!("Usage: {} {}", params[0], self.get_params_help());
             return;
@@ -38,12 +38,13 @@ impl Command for TransitionCommand {
                 .unwrap()
                 .to_vec(),
         );
+
         // TODO: Add proper error handling if any of the addresses are invalid.
         let move_state = MoveState {
             author: format!("0x{}", author),
             module: params[2].into(),
             context_id: params[3].parse().unwrap(),
-            to_state: params[4].parse().unwrap(),
+            to_states: &params[4..params.len()],
         };
 
         // Create a file inside of `std::env::temp_dir()`.

@@ -3,8 +3,7 @@ import 0x0.LibraCoin;
 import {{author}}.{{module}};
 
 main() {
-    // TODO: Replace 1 and 0 with parameter
-    {{module}}.deposit({{owner}}, LibraAccount.withdraw_from_sender(1), 0);
+    {{module}}.deposit({{author}}, LibraAccount.withdraw_from_sender({{amount}}), {{coin_store_index}});
 
     return;
 }

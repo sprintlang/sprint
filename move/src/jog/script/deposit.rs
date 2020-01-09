@@ -5,5 +5,6 @@ use askama::Template;
 pub struct Deposit {
     pub author: String,
     pub module: String,
-    pub owner: String,
+    pub amount: String,
+    pub coin_store_index: u64,
 }
