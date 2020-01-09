@@ -22,14 +22,14 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
         }
 
         for variable in other.variables {
-            let name = variable.name;
-            let kind = variable.kind.clone();
-            let span = variable.span;
-
-            if let Some(original) = self.variables.replace(variable) {
-                if let Err(e) = original.kind.unify(kind) {
-                    let sprint_error = SprintError::TypeError(name, e.sprint_error.unwrap().into());
-                    return Err(Error::from_sprint_error_and_span(span, sprint_error));
+            if let Some(original) = self.variables.replace(variable.clone()) {
+                if let Err(e) = original.kind.unify(variable.kind.clone()) {
+                    let sprint_error =
+                        SprintError::TypeError(variable.name, e.sprint_error.unwrap().into());
+                    return Err(Error::from_sprint_error_and_span(
+                        variable.span,
+                        sprint_error,
+                    ));
                 }
             }
         }

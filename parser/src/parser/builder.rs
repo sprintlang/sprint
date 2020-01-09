@@ -18,9 +18,8 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, 
         .map_err(Err::Error)?;
 
     for variable in &context.variables {
-        let name = variable.name;
-        if !context.definitions.contains_key(name) {
-            if name == "main" {
+        if !context.definitions.contains_key(variable.name) {
+            if variable.name == "main" {
                 return Err(Err::Error(Error::from_sprint_error(
                     SprintError::UndefinedMainError,
                 )));
@@ -28,7 +27,7 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, 
             return Err(Err::Error(Error::from_sprint_error_and_span(
                 variable.span,
                 SprintError::UnknownIdentifierError(
-                    name,
+                    variable.name,
                     Rc::make_mut(&mut variable.kind.clone()).clone(),
                 ),
             )));
@@ -60,10 +59,9 @@ pub fn definition<'a>(
         let argument = expression.variables.take(&argument).unwrap_or(argument);
 
         expression = expression.map(|expression| {
-            let span = expression.span;
             Expression::new(
-                ExpressionType::Abstraction(argument, expression.into()),
-                span,
+                ExpressionType::Abstraction(argument, expression.clone().into()),
+                expression.span,
             )
         });
     }
@@ -148,10 +146,9 @@ fn map_arg_to_application<'a>(
         Err(_) => context,
         Ok(context) => {
             let context = context.map(|expression| {
-                let span = expression.span;
                 Expression::new(
-                    ExpressionType::Application(expression.into(), argument.into()),
-                    span,
+                    ExpressionType::Application(expression.clone().into(), argument.into()),
+                    expression.span,
                 )
             });
             Ok(context)
