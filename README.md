@@ -1,11 +1,13 @@
-# Sprint :zap:
+![](logo.png)
 
-Sprint is a functional programming language for writing smart contracts. It compiles into Move for Libra.
+## Syntax
 
-## Compiling a contract from Sprint to Move
+Programs are represented as combinations of contracts, inspired by [this paper](https://www.microsoft.com/en-us/research/publication/composing-contracts-an-adventure-in-financial-engineering/) by Simon Peyton Jones. `main` is the entrypoint for all programs, a simple example is
 
-Clone this repository. In its root directory, write a Sprint program in a new file, such as `example.sprint`. Then you can run:
+```haskell
+scaleK :: Word -> Contract -> Contract
+scaleK k c = scale (konst k) c
 
-`cargo run -- example.sprint`
-
-This compiles the Sprint code and saves it into a new file `example.mvir`. Have a look at the generated Move code!
+main :: Contract
+main = scaleK 10 one
+```
