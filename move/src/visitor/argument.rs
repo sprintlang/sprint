@@ -3,7 +3,7 @@ use crate::jog::{
     action::push::Push,
     expression::{Binary, Expression},
     kind::Kind,
-    variable::{STACK, STACK_LENGTH},
+    variable::STACK,
 };
 use sprint_parser::ast;
 
@@ -12,16 +12,15 @@ pub(super) fn visit<'a>(
     expression: &ast::Expression<'a>,
 ) -> Vec<Push<'a>> {
     if !expression::results_in_state(expression.kind()) {
-        return vec![Push::with_length(
+        return vec![Push::new(
             STACK.clone(),
             expression::visit(context, expression),
-            STACK_LENGTH.clone(),
         )];
     }
 
     match &expression.expression {
         ast::ExpressionType::Application(f, a) => visit_application(context, &f, &a),
-        ast::ExpressionType::Variable(v) => vec![Push::with_length(
+        ast::ExpressionType::Variable(v) => vec![Push::new(
             STACK.clone(),
             match context.definitions.get(v.name) {
                 Some(definition) => {
@@ -30,7 +29,6 @@ pub(super) fn visit<'a>(
                 }
                 None => expression::visit(context, expression),
             },
-            STACK_LENGTH.clone(),
         )],
         ast::ExpressionType::State(_) => unimplemented!("state arguments cannot be inlined"),
         _ => unreachable!(),
@@ -53,14 +51,17 @@ fn visit_application<'a>(
         _ => {
             pushes.append(&mut abstraction);
 
-            arguments.push(Push::with_length(
+            arguments.push(Push::new(
                 STACK.clone(),
                 Expression::Binary(
                     Binary::Subtract,
                     Expression::Length(
                         Kind::Unsigned,
-                        Expression::Copied(
-                            Expression::Identifier(STACK.identifier().clone()).into(),
+                        Expression::Frozen(
+                            Expression::Copied(
+                                Expression::Identifier(STACK.identifier().clone()).into(),
+                            )
+                            .into(),
                         )
                         .into(),
                     )
@@ -73,7 +74,6 @@ fn visit_application<'a>(
                     )
                     .into(),
                 ),
-                STACK_LENGTH.clone(),
             ));
         }
     }
@@ -83,21 +83,23 @@ fn visit_application<'a>(
         _ => {
             pushes.append(&mut argument);
 
-            arguments.push(Push::with_length(
+            arguments.push(Push::new(
                 STACK.clone(),
                 Expression::Binary(
                     Binary::Subtract,
                     Expression::Length(
                         Kind::Unsigned,
-                        Expression::Copied(
-                            Expression::Identifier(STACK.identifier().clone()).into(),
+                        Expression::Frozen(
+                            Expression::Copied(
+                                Expression::Identifier(STACK.identifier().clone()).into(),
+                            )
+                            .into(),
                         )
                         .into(),
                     )
                     .into(),
                     Expression::Unsigned(3).into(),
                 ),
-                STACK_LENGTH.clone(),
             ));
         }
     }

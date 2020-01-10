@@ -1,9 +1,5 @@
 use super::{
-    super::{
-        expression::{Binary, Expression},
-        variable::Variable,
-    },
-    assign::Assign,
+    super::{expression::Expression, variable::Variable},
     Action,
 };
 use std::fmt::{self, Display, Formatter};
@@ -12,32 +8,11 @@ use std::fmt::{self, Display, Formatter};
 pub struct Push<'a> {
     vector: Variable<'a>,
     item: Expression<'a>,
-    increment: Option<Assign<'a>>,
 }
 
 impl<'a> Push<'a> {
     pub fn new(vector: Variable<'a>, item: Expression<'a>) -> Self {
-        Self {
-            vector,
-            item,
-            increment: None,
-        }
-    }
-
-    pub fn with_length(vector: Variable<'a>, item: Expression<'a>, length: Variable<'a>) -> Self {
-        let identifier = length.identifier().clone();
-        Self {
-            vector,
-            item,
-            increment: Some(Assign::new(
-                length,
-                Expression::Binary(
-                    Binary::Add,
-                    Expression::Copied(Expression::Identifier(identifier).into()).into(),
-                    Expression::Unsigned(1).into(),
-                ),
-            )),
-        }
+        Self { vector, item }
     }
 }
 
@@ -47,15 +22,7 @@ impl Action for Push<'_> {
     }
 
     fn definitions(&self) -> Vec<&Variable> {
-        let mut definitions = vec![&self.vector];
-        definitions.extend(
-            self.increment
-                .as_ref()
-                .map(Action::definitions)
-                .iter()
-                .flatten(),
-        );
-        definitions
+        vec![&self.vector]
     }
 }
 
@@ -68,12 +35,6 @@ impl Display for Push<'_> {
             self.vector.kind().inner(),
             self.vector.identifier(),
             self.item
-        )?;
-
-        if let Some(increment) = &self.increment {
-            increment.fmt(f)?;
-        }
-
-        Ok(())
+        )
     }
 }

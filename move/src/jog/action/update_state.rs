@@ -1,22 +1,13 @@
 use super::super::{
     action::{drop::DROP_STACK, Action},
-    expression::Expression,
-    variable::Variable,
+    variable::{Variable, TO_STATE},
 };
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
-pub struct UpdateState<'a> {
-    to: Expression<'a>,
-}
+pub struct UpdateState;
 
-impl<'a> UpdateState<'a> {
-    pub fn new(to: Expression<'a>) -> Self {
-        Self { to }
-    }
-}
-
-impl Action for UpdateState<'_> {
+impl Action for UpdateState {
     fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
@@ -26,9 +17,13 @@ impl Action for UpdateState<'_> {
     }
 }
 
-impl Display for UpdateState<'_> {
+impl Display for UpdateState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         DROP_STACK.fmt(f)?;
-        writeln!(f, "*(&mut move(context_ref).state) = {};", self.to)
+        writeln!(
+            f,
+            "*(&mut move(context_ref).state) = copy({});",
+            TO_STATE.identifier()
+        )
     }
 }

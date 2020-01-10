@@ -46,4 +46,12 @@ impl<'a> FunctionContext<'a> {
             method: Default::default(),
         }
     }
+
+    fn find_argument(&self, name: &'a str) -> Option<u64> {
+        self.arguments
+            .iter()
+            .rev()
+            .position(|v| v.identifier().has_name(name))
+            .map(|n| n as u64)
+    }
 }

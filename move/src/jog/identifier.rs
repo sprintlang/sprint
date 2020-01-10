@@ -11,6 +11,15 @@ pub enum Identifier<'a> {
     Transition(&'a str),
 }
 
+impl Identifier<'_> {
+    pub fn has_name(&self, needle: &str) -> bool {
+        match &self {
+            Self::Raw(name) | Self::Prefixed(name) | Self::Transition(name) => *name == needle,
+            _ => false,
+        }
+    }
+}
+
 impl Display for Identifier<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {

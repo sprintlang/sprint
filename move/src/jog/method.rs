@@ -1,10 +1,17 @@
 use super::{
-    action::{assert::Assert, assign::Assign, Action},
-    expression::{Binary, Expression},
+    action::{
+        assert::Assert,
+        assign::Assign,
+        libra::{DestroyHandle, Emit},
+        update_state::UpdateState,
+        Action,
+    },
+    expression::Expression,
     identifier::Identifier,
     kind::Kind,
     variable::{
-        Variable, CONTEXTS, CONTEXT_INDEX, CONTEXT_REF, CONTRACT_REF, OWNER, STACK, STACK_LENGTH,
+        Variable, CONTEXTS, CONTEXT_INDEX, CONTEXT_REF, CONTRACT_REF, EVENT, OWNER, STACK,
+        STACK_LENGTH, TO_STATE,
     },
 };
 use askama::Template;
@@ -17,6 +24,8 @@ pub struct Method<'a> {
     identifier: Identifier<'a>,
     arguments: Vec<Variable<'a>>,
     actions: Vec<Box<dyn Action + 'a>>,
+    post_actions: Vec<Box<dyn Action + 'a>>,
+    emit_actions: Vec<Box<dyn Action + 'a>>,
     result: Option<Expression<'a>>,
     acquires_resource: bool,
 }
@@ -28,6 +37,8 @@ impl<'a> Method<'a> {
             identifier,
             arguments: Default::default(),
             actions: Default::default(),
+            post_actions: Default::default(),
+            emit_actions: Default::default(),
             result: Default::default(),
             acquires_resource: false,
         }
@@ -41,7 +52,7 @@ impl<'a> Method<'a> {
         Self::new(true, identifier)
     }
 
-    pub fn transition(name: &'a str, arguments: &[Variable<'a>], from: u64) -> Self {
+    pub fn transition(name: &'a str, from: u64, to: Expression<'a>) -> Self {
         let mut method = Self::public(Identifier::Transition(name));
 
         method.add_action(Assign::new(
@@ -70,33 +81,23 @@ impl<'a> Method<'a> {
         ));
 
         method.add_action(Assign::new(
-            STACK_LENGTH.clone(),
-            Expression::Expression("Vector.length<u64>(&copy(context_ref).stack)".into()),
-        ));
-
-        for (i, argument) in arguments.iter().rev().enumerate() {
-            method.add_action(Assign::new(
-                argument.clone(),
-                Expression::Get(
-                    Kind::Unsigned,
-                    Expression::Expression("&copy(context_ref).stack".into()).into(),
-                    Expression::Binary(
-                        Binary::Subtract,
-                        Expression::Copied(
-                            Expression::Identifier(STACK_LENGTH.identifier().clone()).into(),
-                        )
-                        .into(),
-                        Expression::Unsigned((i + 1) as u64).into(),
-                    )
-                    .into(),
-                ),
-            ));
-        }
-
-        method.add_action(Assign::new(
             STACK.clone(),
             Expression::Expression("&mut copy(context_ref).stack".into()),
         ));
+
+        method.add_action(Assign::new(
+            STACK_LENGTH.clone(),
+            Expression::Length(
+                Kind::Unsigned,
+                Expression::Frozen(
+                    Expression::Copied(Expression::Identifier(STACK.identifier().clone()).into())
+                        .into(),
+                )
+                .into(),
+            ),
+        ));
+
+        method.add_action(Assign::new(TO_STATE.clone(), to));
 
         method.add_argument(OWNER.clone());
         method.add_argument(CONTEXT_INDEX.clone());
@@ -108,21 +109,32 @@ impl<'a> Method<'a> {
             1,
         ));
 
+        method.add_post_action(UpdateState);
+
+        method.add_emit_action(Assign::new(
+            EVENT.clone(),
+            Expression::Expression("LibraAccount.new_event_handle<u64>()".into()),
+        ));
+        method.add_emit_action(Emit::new(Expression::Copied(
+            Expression::Identifier(TO_STATE.identifier().clone()).into(),
+        )));
+        method.add_emit_action(DestroyHandle);
+
         method
     }
 
     pub fn dependencies(&self) -> Vec<&str> {
-        self.actions
-            .iter()
-            .flat_map(|action| action.dependencies())
+        self.all_actions()
+            .into_iter()
+            .flat_map(Action::dependencies)
             .copied()
             .collect()
     }
 
     pub fn definitions(&self) -> HashSet<&Variable> {
-        self.actions
-            .iter()
-            .flat_map(|action| action.definitions())
+        self.all_actions()
+            .into_iter()
+            .flat_map(Action::definitions)
             .collect()
     }
 
@@ -139,6 +151,10 @@ impl<'a> Method<'a> {
         self.actions.push(Box::new(action));
     }
 
+    pub fn add_post_action(&mut self, post_action: impl Action + 'a) {
+        self.post_actions.push(Box::new(post_action));
+    }
+
     pub fn set_result(&mut self, expression: Expression<'a>) {
         self.result = Some(expression);
     }
@@ -152,5 +168,18 @@ impl<'a> Method<'a> {
             .as_ref()
             .map(|e| format!(" {}", e))
             .unwrap_or_default()
+    }
+
+    fn all_actions(&self) -> Vec<&(dyn Action + 'a)> {
+        self.actions
+            .iter()
+            .chain(self.post_actions.iter())
+            .chain(self.emit_actions.iter())
+            .map(AsRef::as_ref)
+            .collect()
+    }
+
+    fn add_emit_action(&mut self, emit_action: impl Action + 'a) {
+        self.emit_actions.push(Box::new(emit_action));
     }
 }

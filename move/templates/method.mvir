@@ -7,7 +7,7 @@
         let {{ definition }};
         {%- endfor %}
 
-        {%- for action in actions %}
+        {%- for action in self.all_actions() %}
         {{ action }}
         {%- endfor %}
 

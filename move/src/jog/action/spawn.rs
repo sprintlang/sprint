@@ -4,8 +4,6 @@ use super::{
         expression::Expression,
         variable::{Variable, STACK},
     },
-    assign::Assign,
-    drop::DROP_STACK,
     Action,
 };
 use std::fmt::{self, Display, Formatter};
@@ -14,19 +12,11 @@ use std::fmt::{self, Display, Formatter};
 pub struct Spawn<'a> {
     context: Variable<'a>,
     root: Expression<'a>,
-    assign: Assign<'a>,
 }
 
 impl<'a> Spawn<'a> {
     pub fn new(context: Variable<'a>, root: Expression<'a>) -> Self {
-        Spawn {
-            context,
-            root,
-            assign: Assign::new(
-                STACK.clone(),
-                Expression::Expression("&mut copy(context_ref).stack".into()),
-            ),
-        }
+        Spawn { context, root }
     }
 }
 
@@ -36,15 +26,12 @@ impl Action for Spawn<'_> {
     }
 
     fn definitions(&self) -> Vec<&Variable> {
-        let mut definitions = self.assign.definitions();
-        definitions.push(&self.context);
-        definitions
+        vec![&self.context]
     }
 }
 
 impl Display for Spawn<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        DROP_STACK.fmt(f)?;
         writeln!(
             f,
             "{} = Context {{
@@ -53,13 +40,13 @@ impl Display for Spawn<'_> {
                 party: *(&{}),
                 counterparty: *(&{}),
                 scale: *(&copy(context_ref).scale),
-                stack: Self.clone_stack(&copy(context_ref).stack),
+                stack: Self.clone_stack(freeze(copy({}))),
             }};",
             self.context.identifier(),
             self.root,
             Address::Party,
             Address::Counterparty,
-        )?;
-        self.assign.fmt(f)
+            STACK.identifier(),
+        )
     }
 }

@@ -26,7 +26,9 @@ lazy_static! {
         Kind::MutableReference(Kind::Vector(Kind::Unsigned.into()).into()),
     );
     pub static ref STACK_LENGTH: Variable<'static> =
-        Variable::new(Identifier::Raw("stack_length"), Kind::Unsigned,);
+        Variable::new(Identifier::Raw("stack_length"), Kind::Unsigned);
+    pub static ref TO_STATE: Variable<'static> =
+        Variable::new(Identifier::Raw("to_state"), Kind::Unsigned);
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]

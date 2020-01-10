@@ -1,6 +1,6 @@
 use super::{argument, state, Context};
 use crate::jog::{
-    action::{push::Push, update_state::UpdateState},
+    action::push::Push,
     call::Call,
     expression::{Address, Binary, Expression},
     identifier::Identifier,
@@ -132,9 +132,33 @@ fn visit_variable<'a>(
     arguments: Vec<&ast::Expression<'a>>,
 ) -> Expression<'a> {
     match context.definitions.get(variable.name) {
-        None => {
-            Expression::Copied(Expression::Identifier(Identifier::Prefixed(variable.name)).into())
-        }
+        None => match context
+            .function_context
+            .as_ref()
+            .unwrap()
+            .find_argument(variable.name)
+        {
+            None => Expression::Copied(
+                Expression::Identifier(Identifier::Prefixed(variable.name)).into(),
+            ),
+            Some(i) => Expression::Get(
+                Kind::Unsigned,
+                Expression::Frozen(
+                    Expression::Copied(Expression::Identifier(STACK.identifier().clone()).into())
+                        .into(),
+                )
+                .into(),
+                Expression::Binary(
+                    Binary::Subtract,
+                    Expression::Copied(
+                        Expression::Identifier(STACK_LENGTH.identifier().clone()).into(),
+                    )
+                    .into(),
+                    Expression::Unsigned(i + 1).into(),
+                )
+                .into(),
+            ),
+        },
         Some(definition) => {
             let arguments = arguments.into_iter().rev();
             let definition = definition.clone();
@@ -144,8 +168,7 @@ fn visit_variable<'a>(
                 let to = visit_abstraction(context, &definition.expression);
 
                 let function_context = context.function_context.as_ref().unwrap();
-                let mut method =
-                    Method::transition(function_context.name, &function_context.arguments, from);
+                let mut method = Method::transition(function_context.name, from, to);
 
                 let stacks = arguments.map(|argument| argument::visit(context, argument));
 
@@ -162,22 +185,24 @@ fn visit_variable<'a>(
                                 method.add_action(push);
                             }
 
-                            arguments.push(Push::with_length(
+                            arguments.push(Push::new(
                                 STACK.clone(),
                                 Expression::Binary(
                                     Binary::Add,
                                     Expression::Length(
                                         Kind::Unsigned,
-                                        Expression::Copied(
-                                            Expression::Identifier(STACK.identifier().clone())
-                                                .into(),
+                                        Expression::Frozen(
+                                            Expression::Copied(
+                                                Expression::Identifier(STACK.identifier().clone())
+                                                    .into(),
+                                            )
+                                            .into(),
                                         )
                                         .into(),
                                     )
                                     .into(),
                                     Expression::Unsigned(position - 2).into(),
                                 ),
-                                STACK_LENGTH.clone(),
                             ));
                         }
                     };
@@ -187,7 +212,6 @@ fn visit_variable<'a>(
                     method.add_action(argument);
                 }
 
-                method.add_action(UpdateState::new(to));
                 context.contract.add_method(method);
 
                 from.into()
