@@ -36,7 +36,7 @@ pub fn zero() -> Result<'static, Context<'static, Expression<'static>>> {
     definition(
         Span::new("zero"),
         vec![],
-        Expression::new(ExpressionType::State(State::default()), None).into(),
+        Expression::new(ExpressionType::from(State::default()), None).into(),
     )
 }
 
@@ -121,6 +121,7 @@ pub fn or() -> Result<'static, Context<'static, Expression<'static>>> {
     state
         .add_transition(left_transition)
         .add_transition(right_transition);
+
     definition(
         Span::new("or"),
         vec![Span::new("left"), Span::new("right")],
@@ -179,9 +180,8 @@ pub fn anytime() -> Result<'static, Context<'static, Expression<'static>>> {
 
 pub fn konst(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
     let value = arguments!(arguments, Kind::default())?;
-    let span = value.span;
 
-    Ok(Expression::new(ExpressionType::Observable(value.into()), span).into())
+    Ok(Expression::new(ExpressionType::Observable(value.clone().into()), value.span).into())
 }
 
 fn argument<'a>(
@@ -193,6 +193,7 @@ fn argument<'a>(
         None => {
             return Err(Err::Error(Error::from_sprint_error(
                 SprintError::InvalidNumberArgsError,
+                None,
             )));
         }
     };

@@ -26,23 +26,20 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, 
         .unify(signature(Span::new("main"), Kind::State).unwrap())
         .map_err(Err::Error)?;
 
-    context
-        .unify(signature(Span::new("main"), Kind::State).unwrap())
-        .map_err(Err::Error)?;
-
     for (variable, _) in &context.variables {
         if !context.definitions.contains_key(variable.name) {
             if variable.name == "main" {
                 return Err(Err::Error(Error::from_sprint_error(
                     SprintError::UndefinedMainError,
+                    None,
                 )));
             }
-            return Err(Err::Error(Error::from_sprint_error_and_span(
-                variable.span,
+            return Err(Err::Error(Error::from_sprint_error(
                 SprintError::UnknownIdentifierError(
                     variable.name,
                     Rc::make_mut(&mut variable.kind.clone()).clone(),
                 ),
+                variable.span,
             )));
         }
     }

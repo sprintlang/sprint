@@ -21,8 +21,8 @@ pub enum SprintError<'a> {
     TypeError(&'a str, Box<SprintError<'a>>),
     MismatchedKinds(Kind, Kind),
     UnknownIdentifierError(&'a str, Kind),
-    InvalidNumberArgsError,
     DuplicateDefinitionError(&'a str),
+    InvalidNumberArgsError,
     UndefinedMainError,
 }
 
@@ -36,45 +36,35 @@ impl<'a> Error<'a> {
             Some(err) => err.clone().pretty(),
             None => String::from(""),
         };
+
         format!("{}{}\n", sprint_error, nom_error)
     }
 
-    pub fn from_sprint_error(sprint_error: SprintError<'a>) -> Self {
-        Error {
-            nom_error: None,
-            sprint_error: Some(sprint_error),
-        }
-    }
-
-    pub fn from_sprint_error_and_error_kind(
-        input: Option<Span<'a>>,
-        kind: ErrorKind,
-        sprint_error: SprintError<'a>,
-    ) -> Self {
-        match input {
-            Some(span) => Error {
-                nom_error: Some(NomError::from_error_kind(span, kind)),
-                sprint_error: Some(sprint_error),
-            },
-            None => Error::from_sprint_error(sprint_error),
-        }
-    }
-
-    pub fn from_sprint_error_and_span(
-        input: Option<Span<'a>>,
-        sprint_error: SprintError<'a>,
-    ) -> Self {
+    pub fn from_sprint_error(sprint_error: SprintError<'a>, input: Option<Span<'a>>) -> Self {
         match input {
             Some(span) => Error {
                 nom_error: Some(NomError::from_span(span)),
                 sprint_error: Some(sprint_error),
             },
-            None => Error::from_sprint_error(sprint_error),
+            None => Error {
+                nom_error: None,
+                sprint_error: Some(sprint_error),
+            },
         }
     }
 }
 
 impl<'a> NomError<'a> {
+    pub fn pretty(&self, original: &str) -> String {
+        let line = self.line;
+        let code = print_code_line(original, line);
+        if code.is_empty() {
+            code
+        } else {
+            format!("\nOn line {}: \n\t{}", line, code)
+        }
+    }
+
     fn from_span(input: Span<'a>) -> Self {
         NomError {
             line: input.line as usize,
@@ -82,16 +72,6 @@ impl<'a> NomError<'a> {
             input: input.fragment,
             // nom ErrorKind does not allow Custom or Default ErrorKinds.
             kind: ErrorKind::Tag,
-        }
-    }
-
-    pub fn pretty(&self, original: &str) -> String {
-        let line = self.line;
-        let code = print_code_location(original, line);
-        if code.is_empty() {
-            code
-        } else {
-            format!("\nOn line {}: \n\t{}", line, code)
         }
     }
 }
@@ -151,7 +131,7 @@ impl<'a> ParseError<Span<'a>> for NomError<'a> {
     }
 }
 
-fn print_code_location(input: &str, line: usize) -> String {
+fn print_code_line(input: &str, line: usize) -> String {
     let lines: std::vec::Vec<String> = input.lines().map(String::from).collect();
     if lines.is_empty() {
         "".to_string()

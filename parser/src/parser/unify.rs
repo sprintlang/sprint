@@ -14,9 +14,9 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
         for (name, definition) in &other.definitions {
             if self.definitions.insert(name, definition.clone()).is_some() {
                 // There is a duplicate definition.
-                return Err(Error::from_sprint_error_and_span(
-                    definition.expression.span,
+                return Err(Error::from_sprint_error(
                     SprintError::DuplicateDefinitionError(name),
+                    definition.expression.span,
                 ));
             }
         }
@@ -26,10 +26,7 @@ impl<'a, T, U> Unify<'a, Context<'a, U>> for &mut Context<'a, T> {
                 if let Err(e) = original.kind.unify(variable.kind.clone()) {
                     let sprint_error =
                         SprintError::TypeError(variable.name, e.sprint_error.unwrap().into());
-                    return Err(Error::from_sprint_error_and_span(
-                        variable.span,
-                        sprint_error,
-                    ));
+                    return Err(Error::from_sprint_error(sprint_error, variable.span));
                 }
             }
         }
@@ -60,10 +57,13 @@ impl<'a> Unify<'a> for Rc<Kind> {
             (_, Kind::Unresolved(_)) => other.unify(this)?,
             (Kind::Word, Kind::Word) => {}
             _ => {
-                return Err(Error::from_sprint_error(SprintError::MismatchedKinds(
-                    Rc::make_mut(&mut this).clone(),
-                    Rc::make_mut(&mut other).clone(),
-                )))
+                return Err(Error::from_sprint_error(
+                    SprintError::MismatchedKinds(
+                        Rc::make_mut(&mut this).clone(),
+                        Rc::make_mut(&mut other).clone(),
+                    ),
+                    None,
+                ))
             }
         }
 
