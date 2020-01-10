@@ -1,0 +1,33 @@
+module Date {
+    resource T {
+        value: u64
+    }
+
+    public create(value: u64) {
+        let observable: Self.T;
+
+        observable = T {
+            value: move(value),
+        };
+
+        move_to_sender<T>(move(observable));
+
+        return;
+    }
+
+    public get_value(owner: address): u64 acquires T {
+        let observable_ref: &Self.T;
+        observable_ref = borrow_global<T>(move(owner));
+
+        return *(&move(observable_ref).value);
+    }
+
+    public set_value(value: u64) acquires T {
+        let observable_ref: &mut Self.T;
+
+        observable_ref = borrow_global_mut<T>(get_txn_sender());
+        *(&mut move(observable_ref).value) = move(value);
+
+        return;
+    }
+}

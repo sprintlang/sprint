@@ -1,13 +1,16 @@
 pub mod state;
 
 mod class;
+mod date;
 mod kind;
 
 pub use self::{
     class::{Class, Comparable, Equatable, Negatable, Numerable},
+    date::Date,
     kind::Kind,
     state::State,
 };
+
 use super::parser::Span;
 use std::{
     hash::{Hash, Hasher},
@@ -41,6 +44,10 @@ impl<'a> Expression<'a> {
     pub fn new(expression: ExpressionType<'a>, span: Option<Span<'a>>) -> Self {
         Self { expression, span }
     }
+
+    pub fn kind(&self) -> Rc<Kind> {
+        self.expression.kind()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -49,26 +56,19 @@ pub enum ExpressionType<'a> {
     Application(Box<Expression<'a>>, Box<Expression<'a>>),
     Boolean(bool),
     Class(Class<'a>),
+    Date(Date),
     Observable(Observable<'a>),
     State(State<'a>),
     Variable(Variable<'a>),
     Word(u64),
 }
 
-impl Expression<'_> {
-    pub fn kind(&self) -> Rc<Kind> {
-        self.expression.kind()
-    }
-}
-
 impl ExpressionType<'_> {
     pub fn kind(&self) -> Rc<Kind> {
         match self {
-            Self::Abstraction(from, to) => {
-                Kind::Abstraction(from.kind.clone(), to.expression.kind()).into()
-            }
+            Self::Abstraction(from, to) => Kind::Abstraction(from.kind.clone(), to.kind()).into(),
 
-            Self::Application(f, _) => match f.expression.kind().as_ref() {
+            Self::Application(f, _) => match f.kind().as_ref() {
                 Kind::Abstraction(_, k) => k.clone(),
                 _ => unreachable!(),
             },
@@ -78,14 +78,16 @@ impl ExpressionType<'_> {
             Self::Class(c) => match c {
                 Class::Comparable(_) => Kind::Boolean.into(),
                 Class::Equatable(_) => Kind::Boolean.into(),
-                Class::Negatable(Negatable::Negate(e)) => e.expression.kind(),
+                Class::Negatable(Negatable::Negate(e)) => e.kind(),
                 Class::Numerable(n) => n.kind(),
             },
+
+            Self::Date(_) => Kind::Date.into(),
 
             Self::Observable(o) => Kind::Observable(match o {
                 Observable::IsParty => Kind::Boolean.into(),
                 Observable::IsCounterparty => Kind::Boolean.into(),
-                Observable::Konst(e) => e.expression.kind(),
+                Observable::Konst(e) => e.kind(),
             })
             .into(),
 
@@ -208,7 +210,7 @@ mod tests {
 
         // two :: Word -> Boolean
         assert_eq!(
-            *two.expression.kind(),
+            *two.kind(),
             Kind::Abstraction(Kind::Word.into(), Kind::Boolean.into())
         );
 
@@ -222,6 +224,6 @@ mod tests {
         );
 
         // three :: Boolean
-        assert_eq!(*three.expression.kind(), Kind::Boolean);
+        assert_eq!(*three.kind(), Kind::Boolean);
     }
 }

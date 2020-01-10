@@ -5,7 +5,7 @@ use super::{
 };
 use crate::ast::{
     state::{Effect, State, Transition},
-    {Expression, ExpressionType, Kind, Observable, Variable},
+    {Class, Comparable, Date, Expression, ExpressionType, Kind, Observable, Variable},
 };
 use nom::Err;
 use phf::phf_map;
@@ -129,6 +129,73 @@ pub fn or() -> Context<'static, Expression<'static>> {
     definition(
         Span::new("or"),
         vec![Span::new("left"), Span::new("right")],
+        Expression::new(ExpressionType::from(state), None).into(),
+    )
+    .unwrap()
+}
+
+pub fn before() -> Context<'static, Expression<'static>> {
+    let now = Expression::new(ExpressionType::Date(Date::Now), None);
+
+    let date = Expression::new(
+        ExpressionType::from(Variable::new("date", Kind::Date.into(), None)),
+        None,
+    );
+
+    let next = Expression::new(
+        ExpressionType::from(Variable::new("next", Kind::State.into(), None)),
+        None,
+    );
+
+    let mut transition = Transition::default();
+    transition
+        .add_condition(Expression::new(
+            ExpressionType::Class(Class::Comparable(Comparable::Less(now.into(), date.into()))),
+            None,
+        ))
+        .set_next(next);
+
+    let mut state = State::default();
+    state.add_transition(transition);
+
+    definition(
+        Span::new("before"),
+        vec![Span::new("date"), Span::new("next")],
+        Expression::new(ExpressionType::from(state), None).into(),
+    )
+    .unwrap()
+}
+
+pub fn after() -> Context<'static, Expression<'static>> {
+    let now = Expression::new(ExpressionType::Date(Date::Now), None);
+
+    let date = Expression::new(
+        ExpressionType::from(Variable::new("date", Kind::Date.into(), None)),
+        None,
+    );
+
+    let next = Expression::new(
+        ExpressionType::from(Variable::new("next", Kind::State.into(), None)),
+        None,
+    );
+
+    let mut transition = Transition::default();
+    transition
+        .add_condition(Expression::new(
+            ExpressionType::Class(Class::Comparable(Comparable::Greater(
+                now.into(),
+                date.into(),
+            ))),
+            None,
+        ))
+        .set_next(next);
+
+    let mut state = State::default();
+    state.add_transition(transition);
+
+    definition(
+        Span::new("after"),
+        vec![Span::new("date"), Span::new("next")],
         Expression::new(ExpressionType::from(state), None).into(),
     )
     .unwrap()

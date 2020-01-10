@@ -1,6 +1,6 @@
 use super::{
     action::{assert::Assert, assign::Assign, Action},
-    expression::Expression,
+    expression::{Binary, Expression},
     identifier::Identifier,
     kind::Kind,
     variable::{
@@ -41,7 +41,7 @@ impl<'a> Method<'a> {
         Self::new(true, identifier)
     }
 
-    pub fn transition(name: &'a str, arguments: &[Variable<'a>], from: usize) -> Self {
+    pub fn transition(name: &'a str, arguments: &[Variable<'a>], from: u64) -> Self {
         let mut method = Self::public(Identifier::Transition(name));
 
         method.add_action(Assign::new(
@@ -80,12 +80,13 @@ impl<'a> Method<'a> {
                 Expression::Get(
                     Kind::Unsigned,
                     Expression::Expression("&copy(context_ref).stack".into()).into(),
-                    Expression::Subtract(
+                    Expression::Binary(
+                        Binary::Subtract,
                         Expression::Copied(
                             Expression::Identifier(STACK_LENGTH.identifier().clone()).into(),
                         )
                         .into(),
-                        Expression::Unsigned(i + 1).into(),
+                        Expression::Unsigned((i + 1) as u64).into(),
                     )
                     .into(),
                 ),

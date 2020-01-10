@@ -9,6 +9,7 @@ use std::{
 pub enum Kind {
     Abstraction(Rc<Self>, Rc<Self>),
     Boolean,
+    Date,
     Observable(Rc<Self>),
     State,
     Unresolved(RefCell<Option<Rc<Self>>>),
@@ -43,6 +44,7 @@ impl Kind {
                 Self::contains(from.clone(), other.clone()) || Self::contains(to.clone(), other)
             }
             Self::Boolean => false,
+            Self::Date => false,
             Self::Observable(k) => Self::contains(k.clone(), other),
             Self::State => false,
             Self::Unresolved(k) => match k.borrow().as_ref() {
@@ -112,6 +114,7 @@ impl Display for Formatter<'_> {
                 write!(f, " -> {}", self.with(to))
             }
             Kind::Boolean => write!(f, "Bool"),
+            Kind::Date => write!(f, "Date"),
             Kind::Observable(k) => write!(f, "Observable {}", self.with(k)),
             Kind::State => write!(f, "Contract"),
             Kind::Unresolved(k) => match k.borrow().as_ref() {

@@ -22,7 +22,7 @@ use crate::{
 use sprint_parser::ast;
 use std::convert::TryFrom;
 
-pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) -> usize {
+pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State<'a>) -> u64 {
     if state.is_terminal() {
         return TERMINAL_ID;
     }
@@ -55,7 +55,7 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
                     let spawned_context =
                         Variable::new(Identifier::Raw("spawned_context"), Kind::Context);
 
-                    let expression = match usize::try_from(child) {
+                    let expression = match u64::try_from(child) {
                         Ok(_) => {
                             let variable = Variable::new(
                                 Identifier::Spawn(spawn_numbers.next().unwrap()),

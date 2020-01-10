@@ -5,7 +5,7 @@ use crate::jog::{
 use sprint_parser::ast;
 use std::{convert::TryInto, rc::Rc};
 
-pub(super) const TERMINAL_ID: usize = 0;
+pub(super) const TERMINAL_ID: u64 = 0;
 
 pub fn visit<'a>(definitions: &[ast::Definition<'a>]) -> Contract<'a> {
     let definitions = definitions.iter().map(Rc::new);

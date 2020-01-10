@@ -40,7 +40,7 @@ impl Numerable<'_> {
     pub(super) fn kind(&self) -> Rc<Kind> {
         match self {
             Self::Add(e, _) | Self::Subtract(e, _) | Self::Multiply(e, _) | Self::Divide(e, _) => {
-                e.expression.kind()
+                e.kind()
             }
         }
     }

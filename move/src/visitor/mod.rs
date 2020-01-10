@@ -16,7 +16,7 @@ struct Context<'a, 'b> {
     definitions: HashMap<&'a str, Rc<&'b ast::Definition<'a>>>,
     numbers: Numbers,
     function_context: Option<FunctionContext<'a>>,
-    functions: HashMap<*const ast::Expression<'a>, Rc<RefCell<Option<usize>>>>,
+    functions: HashMap<*const ast::Expression<'a>, Rc<RefCell<Option<u64>>>>,
 }
 
 impl<'a, 'b> Context<'a, 'b> {

@@ -27,7 +27,6 @@ main() {
     return;
 }
 
-// Checks chris can execute the one
 //! new-transaction
 //! sender: chris
 import {{alice}}.Contract;

@@ -7,9 +7,8 @@ const SPAWN: &str = "spawn";
 pub enum Identifier<'a> {
     Raw(&'a str),
     Prefixed(&'a str),
-    Spawn(usize),
+    Spawn(u64),
     Transition(&'a str),
-    AbstractTransition(&'a str, usize, usize),
 }
 
 impl Display for Identifier<'_> {
@@ -19,9 +18,6 @@ impl Display for Identifier<'_> {
             Self::Prefixed(name) => write!(f, "{}_{}", PREFIX, name),
             Self::Spawn(id) => write!(f, "{}_{}", SPAWN, id),
             Self::Transition(name) => write!(f, "transition_{}", name),
-            Self::AbstractTransition(name, from, to) => {
-                write!(f, "{}_{}_{}_{}", PREFIX, name, from, to)
-            }
         }
     }
 }

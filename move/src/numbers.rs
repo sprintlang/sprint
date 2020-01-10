@@ -1,10 +1,10 @@
 #[derive(Default, Debug)]
-pub struct Numbers(usize);
+pub struct Numbers(u64);
 
 impl Iterator for Numbers {
-    type Item = usize;
+    type Item = u64;
 
-    fn next(&mut self) -> Option<usize> {
+    fn next(&mut self) -> Option<u64> {
         let result = Some(self.0);
         self.0 += 1;
 
@@ -12,8 +12,8 @@ impl Iterator for Numbers {
     }
 }
 
-impl From<usize> for Numbers {
-    fn from(start: usize) -> Self {
+impl From<u64> for Numbers {
+    fn from(start: u64) -> Self {
         Self(start)
     }
 }

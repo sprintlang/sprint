@@ -1,5 +1,8 @@
 use super::{
-    super::{expression::Expression, variable::Variable},
+    super::{
+        expression::{Binary, Expression},
+        variable::Variable,
+    },
     assign::Assign,
     Action,
 };
@@ -28,7 +31,8 @@ impl<'a> Push<'a> {
             item,
             increment: Some(Assign::new(
                 length,
-                Expression::Add(
+                Expression::Binary(
+                    Binary::Add,
                     Expression::Copied(Expression::Identifier(identifier).into()).into(),
                     Expression::Unsigned(1).into(),
                 ),

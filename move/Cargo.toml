@@ -12,6 +12,7 @@ edition = "2018"
 
 [dependencies]
 askama = "0.8.0"
+chrono = "0.4.10"
 lazy_static = "1.4.0"
 sprint-parser = { path = "../parser" }
 

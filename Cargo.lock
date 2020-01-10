@@ -2942,6 +2942,7 @@ name = "sprint-move"
 version = "0.1.0"
 dependencies = [
  "askama 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "functional_tests 0.1.0 (git+https://github.com/libra/libra)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sprint-parser 0.1.0",

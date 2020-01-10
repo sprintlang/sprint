@@ -2,12 +2,13 @@ use super::{argument, state, Context};
 use crate::jog::{
     action::{push::Push, update_state::UpdateState},
     call::Call,
-    expression::{Address, Expression},
+    expression::{Address, Binary, Expression},
     identifier::Identifier,
     kind::Kind,
     method::Method,
     variable::{STACK, STACK_LENGTH},
 };
+use chrono::NaiveDate;
 use sprint_parser::ast;
 use std::{cell::RefCell, rc::Rc};
 
@@ -20,6 +21,7 @@ pub(super) fn visit<'a>(
         ast::ExpressionType::Application(f, a) => visit_application(context, &f, &a),
         ast::ExpressionType::Boolean(_) => unimplemented!(),
         ast::ExpressionType::Class(c) => visit_class(context, &c),
+        ast::ExpressionType::Date(d) => visit_date(context, &d),
         ast::ExpressionType::Observable(o) => visit_observable(context, &o),
         ast::ExpressionType::State(s) => visit_state(context, &s),
         ast::ExpressionType::Variable(v) => visit_variable(context, &v, Vec::new()),
@@ -68,12 +70,40 @@ fn visit_application<'a>(
     }
 }
 
-fn visit_class<'a>(_context: &mut Context<'a, '_>, class: &ast::Class<'a>) -> Expression<'a> {
+fn visit_class<'a>(context: &mut Context<'a, '_>, class: &ast::Class<'a>) -> Expression<'a> {
     match class {
-        ast::Class::Comparable(_) => unimplemented!(),
+        ast::Class::Comparable(c) => {
+            let (binary, left, right) = match c {
+                ast::Comparable::Greater(left, right) => (Binary::Greater, left, right),
+                ast::Comparable::Less(left, right) => (Binary::Less, left, right),
+                ast::Comparable::GreaterEqual(left, right) => (Binary::GreaterEqual, left, right),
+                ast::Comparable::LessEqual(left, right) => (Binary::LessEqual, left, right),
+            };
+
+            Expression::Binary(
+                binary,
+                visit(context, left).into(),
+                visit(context, right).into(),
+            )
+        }
         ast::Class::Equatable(_) => unimplemented!(),
         ast::Class::Negatable(_) => unimplemented!(),
         ast::Class::Numerable(_) => unimplemented!(),
+    }
+}
+
+fn visit_date<'a>(context: &mut Context<'a, '_>, date: &ast::Date) -> Expression<'a> {
+    match date {
+        ast::Date::Now => {
+            context.contract.add_dependency("{{alice}}.Date");
+            Expression::Observable("Date")
+        }
+        ast::Date::Date(year, month, day, hour, minute, second) => {
+            let timestamp = NaiveDate::from_ymd(*year as i32, *month as u32, *day as u32)
+                .and_hms(*hour as u32, *minute as u32, *second as u32)
+                .timestamp() as u64;
+            timestamp.into()
+        }
     }
 }
 
@@ -126,7 +156,7 @@ fn visit_variable<'a>(
                     match pushes.len() {
                         1 => arguments.push(pushes.pop().unwrap()),
                         _ => {
-                            position += pushes.len();
+                            position += pushes.len() as u64;
 
                             for push in pushes {
                                 method.add_action(push);
@@ -134,7 +164,8 @@ fn visit_variable<'a>(
 
                             arguments.push(Push::with_length(
                                 STACK.clone(),
-                                Expression::Add(
+                                Expression::Binary(
+                                    Binary::Add,
                                     Expression::Length(
                                         Kind::Unsigned,
                                         Expression::Copied(

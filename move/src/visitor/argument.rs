@@ -1,7 +1,7 @@
 use super::{expression, Context};
 use crate::jog::{
     action::push::Push,
-    expression::Expression,
+    expression::{Binary, Expression},
     kind::Kind,
     variable::{STACK, STACK_LENGTH},
 };
@@ -55,7 +55,8 @@ fn visit_application<'a>(
 
             arguments.push(Push::with_length(
                 STACK.clone(),
-                Expression::Subtract(
+                Expression::Binary(
+                    Binary::Subtract,
                     Expression::Length(
                         Kind::Unsigned,
                         Expression::Copied(
@@ -67,7 +68,7 @@ fn visit_application<'a>(
                     Expression::Unsigned(
                         2 + match argument.len() {
                             1 => 0,
-                            _ => argument.len(),
+                            _ => argument.len() as u64,
                         },
                     )
                     .into(),
@@ -84,7 +85,8 @@ fn visit_application<'a>(
 
             arguments.push(Push::with_length(
                 STACK.clone(),
-                Expression::Subtract(
+                Expression::Binary(
+                    Binary::Subtract,
                     Expression::Length(
                         Kind::Unsigned,
                         Expression::Copied(

@@ -2,6 +2,7 @@ use super::{
     builder,
     combinator::{brackets1, padding0},
     context::Context,
+    date::date,
     IResult, Span,
 };
 use crate::ast::{Expression, ExpressionType, Kind};
@@ -82,16 +83,17 @@ pub fn term(input: Span) -> IResult<Span, Context<Expression>> {
         map_res(identifier, |identifier| {
             builder::application(identifier, Vec::new())
         }),
-        map(tag("True"), |span: Span| {
+        map(tag("True"), |span| {
             Expression::new(ExpressionType::from(true), Some(span)).into()
         }),
-        map(tag("False"), |span: Span| {
+        map(tag("False"), |span| {
             Expression::new(ExpressionType::from(false), Some(span)).into()
         }),
+        map(date, Context::from),
         map(digit1, |n: Span| {
             Expression::new(
                 ExpressionType::from(n.fragment.parse::<u64>().unwrap()),
-                Some(n),
+                Some(input),
             )
             .into()
         }),

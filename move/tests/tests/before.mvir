@@ -1,0 +1,86 @@
+//! new-transaction
+//! sender: alice
+import {{alice}}.Date;
+import {{alice}}.Contract;
+
+main() {
+    Date.create(1640390400);
+    Contract.create();
+
+    return;
+}
+
+// Checks the contract can be initialized properly
+//! new-transaction
+//! sender: chris
+import {{alice}}.Contract;
+import 0x0.LibraCoin;
+import 0x0.LibraAccount;
+
+main() {
+    let initial_balance: u64;
+    initial_balance = LibraAccount.balance({{chris}});
+
+    Contract.initialize({{alice}}, {{bob}}, {{chris}});
+
+    Contract.deposit({{alice}}, LibraAccount.withdraw_from_sender(1), 0);
+    assert(move(initial_balance) - 1 == LibraAccount.balance({{chris}}), 1);
+
+    return;
+}
+
+//! new-transaction
+//! sender: chris
+import {{alice}}.Contract;
+import 0x0.LibraCoin;
+import 0x0.LibraAccount;
+
+main() {
+    let initial_balance: u64;
+    initial_balance = LibraAccount.balance({{bob}});
+
+    Contract.transition_main({{alice}}, 0);
+    assert(copy(initial_balance) == LibraAccount.balance({{bob}}), 1);
+
+    return;
+}
+
+//! new-transaction
+//! sender: chris
+import {{alice}}.Contract;
+import 0x0.LibraCoin;
+import 0x0.LibraAccount;
+
+main() {
+    let initial_balance: u64;
+    initial_balance = LibraAccount.balance({{bob}});
+
+    Contract.transition_before({{alice}}, 0);
+
+    return;
+}
+
+// check: ABORTED
+// check: 0
+
+//! new-transaction
+//! sender: alice
+import {{alice}}.Date;
+import {{alice}}.Contract;
+import 0x0.LibraCoin;
+import 0x0.LibraAccount;
+
+main() {
+    let initial_balance: u64;
+    initial_balance = LibraAccount.balance({{bob}});
+
+    Date.set_value(1577232000);
+
+    Contract.transition_before({{alice}}, 0);
+    assert(copy(initial_balance) == LibraAccount.balance({{bob}}), 1);
+
+    Contract.transition_one({{alice}}, 0);
+    assert(move(initial_balance) + 1 == LibraAccount.balance({{bob}}), 1);
+
+    return;
+}

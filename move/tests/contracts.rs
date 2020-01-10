@@ -19,69 +19,88 @@ use std::{
 };
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};
 
-fn at_most_n_chars(s: impl IntoIterator<Item = char>, n: usize) -> String {
-    let mut it = s.into_iter();
-    let mut s = String::new();
-    for _ in 0..n {
-        match it.next() {
-            Some(c) => s.push(c),
-            None => return s,
-        }
-    }
-    if it.next().is_some() {
-        s.push_str("...")
-    }
-    s
+pub static DATE: &str = "tests/observables/date.mvir";
+
+#[test]
+fn zero() {
+    let suite = Path::new("tests/tests/zero.mvir");
+    let contract = contract("main = zero").unwrap();
+
+    test(generate(&contract), &[], suite);
 }
 
-fn at_most_n_before_and_m_after(
-    s: &str,
-    n: usize,
-    start: usize,
-    end: usize,
-    m: usize,
-) -> (String, String, String) {
-    let before = at_most_n_chars(s[..start].chars().rev(), n)
-        .chars()
-        .rev()
-        .collect();
-    let matched = s[start..end].to_string();
-    let after = at_most_n_chars(s[end..].chars(), m).chars().collect();
-    (before, matched, after)
+#[test]
+fn one() {
+    let suite = Path::new("tests/tests/one.mvir");
+    let contract = contract("main = one").unwrap();
+
+    test(generate(&contract), &[], suite);
 }
 
-fn env_var(var_name: &str) -> String {
-    env::var(var_name)
-        .unwrap_or_else(|_| "".to_string())
-        .to_ascii_lowercase()
+#[test]
+fn scale() {
+    let suite = Path::new("tests/tests/scale.mvir");
+    let contract = contract("main = scale (konst 5) one").unwrap();
+
+    test(generate(&contract), &[], suite);
 }
 
-fn pretty_mode() -> bool {
-    let pretty = env_var("PRETTY");
-    pretty == "1" || pretty == "true"
+#[test]
+fn before() {
+    let date = Path::new(DATE);
+    let suite = Path::new("tests/tests/before.mvir");
+    let contract = contract("main = before 2020-12-25T00:00:00Z one").unwrap();
+
+    test(generate(&contract), &[date], suite);
 }
 
-// Runs all tests under the test/testsuite directory.
-fn test(module: impl Display, path: &Path) {
+#[test]
+fn after() {
+    let date = Path::new(DATE);
+    let suite = Path::new("tests/tests/after.mvir");
+    let contract = contract("main = after 2020-12-25T00:00:00Z one").unwrap();
+
+    test(generate(&contract), &[date], suite);
+}
+
+#[test]
+fn and() {
+    let suite = Path::new("tests/tests/and.mvir");
+    let contract = contract("main = and one one").unwrap();
+
+    test(generate(&contract), &[], suite);
+}
+
+fn test(module: impl Display, observables: &[&Path], test: &Path) {
     let mut input = String::new();
-    let file_name = path.file_name().unwrap().to_str().unwrap();
 
     input.push_str("//! account: alice, 1000000\n");
     input.push_str("//! account: bob, 1000000\n");
     input.push_str("//! account: chris, 1000000\n\n");
 
+    for observable in observables {
+        input.push_str("//! new-transaction\n");
+        input.push_str("//! sender: alice\n");
+
+        let mut observable_file = File::open(observable).unwrap();
+        observable_file.read_to_string(&mut input).unwrap();
+
+        input.push('\n');
+    }
+
     input.push_str("//! new-transaction\n");
     input.push_str("//! sender: alice\n");
 
-    input.push_str(&format!("{}\n", module));
+    input.push_str(&format!("{}\n\n", module));
 
-    let mut suite = File::open(path).unwrap();
-    suite.read_to_string(&mut input).unwrap();
+    let mut test_file = File::open(test).unwrap();
+    test_file.read_to_string(&mut input).unwrap();
 
-    // TODO: Only create file if flag is set.
     fs::create_dir_all("tests/generated").unwrap();
-    let generated_file = format!("tests/generated/{}", &file_name);
-    let mut file = File::create(&generated_file).unwrap();
+
+    let file_name = test.file_name().unwrap().to_str().unwrap();
+    let mut file = File::create(&format!("tests/generated/{}", &file_name)).unwrap();
+
     file.write_all(input.as_bytes()).unwrap();
 
     let lines: Vec<String> = input.lines().map(ToString::to_string).collect();
@@ -161,7 +180,7 @@ fn test(module: impl Display, path: &Path) {
         iter::repeat('=').take(100).collect::<String>()
     )
     .unwrap();
-    writeln!(output, "{}", path.display()).unwrap();
+    writeln!(output, "{}", test.display()).unwrap();
     writeln!(output).unwrap();
 
     // Render the evaluation log.
@@ -255,34 +274,44 @@ fn test(module: impl Display, path: &Path) {
     panic!("test failed")
 }
 
-#[test]
-fn generated_zero() {
-    let suite = Path::new("tests/suites/zero.test.mvir");
-    let contract = contract("main = zero").unwrap();
-
-    test(generate(&contract), suite);
+fn at_most_n_chars(s: impl IntoIterator<Item = char>, n: usize) -> String {
+    let mut it = s.into_iter();
+    let mut s = String::new();
+    for _ in 0..n {
+        match it.next() {
+            Some(c) => s.push(c),
+            None => return s,
+        }
+    }
+    if it.next().is_some() {
+        s.push_str("...")
+    }
+    s
 }
 
-#[test]
-fn generated_one() {
-    let suite = Path::new("tests/suites/one.test.mvir");
-    let contract = contract("main = one").unwrap();
-
-    test(generate(&contract), suite);
+fn at_most_n_before_and_m_after(
+    s: &str,
+    n: usize,
+    start: usize,
+    end: usize,
+    m: usize,
+) -> (String, String, String) {
+    let before = at_most_n_chars(s[..start].chars().rev(), n)
+        .chars()
+        .rev()
+        .collect();
+    let matched = s[start..end].to_string();
+    let after = at_most_n_chars(s[end..].chars(), m).chars().collect();
+    (before, matched, after)
 }
 
-#[test]
-fn generated_scale() {
-    let suite = Path::new("tests/suites/scale.test.mvir");
-    let contract = contract("main = scale (konst 5) one").unwrap();
-
-    test(generate(&contract), suite);
+fn env_var(var_name: &str) -> String {
+    env::var(var_name)
+        .unwrap_or_else(|_| "".to_string())
+        .to_ascii_lowercase()
 }
 
-#[test]
-fn generated_one_and_one() {
-    let suite = Path::new("tests/suites/one_and_one.test.mvir");
-    let contract = contract("main = and one one").unwrap();
-
-    test(generate(&contract), suite);
+fn pretty_mode() -> bool {
+    let pretty = env_var("PRETTY");
+    pretty == "1" || pretty == "true"
 }

@@ -17,11 +17,12 @@ pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, 
     context.unify(primitive::give()).unwrap();
     context.unify(primitive::and()).unwrap();
     context.unify(primitive::or()).unwrap();
+    context.unify(primitive::before()).unwrap();
+    context.unify(primitive::after()).unwrap();
     context.unify(primitive::scale()).unwrap();
     context.unify(primitive::anytime()).unwrap();
 
     context = definitions.into_iter().fold(Ok(context), unify_context)?;
-
     context
         .unify(signature(Span::new("main"), Kind::State).unwrap())
         .map_err(Err::Error)?;
@@ -77,11 +78,7 @@ pub fn definition<'a>(
     }
 
     let (expression, definition) = expression.clear();
-    let variable = Variable::new(
-        identifier.fragment,
-        definition.expression.kind(),
-        Some(identifier),
-    );
+    let variable = Variable::new(identifier.fragment, definition.kind(), Some(identifier));
 
     let mut context = Context::from(Expression::new(
         ExpressionType::Variable(variable.clone()),
@@ -113,7 +110,7 @@ pub fn application<'a>(
                 .iter()
                 .rev()
                 .fold(Kind::default(), |kind, argument| {
-                    Kind::Abstraction(argument.expression.kind(), kind.into())
+                    Kind::Abstraction(argument.kind(), kind.into())
                 });
             let variable = Variable::new(identifier.fragment, kind.into(), Some(identifier));
 

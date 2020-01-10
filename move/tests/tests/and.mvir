@@ -21,13 +21,12 @@ main() {
 
     Contract.initialize({{alice}}, {{bob}}, {{chris}});
 
-    Contract.deposit({{alice}}, LibraAccount.withdraw_from_sender(5), 0);
-    assert(move(initial_balance) - 5 == LibraAccount.balance({{chris}}), 1);
+    Contract.deposit({{alice}}, LibraAccount.withdraw_from_sender(2), 0);
+    assert(move(initial_balance) - 2 == LibraAccount.balance({{chris}}), 1);
 
     return;
 }
 
-// Checks chris can execute the one
 //! new-transaction
 //! sender: chris
 import {{alice}}.Contract;
@@ -39,13 +38,15 @@ main() {
     initial_balance = LibraAccount.balance({{bob}});
 
     Contract.transition_main({{alice}}, 0);
-    assert(copy(initial_balance) == LibraAccount.balance({{bob}}), 1);
 
-    Contract.transition_scale({{alice}}, 0);
+    Contract.transition_and({{alice}}, 0);
     assert(copy(initial_balance) == LibraAccount.balance({{bob}}), 1);
 
     Contract.transition_one({{alice}}, 0);
-    assert(move(initial_balance) + 5 == LibraAccount.balance({{bob}}), 1);
+    assert(copy(initial_balance) + 1 == LibraAccount.balance({{bob}}), 1);
+
+    Contract.transition_one({{alice}}, 1);
+    assert(move(initial_balance) + 2 == LibraAccount.balance({{bob}}), 1);
 
     return;
 }
