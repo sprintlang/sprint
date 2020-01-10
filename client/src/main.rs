@@ -1,8 +1,8 @@
 mod commands;
 
 use self::commands::{
-    AccountCommand, Command, DeployCommand, DepositCommand, DevCommand, EventsCommand,
-    InitializeCommand, QueryCommand, TransitionCommand,
+    AccountCommand, Command, DeployCommand, DepositCommand, EventsCommand, InitializeCommand,
+    TransitionCommand,
 };
 use chrono::prelude::{SecondsFormat, Utc};
 use client::{client_proxy::ClientProxy, commands::*};
@@ -141,14 +141,10 @@ type Commands = (
 fn get_commands() -> Commands {
     let commands: Vec<Arc<dyn Command>> = vec![
         Arc::new(AccountCommand {}),
-        // Arc::new(QueryCommand {}),
-        // Arc::new(TransferCommand {}),
         Arc::new(DeployCommand {}),
         Arc::new(InitializeCommand {}),
         Arc::new(DepositCommand {}),
         Arc::new(TransitionCommand {}),
-        Arc::new(QueryCommand {}),
-        Arc::new(DevCommand {}),
         Arc::new(EventsCommand {}),
     ];
 
