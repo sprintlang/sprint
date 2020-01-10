@@ -13,6 +13,7 @@ pub use self::initialize::InitializeCommand;
 pub use self::transition::TransitionCommand;
 
 use client::client_proxy::ClientProxy;
+use std::collections::HashMap;
 use std::env;
 use std::path::Path;
 
@@ -99,4 +100,48 @@ fn publish(
     // Change working directory back to original working directory.
     // TODO: Remove once libra doesn't rely on compiler cargo memeber
     assert!(env::set_current_dir(&current_working_directory).is_ok());
+}
+
+/// Print the help message for all sub commands.
+pub fn print_subcommand_help(parent_command: &str, commands: &[Box<dyn Command>]) {
+    println!(
+        "usage: {} <arg>\n\nUse the following args for this command:\n",
+        parent_command
+    );
+    for cmd in commands {
+        println!(
+            "{} {}\n\t{}",
+            cmd.get_aliases().join(" | "),
+            cmd.get_params_help(),
+            cmd.get_description()
+        );
+    }
+    println!("\n");
+}
+
+/// Execute sub command.
+pub fn subcommand_execute(
+    parent_command_name: &str,
+    commands: Vec<Box<dyn Command>>,
+    client: &mut ClientProxy,
+    params: &[&str],
+) {
+    let mut commands_map = HashMap::new();
+    for (i, cmd) in commands.iter().enumerate() {
+        for alias in cmd.get_aliases() {
+            if commands_map.insert(alias, i) != None {
+                panic!("Duplicate alias {}", alias);
+            }
+        }
+    }
+
+    if params.is_empty() {
+        print_subcommand_help(parent_command_name, &commands);
+        return;
+    }
+
+    match commands_map.get(&params[0]) {
+        Some(&idx) => commands[idx].execute(client, &params),
+        _ => print_subcommand_help(parent_command_name, &commands),
+    }
 }

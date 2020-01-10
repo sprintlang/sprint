@@ -1,3 +1,6 @@
+// Uses code from https://github.com/libra/libra
+// Make sure to update if the Libra testsuite updates
+
 use functional_tests::{
     checker::*,
     config::global::Config as GlobalConfig,
