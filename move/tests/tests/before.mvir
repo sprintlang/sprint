@@ -4,7 +4,7 @@ import {{alice}}.Date;
 import {{alice}}.Contract;
 
 main() {
-    Date.create(1640390400);
+    Date.create(1640390400); // 12/25/2021 @ 12:00am
     Contract.create();
 
     return;
@@ -74,7 +74,7 @@ main() {
     let initial_balance: u64;
     initial_balance = LibraAccount.balance({{bob}});
 
-    Date.set_value(1577232000);
+    Date.set_value(1577232000); // 12/25/2019 @ 12:00am
 
     Contract.transition_before({{alice}}, 0);
     assert(copy(initial_balance) == LibraAccount.balance({{bob}}), 1);

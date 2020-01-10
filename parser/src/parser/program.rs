@@ -93,7 +93,7 @@ pub fn term(input: Span) -> IResult<Span, Context<Expression>> {
         map(digit1, |n: Span| {
             Expression::new(
                 ExpressionType::from(n.fragment.parse::<u64>().unwrap()),
-                Some(input),
+                Some(n),
             )
             .into()
         }),
