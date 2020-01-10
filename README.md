@@ -25,6 +25,9 @@ These are the lowest-level of the contract combinators and are similar to those 
 A trivial contract where neither the party nor the counterparty have any rights and obligations, for example
 
 ```haskell
+zero :: Contract
+
+main :: Contract
 main = zero
 ```
 
@@ -33,6 +36,9 @@ main = zero
 A contract where the party is paid a single microLibra from the funds of the contract, for example
 
 ``` haskell
+one :: Contract
+
+main :: Contract
 main = one
 ```
 
@@ -41,6 +47,9 @@ main = one
 A contract allowing the party to acquire an inner contract *before* a given date, for example
 
 ```haskell
+before :: Date -> Contract -> Contract
+
+main :: Contract
 main = before 2020-12-25T00:00:00Z one
 ```
 
@@ -49,6 +58,9 @@ main = before 2020-12-25T00:00:00Z one
 A contract allowing the party to acquire an inner contract *after* a given date, for example
 
 ```haskell
+after :: Date -> Contract -> Contract
+
+main :: Contract
 main = after 2020-12-25T00:00:00Z one
 ```
 
@@ -57,6 +69,9 @@ main = after 2020-12-25T00:00:00Z one
 A contract allowing the party to acquire an inner contract at any time, for example
 
 ```haskell
+anytime :: Contract -> Contract
+
+main :: Contract
 main = anytime one
 ```
 
@@ -65,6 +80,9 @@ main = anytime one
 A contract reversing the rights and obligations (between the party and counterparty) of an inner contract, for example
 
 ```haskell
+give :: Contract -> Contract
+
+main :: Contract
 main = give one
 ```
 
@@ -73,6 +91,9 @@ main = give one
 A contract allowing the party to acquire one of two inner contracts but not both, for example
 
 ```haskell
+or :: Contract -> Contract -> Contract
+
+main :: Contract
 main = or zero one
 ```
 
@@ -81,6 +102,9 @@ main = or zero one
 A contract allowing the party to acquire both of two inner contracts, for example
 
 ```haskell
+and :: Contract -> Contract -> Contract
+
+main :: Contract
 main = and zero one
 ```
 
@@ -89,5 +113,8 @@ main = and zero one
 A contract where the inner contract is scaled by a given observable, for example
 
 ```haskell
+scale :: Observable Word -> Contract -> Contract
+
+main :: Contract
 main = scale (konst 10) one
 ```
