@@ -15,12 +15,8 @@ pub fn visit<'a>(definitions: &[ast::Definition<'a>]) -> Contract<'a> {
         let mut expression = &definition.expression;
         let mut arguments = Vec::new();
 
-        while let ast::Expression {
-            expression: ast::ExpressionType::Abstraction(a, e),
-            ..
-        } = expression
-        {
-            expression = e;
+        while let ast::ExpressionType::Abstraction(a, e) = &expression.expression {
+            expression = &e;
             arguments.push(Variable::new(Identifier::Prefixed(a.name), Kind::Unsigned));
         }
 

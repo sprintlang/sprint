@@ -10,7 +10,7 @@ use crate::ast::{
 use nom::Err;
 use phf::phf_map;
 
-type Primitive = fn(Vec<Expression>) -> Result<Context<Expression>>;
+type Primitive = fn(Vec<Expression>) -> Context<Expression>;
 
 pub static PRIMITIVES: phf::Map<&'static str, Primitive> = phf_map! {
     "konst" => konst,
@@ -32,15 +32,16 @@ macro_rules! arguments {
     };
 }
 
-pub fn zero() -> Result<'static, Context<'static, Expression<'static>>> {
+pub fn zero() -> Context<'static, Expression<'static>> {
     definition(
         Span::new("zero"),
         vec![],
         Expression::new(ExpressionType::from(State::default()), None).into(),
     )
+    .unwrap()
 }
 
-pub fn one() -> Result<'static, Context<'static, Expression<'static>>> {
+pub fn one() -> Context<'static, Expression<'static>> {
     let mut transition = Transition::default();
     transition.add_effect(Effect::Withdraw);
 
@@ -52,9 +53,10 @@ pub fn one() -> Result<'static, Context<'static, Expression<'static>>> {
         vec![],
         Expression::new(ExpressionType::from(state), None).into(),
     )
+    .unwrap()
 }
 
-pub fn give() -> Result<'static, Context<'static, Expression<'static>>> {
+pub fn give() -> Context<'static, Expression<'static>> {
     let next = Expression::new(
         ExpressionType::from(Variable::new("next", Kind::State.into(), None)),
         None,
@@ -71,9 +73,10 @@ pub fn give() -> Result<'static, Context<'static, Expression<'static>>> {
         vec![Span::new("next")],
         Expression::new(ExpressionType::from(state), None).into(),
     )
+    .unwrap()
 }
 
-pub fn and() -> Result<'static, Context<'static, Expression<'static>>> {
+pub fn and() -> Context<'static, Expression<'static>> {
     let left = Expression::new(
         ExpressionType::from(Variable::new("left", Kind::State.into(), None)),
         None,
@@ -95,9 +98,10 @@ pub fn and() -> Result<'static, Context<'static, Expression<'static>>> {
         vec![Span::new("left"), Span::new("right")],
         Expression::new(ExpressionType::from(state), None).into(),
     )
+    .unwrap()
 }
 
-pub fn or() -> Result<'static, Context<'static, Expression<'static>>> {
+pub fn or() -> Context<'static, Expression<'static>> {
     let left = Expression::new(
         ExpressionType::from(Variable::new("left", Kind::State.into(), None)),
         None,
@@ -127,9 +131,10 @@ pub fn or() -> Result<'static, Context<'static, Expression<'static>>> {
         vec![Span::new("left"), Span::new("right")],
         Expression::new(ExpressionType::from(state), None).into(),
     )
+    .unwrap()
 }
 
-pub fn scale() -> Result<'static, Context<'static, Expression<'static>>> {
+pub fn scale() -> Context<'static, Expression<'static>> {
     let scalar = Expression::new(
         ExpressionType::from(Variable::new(
             "scalar",
@@ -155,9 +160,10 @@ pub fn scale() -> Result<'static, Context<'static, Expression<'static>>> {
         vec![Span::new("scalar"), Span::new("next")],
         Expression::new(ExpressionType::from(state), None).into(),
     )
+    .unwrap()
 }
 
-pub fn anytime() -> Result<'static, Context<'static, Expression<'static>>> {
+pub fn anytime() -> Context<'static, Expression<'static>> {
     let next = Expression::new(
         ExpressionType::from(Variable::new("next", Kind::State.into(), None)),
         None,
@@ -176,12 +182,13 @@ pub fn anytime() -> Result<'static, Context<'static, Expression<'static>>> {
         vec![Span::new("next")],
         Expression::new(ExpressionType::from(state), None).into(),
     )
+    .unwrap()
 }
 
-pub fn konst(arguments: Vec<Expression>) -> Result<'_, Context<Expression>> {
-    let value = arguments!(arguments, Kind::default())?;
+pub fn konst(arguments: Vec<Expression>) -> Context<Expression> {
+    let value = arguments!(arguments, Kind::default()).unwrap();
 
-    Ok(Expression::new(ExpressionType::Observable(value.clone().into()), value.span).into())
+    Expression::new(ExpressionType::Observable(value.clone().into()), value.span).into()
 }
 
 fn argument<'a>(

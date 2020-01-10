@@ -4,7 +4,7 @@ use libra_tools::tempdir::TempPath;
 use std::path::Path;
 use structopt::StructOpt;
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt, Debug)]
 #[structopt(about = "Libra swarm to start local nodes")]
 struct Args {
     /// Number of nodes to start (1 by default)

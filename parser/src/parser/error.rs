@@ -2,13 +2,13 @@ use super::Span;
 use crate::ast::Kind;
 use nom::error::{ErrorKind, ParseError};
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct Error<'a> {
     pub nom_error: Option<NomError<'a>>,
     pub sprint_error: Option<SprintError<'a>>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct NomError<'a> {
     pub line: usize,
     pub column: usize,
@@ -16,7 +16,7 @@ pub struct NomError<'a> {
     pub kind: ErrorKind,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum SprintError<'a> {
     TypeError(&'a str, Box<SprintError<'a>>),
     MismatchedKinds(Kind, Kind),

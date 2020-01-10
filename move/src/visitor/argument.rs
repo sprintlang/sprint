@@ -19,15 +19,9 @@ pub(super) fn visit<'a>(
         )];
     }
 
-    match expression {
-        ast::Expression {
-            expression: ast::ExpressionType::Application(f, a),
-            ..
-        } => visit_application(context, f, a),
-        ast::Expression {
-            expression: ast::ExpressionType::Variable(v),
-            ..
-        } => vec![Push::with_length(
+    match &expression.expression {
+        ast::ExpressionType::Application(f, a) => visit_application(context, &f, &a),
+        ast::ExpressionType::Variable(v) => vec![Push::with_length(
             STACK.clone(),
             match context.definitions.get(v.name) {
                 Some(definition) => {
@@ -38,10 +32,7 @@ pub(super) fn visit<'a>(
             },
             STACK_LENGTH.clone(),
         )],
-        ast::Expression {
-            expression: ast::ExpressionType::State(_),
-            ..
-        } => unimplemented!("state arguments cannot be inlined"),
+        ast::ExpressionType::State(_) => unimplemented!("state arguments cannot be inlined"),
         _ => unreachable!(),
     }
 }

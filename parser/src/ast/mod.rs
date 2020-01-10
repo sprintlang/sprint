@@ -16,7 +16,7 @@ use std::{
 
 pub type Definitions<'a> = Vec<Definition<'a>>;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Definition<'a> {
     pub variable: Variable<'a>,
     pub expression: Expression<'a>,
@@ -31,7 +31,7 @@ impl<'a> Definition<'a> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Expression<'a> {
     pub expression: ExpressionType<'a>,
     pub span: Option<Span<'a>>,
@@ -43,7 +43,7 @@ impl<'a> Expression<'a> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum ExpressionType<'a> {
     Abstraction(Variable<'a>, Box<Expression<'a>>),
     Application(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -161,7 +161,7 @@ impl Hash for Variable<'_> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Observable<'a> {
     IsParty,
     IsCounterparty,

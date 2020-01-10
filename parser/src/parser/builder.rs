@@ -12,13 +12,13 @@ use std::rc::Rc;
 pub fn program<'a>(definitions: Vec<Context<'a, Expression<'a>>>) -> Result<'a, Context<'a, ()>> {
     let mut context = Context::from(());
 
-    context.unify(primitive::zero()?).map_err(Err::Error)?;
-    context.unify(primitive::one()?).map_err(Err::Error)?;
-    context.unify(primitive::give()?).map_err(Err::Error)?;
-    context.unify(primitive::and()?).map_err(Err::Error)?;
-    context.unify(primitive::or()?).map_err(Err::Error)?;
-    context.unify(primitive::scale()?).map_err(Err::Error)?;
-    context.unify(primitive::anytime()?).map_err(Err::Error)?;
+    context.unify(primitive::zero()).unwrap();
+    context.unify(primitive::one()).unwrap();
+    context.unify(primitive::give()).unwrap();
+    context.unify(primitive::and()).unwrap();
+    context.unify(primitive::or()).unwrap();
+    context.unify(primitive::scale()).unwrap();
+    context.unify(primitive::anytime()).unwrap();
 
     context = definitions.into_iter().fold(Ok(context), unify_context)?;
 
@@ -107,7 +107,7 @@ pub fn application<'a>(
         // Applications to primitives are handled here. Primitives cannot be
         // implemented as abstractions in the AST as some require polymorphic
         // kinds which is not currently supported.
-        Some(primitive) => primitive(arguments)?,
+        Some(primitive) => primitive(arguments),
         _ => {
             let kind = arguments
                 .iter()

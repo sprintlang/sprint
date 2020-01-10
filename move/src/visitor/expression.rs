@@ -15,39 +15,15 @@ pub(super) fn visit<'a>(
     context: &mut Context<'a, '_>,
     expression: &ast::Expression<'a>,
 ) -> Expression<'a> {
-    match expression {
-        ast::Expression {
-            expression: ast::ExpressionType::Abstraction(_, _),
-            ..
-        } => unreachable!("use visit_abstraction instead"),
-        ast::Expression {
-            expression: ast::ExpressionType::Application(f, a),
-            ..
-        } => visit_application(context, f, a),
-        ast::Expression {
-            expression: ast::ExpressionType::Boolean(_),
-            ..
-        } => unimplemented!(),
-        ast::Expression {
-            expression: ast::ExpressionType::Class(c),
-            ..
-        } => visit_class(context, c),
-        ast::Expression {
-            expression: ast::ExpressionType::Observable(o),
-            ..
-        } => visit_observable(context, o),
-        ast::Expression {
-            expression: ast::ExpressionType::State(s),
-            ..
-        } => visit_state(context, s),
-        ast::Expression {
-            expression: ast::ExpressionType::Variable(v),
-            ..
-        } => visit_variable(context, v, Vec::new()),
-        ast::Expression {
-            expression: ast::ExpressionType::Word(w),
-            ..
-        } => Expression::Expression(w.to_string().into()),
+    match &expression.expression {
+        ast::ExpressionType::Abstraction(_, _) => unreachable!("use visit_abstraction instead"),
+        ast::ExpressionType::Application(f, a) => visit_application(context, &f, &a),
+        ast::ExpressionType::Boolean(_) => unimplemented!(),
+        ast::ExpressionType::Class(c) => visit_class(context, &c),
+        ast::ExpressionType::Observable(o) => visit_observable(context, &o),
+        ast::ExpressionType::State(s) => visit_state(context, &s),
+        ast::ExpressionType::Variable(v) => visit_variable(context, &v, Vec::new()),
+        ast::ExpressionType::Word(w) => Expression::Expression(w.to_string().into()),
     }
 }
 
@@ -55,12 +31,8 @@ pub(super) fn visit_abstraction<'a>(
     context: &mut Context<'a, '_>,
     mut expression: &ast::Expression<'a>,
 ) -> Expression<'a> {
-    while let ast::Expression {
-        expression: ast::ExpressionType::Abstraction(_, e),
-        ..
-    } = expression
-    {
-        expression = e;
+    while let ast::ExpressionType::Abstraction(_, e) = &expression.expression {
+        expression = &e;
     }
 
     // Sanity check -- something that doesn't result in a state shouldn't call this function.
@@ -85,20 +57,13 @@ fn visit_application<'a>(
 ) -> Expression<'a> {
     let mut arguments = vec![argument];
 
-    while let ast::Expression {
-        expression: ast::ExpressionType::Application(e, argument),
-        ..
-    } = abstraction
-    {
-        abstraction = e;
-        arguments.push(argument);
+    while let ast::ExpressionType::Application(e, argument) = &abstraction.expression {
+        abstraction = &e;
+        arguments.push(&argument);
     }
 
-    match abstraction {
-        ast::Expression {
-            expression: ast::ExpressionType::Variable(v),
-            ..
-        } => visit_variable(context, v, arguments),
+    match &abstraction.expression {
+        ast::ExpressionType::Variable(v) => visit_variable(context, &v, arguments),
         _ => unreachable!(),
     }
 }

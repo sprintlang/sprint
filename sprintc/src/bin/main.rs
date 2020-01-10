@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 use std::{error::Error, path::PathBuf};
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt, Debug)]
 #[structopt(name = "Sprint Compiler", about = "Compiler for Sprint to Move IR")]
 pub struct Args {
     /// File to be compiled

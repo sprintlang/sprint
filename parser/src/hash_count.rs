@@ -1,6 +1,6 @@
 use std::{cmp::Eq, collections::HashMap, hash::Hash, iter::IntoIterator};
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct HashCount<T: Eq + Hash>(HashMap<T, usize>);
 
 impl<T: Eq + Hash> Default for HashCount<T> {

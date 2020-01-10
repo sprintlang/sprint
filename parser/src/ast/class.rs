@@ -1,7 +1,7 @@
 use super::{Expression, Kind};
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Class<'a> {
     Comparable(Comparable<'a>),
     Equatable(Equatable<'a>),
@@ -9,7 +9,7 @@ pub enum Class<'a> {
     Numerable(Numerable<'a>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Comparable<'a> {
     Greater(Box<Expression<'a>>, Box<Expression<'a>>),
     Less(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -17,18 +17,18 @@ pub enum Comparable<'a> {
     LessEqual(Box<Expression<'a>>, Box<Expression<'a>>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Equatable<'a> {
     Equal(Box<Expression<'a>>, Box<Expression<'a>>),
     NotEqual(Box<Expression<'a>>, Box<Expression<'a>>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Negatable<'a> {
     Negate(Box<Expression<'a>>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Numerable<'a> {
     Add(Box<Expression<'a>>, Box<Expression<'a>>),
     Subtract(Box<Expression<'a>>, Box<Expression<'a>>),

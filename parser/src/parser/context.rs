@@ -4,7 +4,7 @@ use crate::{
 };
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Context<'a, T> {
     inner: T,
     pub definitions: HashMap<&'a str, Definition<'a>>,
