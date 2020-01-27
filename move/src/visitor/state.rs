@@ -20,7 +20,7 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
         return TERMINAL_ID;
     }
 
-    let from = context.numbers.next().unwrap();
+    let from = context.numbers.borrow_mut().next().unwrap();
 
     for transition in state.transitions() {
         let to = expression::visit(context, transition.next());
@@ -64,9 +64,7 @@ pub(super) fn visit<'a>(context: &mut Context<'a, '_>, state: &ast::state::State
 
                     method.add_post_action(Push::new(
                         CONTEXTS.clone(),
-                        Expression::Moved(
-                            Expression::Identifier(spawned_context.identifier().clone()).into(),
-                        ),
+                        Expression::Identifier(spawned_context.identifier().clone()).r#move(),
                     ));
                 }
                 ast::state::Effect::Withdraw => method.add_action(Withdraw::new(Address::Party)),

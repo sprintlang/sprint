@@ -1,4 +1,5 @@
 use super::{call::Call, identifier::Identifier, kind::Kind};
+use crate::numbers::Numbers;
 use std::{
     borrow::Cow,
     cell::RefCell,
@@ -11,14 +12,15 @@ use std::{
 pub enum Expression<'a> {
     Binary(Binary, Box<Self>, Box<Self>),
     Call(Call<'a>),
-    Copied(Box<Self>),
+    Copy(Box<Self>),
     Expression(Cow<'static, str>),
-    Frozen(Box<Self>),
+    Freeze(Box<Self>),
     Get(Kind, Box<Self>, Box<Self>),
     Identifier(Identifier<'a>),
     Length(Kind, Box<Self>),
-    Moved(Box<Self>),
+    Move(Box<Self>),
     MutableReference(Box<Self>),
+    Numbers(Rc<RefCell<Numbers>>),
     Observable(&'a str),
     Reference(Box<Self>),
     State(Rc<RefCell<Option<u64>>>),
@@ -36,14 +38,15 @@ impl Display for Expression<'_> {
         match self {
             Self::Binary(b, l, r) => write!(f, "{} {} {}", l, b, r),
             Self::Call(c) => c.fmt(f),
-            Self::Copied(e) => write!(f, "copy({})", e),
+            Self::Copy(e) => write!(f, "copy({})", e),
             Self::Expression(e) => e.fmt(f),
-            Self::Frozen(e) => write!(f, "freeze({})", e),
+            Self::Freeze(e) => write!(f, "freeze({})", e),
             Self::Get(k, v, i) => write!(f, "Vector.get<{}>({}, {})", k, v, i),
             Self::Identifier(i) => i.fmt(f),
             Self::Length(k, v) => write!(f, "Vector.length<{}>({})", k, v),
-            Self::Moved(e) => write!(f, "move({})", e),
+            Self::Move(e) => write!(f, "move({})", e),
             Self::MutableReference(e) => write!(f, "&mut {}", e),
+            Self::Numbers(n) => n.borrow().peek().fmt(f),
             Self::Observable(o) => write!(f, "{}.get_value({{{{alice}}}})", o),
             Self::Reference(e) => write!(f, "&{}", e),
             Self::State(u) => u.borrow().unwrap().fmt(f),
@@ -67,6 +70,28 @@ impl From<u64> for Expression<'_> {
 impl<'a> From<Identifier<'a>> for Expression<'a> {
     fn from(i: Identifier<'a>) -> Self {
         Self::Identifier(i)
+    }
+}
+
+impl<'a> Expression<'a> {
+    pub fn copy(self) -> Self {
+        Expression::Copy(self.into())
+    }
+
+    pub fn freeze(self) -> Self {
+        Expression::Freeze(self.into())
+    }
+
+    pub fn r#move(self) -> Self {
+        Expression::Move(self.into())
+    }
+
+    pub fn mutable_reference(self) -> Self {
+        Expression::MutableReference(self.into())
+    }
+
+    pub fn reference(self) -> Self {
+        Expression::Reference(self.into())
     }
 }
 

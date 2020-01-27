@@ -138,22 +138,18 @@ fn visit_variable<'a>(
             .unwrap()
             .find_argument(variable.name)
         {
-            None => Expression::Copied(
-                Expression::Identifier(Identifier::Prefixed(variable.name)).into(),
-            ),
+            None => Expression::Identifier(Identifier::Prefixed(variable.name)).copy(),
             Some(i) => Expression::Get(
                 Kind::Unsigned,
-                Expression::Frozen(
-                    Expression::Copied(Expression::Identifier(STACK.identifier().clone()).into())
-                        .into(),
-                )
-                .into(),
+                Expression::Identifier(STACK.identifier().clone())
+                    .copy()
+                    .freeze()
+                    .into(),
                 Expression::Binary(
                     Binary::Subtract,
-                    Expression::Copied(
-                        Expression::Identifier(STACK_LENGTH.identifier().clone()).into(),
-                    )
-                    .into(),
+                    Expression::Identifier(STACK_LENGTH.identifier().clone())
+                        .copy()
+                        .into(),
                     Expression::Unsigned(i + 1).into(),
                 )
                 .into(),
@@ -164,7 +160,7 @@ fn visit_variable<'a>(
             let definition = definition.clone();
 
             if results_in_state(variable.kind.clone()) {
-                let from = context.numbers.next().unwrap();
+                let from = context.numbers.borrow_mut().next().unwrap();
                 let to = visit_abstraction(context, &definition.expression);
 
                 let function_context = context.function_context.as_ref().unwrap();
@@ -191,14 +187,10 @@ fn visit_variable<'a>(
                                     Binary::Add,
                                     Expression::Length(
                                         Kind::Unsigned,
-                                        Expression::Frozen(
-                                            Expression::Copied(
-                                                Expression::Identifier(STACK.identifier().clone())
-                                                    .into(),
-                                            )
+                                        Expression::Identifier(STACK.identifier().clone())
+                                            .copy()
+                                            .freeze()
                                             .into(),
-                                        )
-                                        .into(),
                                     )
                                     .into(),
                                     Expression::Unsigned(position - 2).into(),

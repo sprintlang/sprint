@@ -14,7 +14,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 struct Context<'a, 'b> {
     contract: Contract<'a>,
     definitions: HashMap<&'a str, Rc<&'b ast::Definition<'a>>>,
-    numbers: Numbers,
+    numbers: Rc<RefCell<Numbers>>,
     function_context: Option<FunctionContext<'a>>,
     functions: HashMap<*const ast::Expression<'a>, Rc<RefCell<Option<u64>>>>,
 }
@@ -24,7 +24,7 @@ impl<'a, 'b> Context<'a, 'b> {
         Self {
             contract: Default::default(),
             definitions: definitions.map(|d| (d.variable.name, d)).collect(),
-            numbers: Numbers::from(TERMINAL_ID + 1),
+            numbers: Rc::new(Numbers::from(TERMINAL_ID + 1).into()),
             function_context: Default::default(),
             functions: Default::default(),
         }

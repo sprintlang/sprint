@@ -89,11 +89,10 @@ impl<'a> Method<'a> {
             STACK_LENGTH.clone(),
             Expression::Length(
                 Kind::Unsigned,
-                Expression::Frozen(
-                    Expression::Copied(Expression::Identifier(STACK.identifier().clone()).into())
-                        .into(),
-                )
-                .into(),
+                Expression::Identifier(STACK.identifier().clone())
+                    .copy()
+                    .freeze()
+                    .into(),
             ),
         ));
 
@@ -115,9 +114,9 @@ impl<'a> Method<'a> {
             EVENT.clone(),
             Expression::Expression("LibraAccount.new_event_handle<u64>()".into()),
         ));
-        method.add_emit_action(Emit::new(Expression::Copied(
-            Expression::Identifier(TO_STATE.identifier().clone()).into(),
-        )));
+        method.add_emit_action(Emit::new(
+            Expression::Identifier(TO_STATE.identifier().clone()).copy(),
+        ));
         method.add_emit_action(DestroyHandle);
 
         method

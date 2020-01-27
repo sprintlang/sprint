@@ -57,13 +57,10 @@ fn visit_application<'a>(
                     Binary::Subtract,
                     Expression::Length(
                         Kind::Unsigned,
-                        Expression::Frozen(
-                            Expression::Copied(
-                                Expression::Identifier(STACK.identifier().clone()).into(),
-                            )
+                        Expression::Identifier(STACK.identifier().clone())
+                            .copy()
+                            .freeze()
                             .into(),
-                        )
-                        .into(),
                     )
                     .into(),
                     Expression::Unsigned(
@@ -89,13 +86,10 @@ fn visit_application<'a>(
                     Binary::Subtract,
                     Expression::Length(
                         Kind::Unsigned,
-                        Expression::Frozen(
-                            Expression::Copied(
-                                Expression::Identifier(STACK.identifier().clone()).into(),
-                            )
+                        Expression::Identifier(STACK.identifier().clone())
+                            .copy()
+                            .freeze()
                             .into(),
-                        )
-                        .into(),
                     )
                     .into(),
                     Expression::Unsigned(3).into(),
