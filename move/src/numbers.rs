@@ -18,6 +18,13 @@ impl From<u64> for Numbers {
     }
 }
 
+impl Numbers {
+    pub fn peek(&self) -> u64 {
+        // Could have used .peekable() for this, but we can peek here with less overhead.
+        self.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -27,6 +34,16 @@ mod tests {
         let mut numbers = Numbers::default();
 
         for i in 0..10 {
+            assert_eq!(numbers.next().unwrap(), i);
+        }
+    }
+
+    #[test]
+    fn peek() {
+        let mut numbers = Numbers::from(42);
+
+        for i in 42..52 {
+            assert_eq!(numbers.peek(), i);
             assert_eq!(numbers.next().unwrap(), i);
         }
     }
