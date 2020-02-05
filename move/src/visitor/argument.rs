@@ -54,20 +54,25 @@ fn visit_application<'a>(
             arguments.push(Push::new(
                 STACK.clone(),
                 Expression::Binary(
-                    Binary::Subtract,
-                    Expression::Length(
-                        Kind::Unsigned,
-                        Expression::Identifier(STACK.identifier().clone())
-                            .copy()
-                            .freeze()
-                            .into(),
-                    )
-                    .into(),
-                    Expression::Unsigned(
-                        2 + match argument.len() {
-                            1 => 0,
-                            _ => argument.len() as u64,
-                        },
+                    Binary::Add,
+                    Expression::Numbers(context.numbers.clone()).into(),
+                    Expression::Binary(
+                        Binary::Subtract,
+                        Expression::Length(
+                            Kind::Unsigned,
+                            Expression::Identifier(STACK.identifier().clone())
+                                .copy()
+                                .freeze()
+                                .into(),
+                        )
+                        .into(),
+                        Expression::Unsigned(
+                            2 + match argument.len() {
+                                1 => 0,
+                                _ => argument.len() as u64,
+                            },
+                        )
+                        .into(),
                     )
                     .into(),
                 ),
@@ -83,16 +88,21 @@ fn visit_application<'a>(
             arguments.push(Push::new(
                 STACK.clone(),
                 Expression::Binary(
-                    Binary::Subtract,
-                    Expression::Length(
-                        Kind::Unsigned,
-                        Expression::Identifier(STACK.identifier().clone())
-                            .copy()
-                            .freeze()
-                            .into(),
+                    Binary::Add,
+                    Expression::Numbers(context.numbers.clone()).into(),
+                    Expression::Binary(
+                        Binary::Subtract,
+                        Expression::Length(
+                            Kind::Unsigned,
+                            Expression::Identifier(STACK.identifier().clone())
+                                .copy()
+                                .freeze()
+                                .into(),
+                        )
+                        .into(),
+                        Expression::Unsigned(3).into(),
                     )
                     .into(),
-                    Expression::Unsigned(3).into(),
                 ),
             ));
         }

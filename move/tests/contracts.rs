@@ -71,6 +71,14 @@ fn and() {
     test(generate(&contract), &[], suite);
 }
 
+#[test]
+fn nested() {
+    let suite = Path::new("tests/tests/nested.mvir");
+    let contract = contract("main = give (give (and one one))").unwrap();
+
+    test(generate(&contract), &[], suite);
+}
+
 fn test(module: impl Display, observables: &[&Path], test: &Path) {
     let mut input = String::new();
 

@@ -93,6 +93,18 @@ impl<'a> Expression<'a> {
     pub fn reference(self) -> Self {
         Expression::Reference(self.into())
     }
+
+    /// Rewrites vector get expressions into calls to expand_stack. Leaves all other expressions
+    /// unmodified.
+    pub fn stack_expansion(self) -> Self {
+        if let Expression::Get(Kind::Unsigned, f, i) = &self {
+            if let Expression::Freeze(v) = f.as_ref() {
+                return Expression::Expression(format!("Self.expand_stack({}, {})", v, i).into());
+            }
+        }
+
+        self
+    }
 }
 
 impl<'a> TryFrom<Expression<'a>> for u64 {

@@ -89,4 +89,24 @@ module Contract {
 
         return move(new);
     }
+
+    expand_stack(stack: &mut Vector.T<u64>, index: u64): u64 {
+        let state: u64;
+        let args: Vector.T<u64>;
+        state = Vector.get<u64>(freeze(copy(stack)), copy(index));
+        args = Vector.empty<u64>();
+
+        while (copy(state) >= {{ stack_offset }}) {
+            index = move(state) - {{ stack_offset }};
+            Vector.push_back<u64>(&mut args, Vector.get<u64>(freeze(copy(stack)), copy(index) + 1));
+            state = Vector.get<u64>(freeze(copy(stack)), copy(index));
+        }
+
+        while (!Vector.is_empty<u64>(&args)) {
+            Vector.push_back<u64>(copy(stack), Vector.pop_back<u64>(&mut args));
+        }
+
+        Vector.destroy_empty<u64>(move(args));
+        return move(state);
+    }
 }

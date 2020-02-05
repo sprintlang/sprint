@@ -8,6 +8,7 @@ const DEPENDENCIES: [&str; 3] = ["0x0.Vector", "0x0.LibraCoin", "0x0.LibraAccoun
 #[template(path = "contract.mvir", escape = "none")]
 pub struct Contract<'a> {
     initial_state: u64,
+    stack_offset: u64,
     methods: Vec<Method<'a>>,
     dependencies: Vec<&'a str>,
 }
@@ -32,5 +33,9 @@ impl<'a> Contract<'a> {
 
     pub fn set_initial_state(&mut self, state: u64) {
         self.initial_state = state;
+    }
+
+    pub fn set_stack_offset(&mut self, offset: u64) {
+        self.stack_offset = offset;
     }
 }

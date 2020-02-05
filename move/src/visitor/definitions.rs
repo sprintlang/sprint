@@ -48,5 +48,8 @@ pub fn visit<'a>(definitions: &[ast::Definition<'a>]) -> Contract<'a> {
         }
     }
 
+    context
+        .contract
+        .set_stack_offset(context.numbers.borrow().peek());
     context.contract
 }

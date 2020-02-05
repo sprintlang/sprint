@@ -96,7 +96,7 @@ impl<'a> Method<'a> {
             ),
         ));
 
-        method.add_action(Assign::new(TO_STATE.clone(), to));
+        method.add_action(Assign::new(TO_STATE.clone(), to.stack_expansion()));
 
         method.add_argument(OWNER.clone());
         method.add_argument(CONTEXT_INDEX.clone());

@@ -29,7 +29,7 @@ impl Action for Push<'_> {
 impl Display for Push<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         // NOTE: does not work with vectors of mutable references.
-        writeln!(
+        write!(
             f,
             "Vector.push_back<{}>(copy({}), {});",
             self.vector.kind().inner(),

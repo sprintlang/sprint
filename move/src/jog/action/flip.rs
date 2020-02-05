@@ -28,7 +28,7 @@ impl Display for Flip {
             Address::Party,
             Address::Counterparty,
         )?;
-        writeln!(
+        write!(
             f,
             "*(&mut {}) = move({});",
             Address::Counterparty,

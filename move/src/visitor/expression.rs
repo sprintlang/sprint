@@ -166,6 +166,9 @@ fn visit_variable<'a>(
                 let function_context = context.function_context.as_ref().unwrap();
                 let mut method = Method::transition(function_context.name, from, to);
 
+                // We need to get context.numbers out before we visit arguments, since until
+                // stacks is consumed we can't borrow context immutably.
+                let numbers = context.numbers.clone();
                 let stacks = arguments.map(|argument| argument::visit(context, argument));
 
                 let mut arguments = Vec::new();
@@ -185,15 +188,15 @@ fn visit_variable<'a>(
                                 STACK.clone(),
                                 Expression::Binary(
                                     Binary::Add,
-                                    Expression::Length(
-                                        Kind::Unsigned,
-                                        Expression::Identifier(STACK.identifier().clone())
+                                    Expression::Numbers(numbers.clone()).into(),
+                                    Expression::Binary(
+                                        Binary::Add,
+                                        Expression::Identifier(STACK_LENGTH.identifier().clone())
                                             .copy()
-                                            .freeze()
                                             .into(),
+                                        Expression::Unsigned(position - 2).into(),
                                     )
                                     .into(),
-                                    Expression::Unsigned(position - 2).into(),
                                 ),
                             ));
                         }
