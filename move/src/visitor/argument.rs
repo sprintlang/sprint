@@ -67,6 +67,10 @@ fn visit_application<'a>(
                         )
                         .into(),
                         Expression::Unsigned(
+                            // Subtract 2 from the current stack length if the argument is not a
+                            // contract. Otherwise subtract 2 plus the number of 'heap' items
+                            // added to the stack for the argument. This is to point to the
+                            // penultimate item on the stack.
                             2 + match argument.len() {
                                 1 => 0,
                                 _ => argument.len() as u64,
