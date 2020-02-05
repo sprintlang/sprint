@@ -1,6 +1,13 @@
 #[derive(Default, Debug)]
 pub struct Numbers(u64);
 
+impl Numbers {
+    pub fn peek(&self) -> u64 {
+        // Could have used .peekable() for this, but we can peek here with less overhead.
+        self.0
+    }
+}
+
 impl Iterator for Numbers {
     type Item = u64;
 
@@ -18,25 +25,9 @@ impl From<u64> for Numbers {
     }
 }
 
-impl Numbers {
-    pub fn peek(&self) -> u64 {
-        // Could have used .peekable() for this, but we can peek here with less overhead.
-        self.0
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn numbers() {
-        let mut numbers = Numbers::default();
-
-        for i in 0..10 {
-            assert_eq!(numbers.next().unwrap(), i);
-        }
-    }
 
     #[test]
     fn peek() {
@@ -44,6 +35,15 @@ mod tests {
 
         for i in 42..52 {
             assert_eq!(numbers.peek(), i);
+            assert_eq!(numbers.next().unwrap(), i);
+        }
+    }
+
+    #[test]
+    fn numbers() {
+        let mut numbers = Numbers::default();
+
+        for i in 0..10 {
             assert_eq!(numbers.next().unwrap(), i);
         }
     }
