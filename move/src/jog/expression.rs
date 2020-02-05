@@ -36,7 +36,7 @@ impl Default for Expression<'_> {
 impl Display for Expression<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Binary(b, l, r) => write!(f, "{} {} {}", l, b, r),
+            Self::Binary(b, l, r) => write!(f, "({} {} {})", l, b, r),
             Self::Call(c) => c.fmt(f),
             Self::Copy(e) => write!(f, "copy({})", e),
             Self::Expression(e) => e.fmt(f),
