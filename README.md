@@ -1,6 +1,12 @@
-![](logo.png)
+<p align="center">
+  <a href="https://sprintlang.org"><img width="384" src="logo.svg"></a>
+</p>
+
+A domain-specific language for writing financial contracts targeting Move. It uses a functional and combinatorial approach for building reusable and safe smart contracts that are fast to develop.
 
 > Please note that the language is highly experimental and is designed for testing. It is currently in active development and we expect many breaking changes as it evolves. Stay tuned for exciting new announcements and updates :musical_note:
+
+---
 
 ## Syntax
 
